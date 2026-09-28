@@ -8,7 +8,8 @@
 # MAGIC Tests are plain pytest functions run inside this notebook with `ipytest`.
 # MAGIC The notebook fails if any test fails, so it can be used as a job task.
 # MAGIC
-# MAGIC Nothing is dropped afterwards: `setup_bronze` is idempotent and the target may be a shared catalog.
+# MAGIC Cleanup: after the tests, the `bronze` schema and `bronze.mandi_raw` table are dropped,
+# MAGIC but only if this run created them. Existing ones (and their data) are left as they were.
 
 # COMMAND ----------
 
@@ -70,8 +71,23 @@ ipytest.autoconfig(raise_on_error=True, addopts=["-p", "no:cacheprovider"])
 
 @pytest.fixture(scope="module", autouse=True)
 def run_setup_bronze():
-    """Run setup_bronze once before the tests."""
+    """Run setup_bronze once before the tests, then drop what it created.
+
+    Only objects that did not exist before the run are dropped, so an existing
+    bronze schema or mandi_raw table (and its data) is never removed.
+    """
+    schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {catalog} LIKE 'bronze'").collect()) == 1
+    table_existed = spark.catalog.tableExists(TABLE_NAME)
+
     dbutils.notebook.run(SETUP_BRONZE_NOTEBOOK, NOTEBOOK_TIMEOUT_SECONDS, {"catalog": catalog})
+
+    yield
+
+    if not table_existed:
+        spark.sql(f"DROP TABLE IF EXISTS {TABLE_NAME}")
+    if not schema_existed:
+        # No CASCADE: fails instead of dropping anything else found in the schema.
+        spark.sql(f"DROP SCHEMA IF EXISTS {catalog}.bronze")
 
 # COMMAND ----------
 
