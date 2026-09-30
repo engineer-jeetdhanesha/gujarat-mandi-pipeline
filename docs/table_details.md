@@ -4,7 +4,7 @@
 
 ### `bronze.mandi_raw`
 
-Raw mandi prices from the data.gov.in API (daily) or a CSV file (backfill), stored exactly as received.
+Raw mandi prices from the data.gov.in API (daily) or a CSV file (backfill), stored exactly as received. File loads read every `/Volumes/<catalog>/bronze/raw_files/mandi_*.csv` (volume created by `setup_bronze`).
 
 | # | Column | Type | Source | Description |
 |---|---|---|---|---|

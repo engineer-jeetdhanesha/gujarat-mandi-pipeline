@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Setup: bronze layer
 # MAGIC
-# MAGIC Creates the `bronze` schema and the `bronze.mandi_raw` table in the given catalog.
+# MAGIC Creates the `bronze` schema, the `bronze.mandi_raw` table and the
+# MAGIC `bronze.raw_files` volume (source CSV files for file loads) in the given catalog.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
 # MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
@@ -76,6 +77,27 @@ def create__table__mandi_raw(catalog: str) -> None:
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Volume: bronze.raw_files
+
+# COMMAND ----------
+
+def create__volume__raw_files(catalog: str) -> None:
+    """Create the bronze.raw_files volume if it does not exist.
+
+    Holds the source CSV files read by the file mode of load_bronze_data
+    (mandi_*.csv). Managed volume.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
+    """
+    spark.sql(f"""
+        CREATE VOLUME IF NOT EXISTS {catalog}.bronze.raw_files
+        COMMENT 'Source CSV files for file-mode bronze loads'
+    """)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
@@ -85,3 +107,6 @@ print(f"Schema ready: {catalog}.bronze")
 
 create__table__mandi_raw(catalog)
 print(f"Table ready: {catalog}.bronze.mandi_raw")
+
+create__volume__raw_files(catalog)
+print(f"Volume ready: {catalog}.bronze.raw_files")

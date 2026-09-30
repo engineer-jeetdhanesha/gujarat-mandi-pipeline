@@ -1,10 +1,11 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Load bronze: mandi_raw (API)
+# MAGIC # Load bronze: mandi_raw (API or file)
 # MAGIC
-# MAGIC Fetches Gujarat mandi prices for one `arrival_date` from the data.gov.in API
-# MAGIC ("Variety-wise Daily Market Prices") and appends them to `bronze.mandi_raw`
-# MAGIC exactly as received (all STRING), plus ingestion metadata columns.
+# MAGIC Loads Gujarat mandi prices into `bronze.mandi_raw` exactly as received (all STRING),
+# MAGIC plus ingestion metadata columns. `mode` picks the source:
+# MAGIC - `api`: data.gov.in API ("Variety-wise Daily Market Prices"), one `arrival_date`
+# MAGIC - `file`: every `mandi_*.csv` in the `bronze.raw_files` volume, loaded whole (`arrival_date` is not used)
 # MAGIC
 # MAGIC Triggered by `build` with `dbutils.notebook.run`; can also be run on its own.
 # MAGIC
@@ -20,17 +21,25 @@
 from datetime import datetime
 
 dbutils.widgets.text("catalog", "gujarat_mandi_pipeline_dev_ws", "Unity Catalog name")
-dbutils.widgets.text("arrival_date", "", "Arrival date (yyyy-MM-dd)")
+dbutils.widgets.text("arrival_date", "", "Arrival date (yyyy-MM-dd), api mode only")
 dbutils.widgets.text("run_id", "", "Job run ID ({{job.run_id}})")
+dbutils.widgets.text("mode", "api", "Load mode (api / file)")
 
 catalog = dbutils.widgets.get("catalog")
 run_id = dbutils.widgets.get("run_id").strip() or None
 
-arrival_date_param = dbutils.widgets.get("arrival_date").strip()
-try:
-    arrival_date = datetime.strptime(arrival_date_param, "%Y-%m-%d").date()
-except ValueError:
-    raise ValueError(f"arrival_date must be yyyy-MM-dd, got '{arrival_date_param}'")
+mode = dbutils.widgets.get("mode").strip().lower()
+if mode not in ("api", "file"):
+    raise ValueError(f"mode must be 'api' or 'file', got '{mode}'")
+
+# arrival_date is only needed (and validated) in api mode.
+arrival_date = None
+if mode == "api":
+    arrival_date_param = dbutils.widgets.get("arrival_date").strip()
+    try:
+        arrival_date = datetime.strptime(arrival_date_param, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError(f"arrival_date must be yyyy-MM-dd, got '{arrival_date_param}'")
 
 # COMMAND ----------
 
@@ -47,7 +56,12 @@ STATE = "Gujarat"
 PAGE_SIZE = 1000
 REQUEST_TIMEOUT_SECONDS = 60
 
-# Source columns in table order; the API returns the same field names.
+# File mode: CSV in the bronze.raw_files volume (created by setup_bronze).
+FILE_VOLUME_DIR = "/Volumes/{catalog}/bronze/raw_files"
+FILE_NAME_PATTERN = "mandi_*.csv"
+
+# Source columns in table order; the API returns the same field names
+# and the CSV file has them as its header.
 SOURCE_COLUMNS = [
     "State",
     "District",
@@ -119,7 +133,7 @@ def fetch__api__mandi_records(api_key: str, arrival_date) -> list[dict]:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Load bronze.mandi_raw
+# MAGIC ## Load bronze.mandi_raw (API)
 
 # COMMAND ----------
 
@@ -166,13 +180,54 @@ def load__bronze__mandi_raw__with_api(catalog: str, arrival_date, api_key: str, 
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Load bronze.mandi_raw (file)
+
+# COMMAND ----------
+
+def load__bronze__mandi_raw__with_file(catalog: str, run_id: str | None) -> int:
+    """Load all mandi_*.csv files from the bronze volume into bronze.mandi_raw.
+
+    Every matching file is loaded whole, with no date filter; the arrival date
+    comes from the Arrival_Date column. Values are stored as received (STRING).
+    Adds _source = 'file', _source_file = path of the row's file, _ingested_at
+    and _run_id. Append only. Writes nothing if the files have no rows.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
+        run_id: Databricks job run ID, or None for interactive runs.
+
+    Returns:
+        Number of rows written.
+    """
+    path = FILE_VOLUME_DIR.format(catalog=catalog) + "/" + FILE_NAME_PATTERN
+
+    schema = StructType([StructField(c, StringType()) for c in SOURCE_COLUMNS])
+    # Raises if no file matches the pattern.
+    df = spark.read.option("header", True).schema(schema).csv(path)
+    df = (
+        df.withColumn("_source", F.lit("file"))
+        .withColumn("_source_file", F.col("_metadata.file_path"))
+        .withColumn("_ingested_at", F.current_timestamp())
+        .withColumn("_run_id", F.lit(run_id).cast("string"))
+    )
+    row_count = df.count()
+    if row_count == 0:
+        return 0
+    df.write.mode("append").saveAsTable(f"{catalog}.bronze.mandi_raw")
+    return row_count
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
 
-api_key = dbutils.secrets.get(SECRET_SCOPE, SECRET_KEY)
-
-row_count = load__bronze__mandi_raw__with_api(catalog, arrival_date, api_key, run_id)
-print(f"Rows loaded into {catalog}.bronze.mandi_raw for {arrival_date}: {row_count}")
+if mode == "api":
+    api_key = dbutils.secrets.get(SECRET_SCOPE, SECRET_KEY)
+    row_count = load__bronze__mandi_raw__with_api(catalog, arrival_date, api_key, run_id)
+else:
+    row_count = load__bronze__mandi_raw__with_file(catalog, run_id)
+print(f"Rows loaded into {catalog}.bronze.mandi_raw (mode={mode}, arrival_date={arrival_date}): {row_count}")
 
 dbutils.notebook.exit(str(row_count))

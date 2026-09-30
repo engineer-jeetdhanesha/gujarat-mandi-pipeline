@@ -7,7 +7,7 @@
 # MAGIC
 # MAGIC | Step | Notebook | Creates |
 # MAGIC |------|----------|---------|
-# MAGIC | 1 | `setup_bronze` | `bronze` schema, `bronze.mandi_raw` |
+# MAGIC | 1 | `setup_bronze` | `bronze` schema, `bronze.mandi_raw`, `bronze.raw_files` volume |
 # MAGIC
 # MAGIC Safe to re-run: every child notebook uses `IF NOT EXISTS`.
 
