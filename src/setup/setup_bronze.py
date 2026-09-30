@@ -18,6 +18,8 @@
 dbutils.widgets.text("catalog", "gujarat_mandi_pipeline_dev_ws", "Unity Catalog name")
 catalog = dbutils.widgets.get("catalog")
 
+print(f"Setting up bronze layer in catalog: {catalog}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -31,6 +33,7 @@ def create__schema__bronze(catalog: str) -> None:
     Args:
         catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
     """
+    print(f"Creating schema {catalog}.bronze (if not exists) ...")
     spark.sql(f"""
         CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
         COMMENT 'Raw data stored exactly as received'
@@ -52,6 +55,7 @@ def create__table__mandi_raw(catalog: str) -> None:
     Args:
         catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
     """
+    print(f"Creating table {catalog}.bronze.mandi_raw (if not exists) ...")
     spark.sql(f"""
         CREATE TABLE IF NOT EXISTS {catalog}.bronze.mandi_raw (
             State           STRING    COMMENT 'State name',
@@ -90,6 +94,7 @@ def create__volume__raw_files(catalog: str) -> None:
     Args:
         catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
     """
+    print(f"Creating volume {catalog}.bronze.raw_files (if not exists) ...")
     spark.sql(f"""
         CREATE VOLUME IF NOT EXISTS {catalog}.bronze.raw_files
         COMMENT 'Source CSV files for file-mode bronze loads'
@@ -110,3 +115,5 @@ print(f"Table ready: {catalog}.bronze.mandi_raw")
 
 create__volume__raw_files(catalog)
 print(f"Volume ready: {catalog}.bronze.raw_files")
+
+print("Bronze setup complete")

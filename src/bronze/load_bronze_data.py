@@ -41,6 +41,8 @@ if mode == "api":
     except ValueError:
         raise ValueError(f"arrival_date must be yyyy-MM-dd, got '{arrival_date_param}'")
 
+print(f"Parameters: catalog={catalog}, mode={mode}, arrival_date={arrival_date}, run_id={run_id}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -105,6 +107,7 @@ def fetch__api__mandi_records(api_key: str, arrival_date) -> list[dict]:
     retry = Retry(total=3, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
     session.mount("https://", HTTPAdapter(max_retries=retry))
 
+    print(f"API: fetching {STATE} records for {arrival_date:%d/%m/%Y} (page size {PAGE_SIZE}) ...")
     records = []
     offset = 0
     while True:
@@ -125,8 +128,10 @@ def fetch__api__mandi_records(api_key: str, arrival_date) -> list[dict]:
             raise RuntimeError(f"data.gov.in API returned HTTP {response.status_code} at offset {offset}")
 
         page = response.json().get("records", [])
+        print(f"API: offset {offset}: {len(page)} records")
         records.extend(page)
         if len(page) < PAGE_SIZE:
+            print(f"API: done, {len(records)} records in total")
             return records
         offset += PAGE_SIZE
 
@@ -157,10 +162,13 @@ def load__bronze__mandi_raw__with_api(catalog: str, arrival_date, api_key: str, 
     Returns:
         Number of rows written.
     """
+    print("Step 1/3: fetching from API")
     records = fetch__api__mandi_records(api_key, arrival_date)
     if not records:
+        print("No records returned (mandi holiday?). Nothing written.")
         return 0
 
+    print(f"Step 2/3: building DataFrame from {len(records)} records")
     schema = StructType([StructField(c, StringType()) for c in SOURCE_COLUMNS])
     rows = [
         tuple(None if r.get(c) is None else str(r.get(c)) for c in SOURCE_COLUMNS)
@@ -174,7 +182,9 @@ def load__bronze__mandi_raw__with_api(catalog: str, arrival_date, api_key: str, 
         .withColumn("_ingested_at", F.current_timestamp())
         .withColumn("_run_id", F.lit(run_id).cast("string"))
     )
+    print(f"Step 3/3: appending to {catalog}.bronze.mandi_raw")
     df.write.mode("append").saveAsTable(f"{catalog}.bronze.mandi_raw")
+    print(f"Wrote {len(rows)} rows")
     return len(rows)
 
 # COMMAND ----------
@@ -201,6 +211,7 @@ def load__bronze__mandi_raw__with_file(catalog: str, run_id: str | None) -> int:
     """
     path = FILE_VOLUME_DIR.format(catalog=catalog) + "/" + FILE_NAME_PATTERN
 
+    print(f"Step 1/3: reading CSV files from {path}")
     schema = StructType([StructField(c, StringType()) for c in SOURCE_COLUMNS])
     # Raises if no file matches the pattern.
     df = spark.read.option("header", True).schema(schema).csv(path)
@@ -211,9 +222,17 @@ def load__bronze__mandi_raw__with_file(catalog: str, run_id: str | None) -> int:
         .withColumn("_run_id", F.lit(run_id).cast("string"))
     )
     row_count = df.count()
+    source_files = sorted(r["_source_file"] for r in df.select("_source_file").distinct().collect())
+    print(f"Step 2/3: found {row_count} rows in {len(source_files)} file(s)")
+    for source_file in source_files:
+        print(f"  {source_file}")
     if row_count == 0:
+        print("Files are empty. Nothing written.")
         return 0
+
+    print(f"Step 3/3: appending to {catalog}.bronze.mandi_raw")
     df.write.mode("append").saveAsTable(f"{catalog}.bronze.mandi_raw")
+    print(f"Wrote {row_count} rows")
     return row_count
 
 # COMMAND ----------
@@ -223,11 +242,14 @@ def load__bronze__mandi_raw__with_file(catalog: str, run_id: str | None) -> int:
 
 # COMMAND ----------
 
+print(f"Starting bronze.mandi_raw load, mode={mode}")
 if mode == "api":
+    print(f"Reading API key from secret scope '{SECRET_SCOPE}' (value not printed)")
     api_key = dbutils.secrets.get(SECRET_SCOPE, SECRET_KEY)
     row_count = load__bronze__mandi_raw__with_api(catalog, arrival_date, api_key, run_id)
 else:
     row_count = load__bronze__mandi_raw__with_file(catalog, run_id)
 print(f"Rows loaded into {catalog}.bronze.mandi_raw (mode={mode}, arrival_date={arrival_date}): {row_count}")
+print("Load finished")
 
 dbutils.notebook.exit(str(row_count))

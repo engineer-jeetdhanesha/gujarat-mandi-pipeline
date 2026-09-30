@@ -24,6 +24,8 @@ catalog = dbutils.widgets.get("catalog")
 # Max seconds each child notebook may run before it is failed.
 NOTEBOOK_TIMEOUT_SECONDS = 600
 
+print(f"Setup started: catalog={catalog}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -31,4 +33,6 @@ NOTEBOOK_TIMEOUT_SECONDS = 600
 
 # COMMAND ----------
 
+print("Running setup_bronze ...")
 dbutils.notebook.run("./setup_bronze", NOTEBOOK_TIMEOUT_SECONDS, {"catalog": catalog})
+print("setup_bronze finished")

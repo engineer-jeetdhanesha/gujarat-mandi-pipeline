@@ -29,6 +29,8 @@ mode = dbutils.widgets.get("mode")
 # Max seconds each child notebook may run before it is failed.
 NOTEBOOK_TIMEOUT_SECONDS = 1800
 
+print(f"Bronze build started: catalog={catalog}, mode={mode}, arrival_date={arrival_date or '-'}, run_id={run_id or '-'}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -36,8 +38,10 @@ NOTEBOOK_TIMEOUT_SECONDS = 1800
 
 # COMMAND ----------
 
-dbutils.notebook.run(
+print(f"Running load_bronze_data (mode={mode}) ...")
+rows_loaded = dbutils.notebook.run(
     "./load_bronze_data",
     NOTEBOOK_TIMEOUT_SECONDS,
     {"catalog": catalog, "arrival_date": arrival_date, "run_id": run_id, "mode": mode},
 )
+print(f"load_bronze_data finished: {rows_loaded} rows loaded")
