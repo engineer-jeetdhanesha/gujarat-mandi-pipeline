@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Setup: bronze layer
 # MAGIC
-# MAGIC Creates the `bronze` schema and the `bronze.mandi_raw` table in the given catalog.
+# MAGIC Creates the `bronze` schema, the `bronze.mandi_raw` table and the
+# MAGIC `bronze.raw_files` volume (source CSV files for file loads) in the given catalog.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
 # MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
@@ -17,6 +18,8 @@
 dbutils.widgets.text("catalog", "gujarat_mandi_pipeline_dev_ws", "Unity Catalog name")
 catalog = dbutils.widgets.get("catalog")
 
+print(f"Setting up bronze layer in catalog: {catalog}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -30,6 +33,7 @@ def create__schema__bronze(catalog: str) -> None:
     Args:
         catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
     """
+    print(f"Creating schema {catalog}.bronze (if not exists) ...")
     spark.sql(f"""
         CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
         COMMENT 'Raw data stored exactly as received'
@@ -51,6 +55,7 @@ def create__table__mandi_raw(catalog: str) -> None:
     Args:
         catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
     """
+    print(f"Creating table {catalog}.bronze.mandi_raw (if not exists) ...")
     spark.sql(f"""
         CREATE TABLE IF NOT EXISTS {catalog}.bronze.mandi_raw (
             State           STRING    COMMENT 'State name',
@@ -76,6 +81,28 @@ def create__table__mandi_raw(catalog: str) -> None:
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Volume: bronze.raw_files
+
+# COMMAND ----------
+
+def create__volume__raw_files(catalog: str) -> None:
+    """Create the bronze.raw_files volume if it does not exist.
+
+    Holds the source CSV files read by the file mode of load_bronze_data
+    (mandi_*.csv). Managed volume.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "gujarat_mandi_pipeline_dev_ws".
+    """
+    print(f"Creating volume {catalog}.bronze.raw_files (if not exists) ...")
+    spark.sql(f"""
+        CREATE VOLUME IF NOT EXISTS {catalog}.bronze.raw_files
+        COMMENT 'Source CSV files for file-mode bronze loads'
+    """)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
@@ -85,3 +112,8 @@ print(f"Schema ready: {catalog}.bronze")
 
 create__table__mandi_raw(catalog)
 print(f"Table ready: {catalog}.bronze.mandi_raw")
+
+create__volume__raw_files(catalog)
+print(f"Volume ready: {catalog}.bronze.raw_files")
+
+print("Bronze setup complete")

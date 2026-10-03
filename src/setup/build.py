@@ -7,7 +7,7 @@
 # MAGIC
 # MAGIC | Step | Notebook | Creates |
 # MAGIC |------|----------|---------|
-# MAGIC | 1 | `setup_bronze` | `bronze` schema, `bronze.mandi_raw` |
+# MAGIC | 1 | `setup_bronze` | `bronze` schema, `bronze.mandi_raw`, `bronze.raw_files` volume |
 # MAGIC
 # MAGIC Safe to re-run: every child notebook uses `IF NOT EXISTS`.
 
@@ -24,6 +24,8 @@ catalog = dbutils.widgets.get("catalog")
 # Max seconds each child notebook may run before it is failed.
 NOTEBOOK_TIMEOUT_SECONDS = 600
 
+print(f"Setup started: catalog={catalog}")
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -31,4 +33,6 @@ NOTEBOOK_TIMEOUT_SECONDS = 600
 
 # COMMAND ----------
 
+print("Running setup_bronze ...")
 dbutils.notebook.run("./setup_bronze", NOTEBOOK_TIMEOUT_SECONDS, {"catalog": catalog})
+print("setup_bronze finished")
