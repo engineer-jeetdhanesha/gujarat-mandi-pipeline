@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Setup: bronze layer
 # MAGIC
-# MAGIC Creates the catalog, the `bronze` schema and the `bronze.raw_mandi_transactions` table.
+# MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table in the workspace's default catalog
+# MAGIC (`SELECT current_catalog()`), which must already exist.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
 # MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
@@ -10,40 +11,18 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Parameters
+# MAGIC ## Functions
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "mandi_dev", "Unity Catalog name")
-catalog = dbutils.widgets.get("catalog")
+def get__default_catalog() -> str:
+    """Return the name of the workspace's current (default) catalog.
 
-print(f"Setting up bronze layer in catalog: {catalog}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Catalog
-
-# COMMAND ----------
-
-def create__catalog(catalog: str) -> None:
-    """Create the catalog if it does not exist.
-
-    Args:
-        catalog: Unity Catalog name, e.g. "mandi_dev".
+    Returns:
+        Catalog name, e.g. "mandi_dev".
     """
-    print(f"Creating catalog {catalog} (if not exists) ...")
-    spark.sql(f"""
-        CREATE CATALOG IF NOT EXISTS {catalog}
-        COMMENT 'Gujarat mandi price pipeline'
-    """)
+    return spark.sql("SELECT current_catalog()").first()[0]
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Schema: bronze
-
-# COMMAND ----------
 
 def create__schema__bronze(catalog: str) -> None:
     """Create the bronze schema if it does not exist.
@@ -57,12 +36,6 @@ def create__schema__bronze(catalog: str) -> None:
         COMMENT 'Raw data stored exactly as received'
     """)
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Table: bronze.raw_mandi_transactions
-
-# COMMAND ----------
 
 def create__table__raw_mandi_transactions(catalog: str) -> None:
     """Create the bronze.raw_mandi_transactions Delta table if it does not exist.
@@ -104,8 +77,8 @@ def create__table__raw_mandi_transactions(catalog: str) -> None:
 
 # COMMAND ----------
 
-create__catalog(catalog)
-print(f"Catalog ready: {catalog}")
+catalog = get__default_catalog()
+print(f"Setting up bronze layer in catalog: {catalog}")
 
 create__schema__bronze(catalog)
 print(f"Schema ready: {catalog}.bronze")
