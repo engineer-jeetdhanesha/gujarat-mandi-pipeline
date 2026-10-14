@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: setup
 # MAGIC
-# MAGIC Runs `src/setup` (as a child notebook, expecting `SUCCESS`), then checks the default catalog, the `bronze` schema and the
+# MAGIC Runs `src/setup`, then checks the default catalog, the `bronze` schema and the
 # MAGIC `bronze.raw_mandi_transactions` table match `docs/table-structure.md`.
 # MAGIC
 # MAGIC Tests are plain pytest functions run inside this notebook with `ipytest`.
@@ -64,13 +64,7 @@ table_existed = spark.catalog.tableExists(TABLE_NAME)
 
 # COMMAND ----------
 
-# MAGIC %run ../src/utility
-
-# COMMAND ----------
-
-# setup ends with dbutils.notebook.exit, so run it as a child notebook and check its result.
-setup_result = dbutils.notebook.run("../src/setup", 600)
-assert setup_result == "SUCCESS", setup_result
+# MAGIC %run ../src/setup
 
 # COMMAND ----------
 

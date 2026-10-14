@@ -13,7 +13,7 @@
 # MAGIC - `file_path`: path of the CSV file to load.
 # MAGIC - `run_id`: id of the run loading the file.
 # MAGIC
-# MAGIC Exits with `SUCCESS` or `FAILURE: <message>`.
+# MAGIC Raises an error if the load fails, so the run shows as failed.
 
 # COMMAND ----------
 
@@ -97,8 +97,8 @@ def load__table__raw_mandi_transactions(file_path: str, run_id: str) -> bool:
             .withColumn("_row_no", F.row_number().over(row_window).cast("bigint"))
         )
 
-        # Cache so the count below and the write see the same rows and timestamp.
-        df = df.cache()
+        # No cache(): PERSIST is not supported on serverless compute. The file is read twice
+        # (count, then write); _ingested_at is set per query, so the write has one value for all rows.
         row_count = df.count()
         if row_count == 0:
             print(f"WARNING: no data rows in {file_path}; nothing loaded")
@@ -123,9 +123,9 @@ file_path = dbutils.widgets.get("file_path").strip()
 run_id = dbutils.widgets.get("run_id").strip()
 
 if not file_path or not run_id:
-    dbutils.notebook.exit(get__exit_message(False, "widgets 'file_path' and 'run_id' are required"))
+    raise ValueError("Widgets 'file_path' and 'run_id' are required")
 
-loaded = load__table__raw_mandi_transactions(file_path, run_id)
-if loaded:
-    print("Bronze load complete")
-dbutils.notebook.exit(get__exit_message(loaded, f"bronze load failed for {file_path}"))
+if not load__table__raw_mandi_transactions(file_path, run_id):
+    raise RuntimeError(f"Bronze load failed for {file_path} (see the error printed above)")
+
+print("Bronze load complete")

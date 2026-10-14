@@ -8,7 +8,7 @@
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
 # MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
 # MAGIC
-# MAGIC Exits with `SUCCESS` or `FAILURE: <message>`.
+# MAGIC Raises an error if any step fails, so the run shows as failed.
 
 # COMMAND ----------
 
@@ -97,15 +97,14 @@ catalog = get__default_catalog()
 print(f"Setting up bronze layer in catalog: {catalog}")
 
 if not catalog:
-    dbutils.notebook.exit(get__exit_message(False, "could not read the default catalog"))
+    raise RuntimeError("Could not read the default catalog (see the error printed above)")
 
 if not create__schema__bronze(catalog):
-    dbutils.notebook.exit(get__exit_message(False, f"could not create schema {catalog}.bronze"))
+    raise RuntimeError(f"Could not create schema {catalog}.bronze (see the error printed above)")
 print(f"Schema ready: {catalog}.bronze")
 
 if not create__table__raw_mandi_transactions(catalog):
-    dbutils.notebook.exit(get__exit_message(False, f"could not create table {catalog}.bronze.raw_mandi_transactions"))
+    raise RuntimeError(f"Could not create table {catalog}.bronze.raw_mandi_transactions (see the error printed above)")
 print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
 
 print("Bronze setup complete")
-dbutils.notebook.exit(get__exit_message(True))

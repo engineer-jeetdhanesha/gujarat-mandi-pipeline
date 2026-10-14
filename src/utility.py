@@ -18,17 +18,3 @@ def get__default_catalog() -> str:
     except Exception as e:
         print(f"ERROR: could not read the default catalog: {e}")
         return ""
-
-# COMMAND ----------
-
-def get__exit_message(success: bool, message: str = "") -> str:
-    """Build the string a notebook passes to dbutils.notebook.exit.
-
-    Args:
-        success: True if the notebook succeeded.
-        message: Failure detail, used only when success is False.
-
-    Returns:
-        "SUCCESS", or "FAILURE: <message>".
-    """
-    return "SUCCESS" if success else f"FAILURE: {message}"
