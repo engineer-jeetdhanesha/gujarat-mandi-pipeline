@@ -10,10 +10,16 @@ def get__default_catalog() -> str:
     """Return the name of the workspace's current (default) catalog.
 
     Returns:
-        Catalog name, e.g. "mandi_dev".
+        Catalog name, e.g. "mandi_dev"; empty string if it could not be read
+        (the reason is printed).
     """
-    return spark.sql("SELECT current_catalog()").first()[0]
+    try:
+        return spark.sql("SELECT current_catalog()").first()[0]
+    except Exception as e:
+        print(f"ERROR: could not read the default catalog: {e}")
+        return ""
 
+# COMMAND ----------
 
 def get__exit_message(success: bool, message: str = "") -> str:
     """Build the string a notebook passes to dbutils.notebook.exit.

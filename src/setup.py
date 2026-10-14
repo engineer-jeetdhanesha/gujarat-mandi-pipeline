@@ -21,20 +21,30 @@
 
 # COMMAND ----------
 
-def create__schema__bronze(catalog: str) -> None:
+def create__schema__bronze(catalog: str) -> bool:
     """Create the bronze schema if it does not exist.
 
     Args:
         catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the schema exists afterwards; False if creating it failed
+        (the reason is printed).
     """
-    print(f"Creating schema {catalog}.bronze (if not exists) ...")
-    spark.sql(f"""
-        CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
-        COMMENT 'Raw data stored exactly as received'
-    """)
+    try:
+        print(f"Creating schema {catalog}.bronze (if not exists) ...")
+        spark.sql(f"""
+            CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
+            COMMENT 'Raw data stored exactly as received'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create schema {catalog}.bronze: {e}")
+        return False
 
+# COMMAND ----------
 
-def create__table__raw_mandi_transactions(catalog: str) -> None:
+def create__table__raw_mandi_transactions(catalog: str) -> bool:
     """Create the bronze.raw_mandi_transactions Delta table if it does not exist.
 
     All source columns are STRING; typing happens in silver.
@@ -42,30 +52,39 @@ def create__table__raw_mandi_transactions(catalog: str) -> None:
 
     Args:
         catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
     """
-    print(f"Creating table {catalog}.bronze.raw_mandi_transactions (if not exists) ...")
-    spark.sql(f"""
-        CREATE TABLE IF NOT EXISTS {catalog}.bronze.raw_mandi_transactions (
-            state           STRING    COMMENT 'As received (always Gujarat)',
-            district        STRING    COMMENT 'Raw district spelling (e.g. Banaskanth)',
-            market          STRING    COMMENT 'APMC yard name, raw',
-            commodity       STRING    COMMENT 'Commodity name, raw',
-            commodity_code  STRING    COMMENT 'Agmarknet commodity code',
-            variety         STRING    COMMENT 'Variety, raw ("Other" is common)',
-            grade           STRING    COMMENT 'Grade, raw (FAQ, Local, Medium...)',
-            arrival_date    STRING    COMMENT 'dd/MM/yyyy as received',
-            min_price       STRING    COMMENT 'Rs/quintal, raw (may be decimal)',
-            max_price       STRING    COMMENT 'Rs/quintal, raw',
-            modal_price     STRING    COMMENT 'Rs/quintal, raw',
-            _ingested_at    TIMESTAMP COMMENT 'Load time',
-            _source_mode    STRING    COMMENT 'API / FILE / BACKFILL',
-            _file_name      STRING    COMMENT 'Source file (NULL for API)',
-            _run_id         STRING    COMMENT 'Run that loaded the row (joins audit)',
-            _row_no         BIGINT    COMMENT 'Row number within the file/API page'
-        )
-        USING DELTA
-        COMMENT 'Raw, append-only mandi prices stored exactly as received'
-    """)
+    try:
+        print(f"Creating table {catalog}.bronze.raw_mandi_transactions (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.bronze.raw_mandi_transactions (
+                state           STRING    COMMENT 'As received (always Gujarat)',
+                district        STRING    COMMENT 'Raw district spelling (e.g. Banaskanth)',
+                market          STRING    COMMENT 'APMC yard name, raw',
+                commodity       STRING    COMMENT 'Commodity name, raw',
+                commodity_code  STRING    COMMENT 'Agmarknet commodity code',
+                variety         STRING    COMMENT 'Variety, raw ("Other" is common)',
+                grade           STRING    COMMENT 'Grade, raw (FAQ, Local, Medium...)',
+                arrival_date    STRING    COMMENT 'dd/MM/yyyy as received',
+                min_price       STRING    COMMENT 'Rs/quintal, raw (may be decimal)',
+                max_price       STRING    COMMENT 'Rs/quintal, raw',
+                modal_price     STRING    COMMENT 'Rs/quintal, raw',
+                _ingested_at    TIMESTAMP COMMENT 'Load time',
+                _source_mode    STRING    COMMENT 'API / FILE / BACKFILL',
+                _file_name      STRING    COMMENT 'Source file (NULL for API)',
+                _run_id         STRING    COMMENT 'Run that loaded the row (joins audit)',
+                _row_no         BIGINT    COMMENT 'Row number within the file/API page'
+            )
+            USING DELTA
+            COMMENT 'Raw, append-only mandi prices stored exactly as received'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.bronze.raw_mandi_transactions: {e}")
+        return False
 
 # COMMAND ----------
 
@@ -74,19 +93,19 @@ def create__table__raw_mandi_transactions(catalog: str) -> None:
 
 # COMMAND ----------
 
-try:
-    catalog = get__default_catalog()
-    print(f"Setting up bronze layer in catalog: {catalog}")
+catalog = get__default_catalog()
+print(f"Setting up bronze layer in catalog: {catalog}")
 
-    create__schema__bronze(catalog)
-    print(f"Schema ready: {catalog}.bronze")
+if not catalog:
+    dbutils.notebook.exit(get__exit_message(False, "could not read the default catalog"))
 
-    create__table__raw_mandi_transactions(catalog)
-    print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
+if not create__schema__bronze(catalog):
+    dbutils.notebook.exit(get__exit_message(False, f"could not create schema {catalog}.bronze"))
+print(f"Schema ready: {catalog}.bronze")
 
-    print("Bronze setup complete")
-except Exception as e:
-    print(f"ERROR: bronze setup failed: {e}")
-    dbutils.notebook.exit(get__exit_message(False, str(e)))
+if not create__table__raw_mandi_transactions(catalog):
+    dbutils.notebook.exit(get__exit_message(False, f"could not create table {catalog}.bronze.raw_mandi_transactions"))
+print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
 
+print("Bronze setup complete")
 dbutils.notebook.exit(get__exit_message(True))

@@ -17,6 +17,11 @@
 
 # COMMAND ----------
 
+dbutils.widgets.text("file_path", "", "File path")
+dbutils.widgets.text("run_id", "", "Run id")
+
+# COMMAND ----------
+
 # MAGIC %run ./utility
 
 # COMMAND ----------
@@ -25,13 +30,6 @@
 # MAGIC ## Functions
 
 # COMMAND ----------
-
-import os
-
-from pyspark.sql import Window
-from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructField, StructType
-
 
 def load__table__raw_mandi_transactions(file_path: str, run_id: str) -> bool:
     """Append the rows of one CSV file to bronze.raw_mandi_transactions.
@@ -49,6 +47,12 @@ def load__table__raw_mandi_transactions(file_path: str, run_id: str) -> bool:
         True if rows were loaded; False if the file is empty or the load failed
         (the reason is printed).
     """
+    import os
+
+    from pyspark.sql import Window
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import StringType, StructField, StructType
+
     source_mode = "FILE"
     source_columns = [
         "state",
@@ -66,7 +70,10 @@ def load__table__raw_mandi_transactions(file_path: str, run_id: str) -> bool:
     schema = StructType([StructField(c, StringType(), True) for c in source_columns])
 
     try:
-        table_name = f"{get__default_catalog()}.bronze.raw_mandi_transactions"
+        catalog = get__default_catalog()
+        if not catalog:
+            return False
+        table_name = f"{catalog}.bronze.raw_mandi_transactions"
 
         print(f"Reading {file_path} ...")
         df = (
@@ -111,9 +118,6 @@ def load__table__raw_mandi_transactions(file_path: str, run_id: str) -> bool:
 # MAGIC ## Run
 
 # COMMAND ----------
-
-dbutils.widgets.text("file_path", "", "File path")
-dbutils.widgets.text("run_id", "", "Run id")
 
 file_path = dbutils.widgets.get("file_path").strip()
 run_id = dbutils.widgets.get("run_id").strip()
