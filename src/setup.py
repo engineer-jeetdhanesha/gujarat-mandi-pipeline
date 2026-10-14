@@ -7,6 +7,12 @@
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
 # MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
+# MAGIC
+# MAGIC Exits with `SUCCESS` or `FAILURE: <message>`.
+
+# COMMAND ----------
+
+# MAGIC %run ./utility
 
 # COMMAND ----------
 
@@ -14,15 +20,6 @@
 # MAGIC ## Functions
 
 # COMMAND ----------
-
-def get__default_catalog() -> str:
-    """Return the name of the workspace's current (default) catalog.
-
-    Returns:
-        Catalog name, e.g. "mandi_dev".
-    """
-    return spark.sql("SELECT current_catalog()").first()[0]
-
 
 def create__schema__bronze(catalog: str) -> None:
     """Create the bronze schema if it does not exist.
@@ -77,13 +74,19 @@ def create__table__raw_mandi_transactions(catalog: str) -> None:
 
 # COMMAND ----------
 
-catalog = get__default_catalog()
-print(f"Setting up bronze layer in catalog: {catalog}")
+try:
+    catalog = get__default_catalog()
+    print(f"Setting up bronze layer in catalog: {catalog}")
 
-create__schema__bronze(catalog)
-print(f"Schema ready: {catalog}.bronze")
+    create__schema__bronze(catalog)
+    print(f"Schema ready: {catalog}.bronze")
 
-create__table__raw_mandi_transactions(catalog)
-print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
+    create__table__raw_mandi_transactions(catalog)
+    print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
 
-print("Bronze setup complete")
+    print("Bronze setup complete")
+except Exception as e:
+    print(f"ERROR: bronze setup failed: {e}")
+    dbutils.notebook.exit(get__exit_message(False, str(e)))
+
+dbutils.notebook.exit(get__exit_message(True))
