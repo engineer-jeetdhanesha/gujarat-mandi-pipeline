@@ -1,0 +1,110 @@
+# Databricks notebook source
+# MAGIC %md
+# MAGIC # Setup: bronze layer
+# MAGIC
+# MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table in the workspace's default catalog
+# MAGIC (`SELECT current_catalog()`), which must already exist.
+# MAGIC
+# MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
+# MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
+# MAGIC
+# MAGIC Raises an error if any step fails, so the run shows as failed.
+
+# COMMAND ----------
+
+# MAGIC %run ./utility
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Functions
+
+# COMMAND ----------
+
+def create__schema__bronze(catalog: str) -> bool:
+    """Create the bronze schema if it does not exist.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the schema exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating schema {catalog}.bronze (if not exists) ...")
+        spark.sql(f"""
+            CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
+            COMMENT 'Raw data stored exactly as received'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create schema {catalog}.bronze: {e}")
+        return False
+
+# COMMAND ----------
+
+def create__table__raw_mandi_transactions(catalog: str) -> bool:
+    """Create the bronze.raw_mandi_transactions Delta table if it does not exist.
+
+    All source columns are STRING; typing happens in silver.
+    Append only; duplicates are removed in silver. No partitioning.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.bronze.raw_mandi_transactions (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.bronze.raw_mandi_transactions (
+                state           STRING    COMMENT 'As received (always Gujarat)',
+                district        STRING    COMMENT 'Raw district spelling (e.g. Banaskanth)',
+                market          STRING    COMMENT 'APMC yard name, raw',
+                commodity       STRING    COMMENT 'Commodity name, raw',
+                commodity_code  STRING    COMMENT 'Agmarknet commodity code',
+                variety         STRING    COMMENT 'Variety, raw ("Other" is common)',
+                grade           STRING    COMMENT 'Grade, raw (FAQ, Local, Medium...)',
+                arrival_date    STRING    COMMENT 'dd/MM/yyyy as received',
+                min_price       STRING    COMMENT 'Rs/quintal, raw (may be decimal)',
+                max_price       STRING    COMMENT 'Rs/quintal, raw',
+                modal_price     STRING    COMMENT 'Rs/quintal, raw',
+                _ingested_at    TIMESTAMP COMMENT 'Load time',
+                _source_mode    STRING    COMMENT 'API / FILE / BACKFILL',
+                _file_name      STRING    COMMENT 'Source file (NULL for API)',
+                _run_id         STRING    COMMENT 'Run that loaded the row (joins audit)',
+                _row_no         BIGINT    COMMENT 'Row number within the file/API page'
+            )
+            USING DELTA
+            COMMENT 'Raw, append-only mandi prices stored exactly as received'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.bronze.raw_mandi_transactions: {e}")
+        return False
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Run
+
+# COMMAND ----------
+
+catalog = get__default_catalog()
+print(f"Setting up bronze layer in catalog: {catalog}")
+
+if not catalog:
+    raise RuntimeError("Could not read the default catalog (see the error printed above)")
+
+if not create__schema__bronze(catalog):
+    raise RuntimeError(f"Could not create schema {catalog}.bronze (see the error printed above)")
+print(f"Schema ready: {catalog}.bronze")
+
+if not create__table__raw_mandi_transactions(catalog):
+    raise RuntimeError(f"Could not create table {catalog}.bronze.raw_mandi_transactions (see the error printed above)")
+print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
+
+print("Bronze setup complete")
