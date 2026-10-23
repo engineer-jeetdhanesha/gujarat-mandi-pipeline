@@ -40,14 +40,15 @@ flowchart LR
       direction TB
       CLEAN[("mandi_prices_clean")]
       REJ[("mandi_prices_rejected")]
-      DL2["<i class='lg delta'></i>"]
-    end
-    subgraph GOLD["Gold"]
-      direction TB
       DC[("dim_commodity")]
       DM[("dim_market")]
       DD[("dim_date")]
       FACT[("fact_mandi_prices")]
+      DL2["<i class='lg delta'></i>"]
+    end
+    subgraph GOLD["Gold"]
+      direction TB
+      MARTS[("data marts")]
       DL3["<i class='lg delta'></i>"]
     end
     DASH["Dashboard"]
@@ -58,11 +59,14 @@ flowchart LR
   RAW --> CLEAN
   RAW --> REJ
   REJ -. "error mode<br/>(skips Bronze)" .-> CLEAN
-  CLEAN --> DC
-  CLEAN --> DM
-  CLEAN --> DD
+  DC -. "validates" .-> CLEAN
+  DM -. "validates" .-> CLEAN
   CLEAN --> FACT
-  FACT --> DASH
+  DC --> FACT
+  DM --> FACT
+  DD --> FACT
+  FACT --> MARTS
+  MARTS --> DASH
 
   classDef src fill:#1b2a4a,stroke:#6d9bff,color:#e6ebf2
   classDef bronze fill:#3a2616,stroke:#e0955a,color:#e6ebf2
@@ -72,8 +76,8 @@ flowchart LR
   classDef logo fill:none,stroke:none,color:#e6ebf2
   class FILE,API src
   class RAW,AUD bronze
-  class CLEAN,REJ silver
-  class DC,DM,DD,FACT gold
+  class CLEAN,REJ,DC,DM,DD,FACT silver
+  class MARTS gold
   class DASH dash
   class DL1,DL2,DL3 logo
 </pre></div>
