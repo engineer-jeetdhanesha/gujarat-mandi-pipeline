@@ -136,7 +136,10 @@ Rows are rejected (not dropped) when any of these rules fail, so nothing is sile
 - Modal price is outside the min–max range.
 - Market or commodity code is missing.
 - Market is not in `dim_market`, or commodity code is not in `dim_commodity`.
-- Arrival date is in the future.
+- Arrival date is in the future, or is not in `dim_date`.
+- Another row of the same run has the same natural key (a duplicate). The latest row is kept; the others are rejected with status `REJECTED`, since there is nothing to fix.
+
+Every failing rule is recorded, as comma separated ids in `reject_rule`.
 
 Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a `status`:
 

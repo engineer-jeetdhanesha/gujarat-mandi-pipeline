@@ -68,8 +68,9 @@ Natural key: `market + commodity_code + variety + grade + arrival_date`
 |---|---|---|
 | state … modal_price | STRING | Same 11 raw columns as bronze (STRING so bad dates/prices still fit) |
 | source_mode, file_name, run_id, ingested_at | as bronze | Lineage back to bronze |
-| reject_reason | STRING | Human-readable reason |
-| reject_rule | STRING | Rule id (null/unparseable date or price, price ≤ 0, min>max, modal outside min–max, missing market/code, unknown market, unknown commodity code, future arrival date) |
+| row_no | BIGINT | Row number within the file/API page (with run_id and file_name identifies the bronze row) |
+| reject_reason | STRING | Human-readable reasons, separated by `;` |
+| reject_rule | STRING | Every failing rule id, separated by commas: `missing_market`, `missing_commodity_code`, `invalid_date`, `invalid_price`, `price_le_zero`, `min_gt_max`, `modal_out_of_range`, `unknown_market`, `unknown_commodity`, `future_date`, `unknown_date`, `duplicate` |
 | rejected_at | TIMESTAMP | When rejected |
 | status | STRING | ERROR (pending decision) / RESOLVED (fixed, ready to reload) / REJECTED (stays out) / LOADED (repaired and merged into clean) |
 | updated_at | TIMESTAMP | Last status change |
