@@ -1,9 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Setup: bronze and silver dimensions
+# MAGIC # Setup: bronze and silver
 # MAGIC
 # MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table, then the `silver` schema and the
-# MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`),
+# MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`) and the
+# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`),
 # MAGIC in the workspace's default catalog (`SELECT current_catalog()`), which must already exist.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
@@ -216,13 +217,105 @@ def create__table__dim_date(catalog: str) -> bool:
 
 # COMMAND ----------
 
+def create__table__mandi_prices_clean(catalog: str) -> bool:
+    """Create the silver.mandi_prices_clean Delta table if it does not exist.
+
+    Typed and standardised rows that passed the quality rules; MERGE target of src/silver.
+    Natural key: market + commodity_code + variety + grade + arrival_date.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.silver.mandi_prices_clean (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.silver.mandi_prices_clean (
+                state           STRING        COMMENT 'Trimmed',
+                district        STRING        COMMENT 'Raw district (trimmed)',
+                district_std    STRING        COMMENT 'Standard district name from silver.dim_market',
+                market          STRING        COMMENT 'Trimmed market name',
+                commodity_code  INT           COMMENT 'Commodity code (natural key of silver.dim_commodity)',
+                commodity       STRING        COMMENT 'Standard name from silver.dim_commodity',
+                variety         STRING        COMMENT 'Trimmed variety',
+                grade           STRING        COMMENT 'Trimmed grade',
+                arrival_date    DATE          COMMENT 'Parsed from dd/MM/yyyy',
+                min_price       DECIMAL(10,2) COMMENT 'Rs/quintal',
+                max_price       DECIMAL(10,2) COMMENT 'Rs/quintal',
+                modal_price     DECIMAL(10,2) COMMENT 'Rs/quintal',
+                run_id          STRING        COMMENT 'Run that last wrote the row',
+                ingested_at     TIMESTAMP     COMMENT 'Bronze ingest time of the row',
+                updated_at      TIMESTAMP     COMMENT 'Last MERGE time'
+            )
+            USING DELTA
+            COMMENT 'Typed, standardised, de-duplicated mandi prices that passed the quality rules'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.silver.mandi_prices_clean: {e}")
+        return False
+
+# COMMAND ----------
+
+def create__table__mandi_prices_rejected(catalog: str) -> bool:
+    """Create the silver.mandi_prices_rejected Delta table if it does not exist.
+
+    Rows that failed a quality rule, with the raw values kept. run_id, file_name and row_no
+    identify the bronze row.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.silver.mandi_prices_rejected (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.silver.mandi_prices_rejected (
+                state           STRING    COMMENT 'As received',
+                district        STRING    COMMENT 'As received',
+                market          STRING    COMMENT 'As received',
+                commodity       STRING    COMMENT 'As received',
+                commodity_code  STRING    COMMENT 'As received',
+                variety         STRING    COMMENT 'As received',
+                grade           STRING    COMMENT 'As received',
+                arrival_date    STRING    COMMENT 'As received',
+                min_price       STRING    COMMENT 'As received',
+                max_price       STRING    COMMENT 'As received',
+                modal_price     STRING    COMMENT 'As received',
+                source_mode     STRING    COMMENT 'API / FILE / BACKFILL',
+                file_name       STRING    COMMENT 'Source file (NULL for API)',
+                run_id          STRING    COMMENT 'Run that loaded the row into bronze',
+                ingested_at     TIMESTAMP COMMENT 'Bronze ingest time',
+                row_no          BIGINT    COMMENT 'Row number within the file/API page',
+                reject_reason   STRING    COMMENT 'Readable reasons, separated by semicolons',
+                reject_rule     STRING    COMMENT 'Rule ids, separated by commas',
+                rejected_at     TIMESTAMP COMMENT 'When rejected',
+                status          STRING    COMMENT 'ERROR / RESOLVED / REJECTED / LOADED',
+                updated_at      TIMESTAMP COMMENT 'Last status change'
+            )
+            USING DELTA
+            COMMENT 'Rows that failed a quality rule, raw values kept, for review'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.silver.mandi_prices_rejected: {e}")
+        return False
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
 
 catalog = get__default_catalog()
-print(f"Setting up bronze and silver dimensions in catalog: {catalog}")
+print(f"Setting up bronze and silver in catalog: {catalog}")
 
 if not catalog:
     raise RuntimeError("Could not read the default catalog (see the error printed above)")
@@ -239,7 +332,14 @@ if not create__schema__silver(catalog):
     raise RuntimeError(f"Could not create schema {catalog}.silver (see the error printed above)")
 print(f"Schema ready: {catalog}.silver")
 
-for create__table in (create__table__dim_market, create__table__dim_commodity, create__table__dim_date):
+silver_tables = (
+    create__table__dim_market,
+    create__table__dim_commodity,
+    create__table__dim_date,
+    create__table__mandi_prices_clean,
+    create__table__mandi_prices_rejected,
+)
+for create__table in silver_tables:
     table = create__table.__name__.replace("create__table__", "")
     if not create__table(catalog):
         raise RuntimeError(f"Could not create table {catalog}.silver.{table} (see the error printed above)")
