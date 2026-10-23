@@ -94,26 +94,30 @@ def drop_created_objects():
 # MAGIC %md
 # MAGIC ## Test: table matches file
 # MAGIC
-# MAGIC `seeds` and `seed_dir` come from `src/seed_dims`. Both sides are compared as strings:
+# MAGIC `seeds` and `seed_dir` come from `src/seed_dims`; each test gets the full file path and the table name. Both sides are compared as strings:
 # MAGIC the CSV as read, the table with its columns cast to STRING (this also checks the casts).
 
 # COMMAND ----------
 
-def read__seed_file(file_name: str):
+# (file path, table name) for each seed.
+SEED_FILES = [(f"{seed_dir}/{file_name}", table_name) for file_name, table_name in seeds]
+
+
+def read__seed_file(file_path: str):
     """Read a seed CSV with all columns as STRING."""
     return (
         spark.read
         .option("header", True)
         .option("quote", '"')
         .option("escape", '"')
-        .csv(f"file:{seed_dir}/{file_name}" if seed_dir.startswith("/Workspace") else f"{seed_dir}/{file_name}")
+        .csv(f"file:{file_path}" if file_path.startswith("/Workspace") else file_path)
     )
 
 
-@pytest.mark.parametrize("file_name, table_name", seeds)
-def test__table_matches_seed_file(file_name, table_name):
+@pytest.mark.parametrize("file_path, table_name", SEED_FILES)
+def test__table_matches_seed_file(file_path, table_name):
     """The table has exactly the rows of the seed file (EXCEPT ALL, both ways)."""
-    file_df = read__seed_file(file_name)
+    file_df = read__seed_file(file_path)
     table_df = spark.table(table_name).drop("updated_at")
     table_df = table_df.select(*[table_df[c].cast("string").alias(c) for c in table_df.columns])
 
