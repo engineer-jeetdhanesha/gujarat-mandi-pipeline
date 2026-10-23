@@ -2,7 +2,7 @@
 
 A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandis (agricultural markets). Prices are ingested from the Government of India open data platform, cleaned through a Bronze → Silver → Gold medallion architecture on Azure Databricks, and served in a dashboard.
 
-> **Status:** planning. The table design and high-level design are done (`docs/`). Pipeline code, CI/CD and the dashboard are planned (see [Roadmap](#roadmap)).
+> **Status:** in progress. The table design and high-level design are done (`docs/`), the Bronze file load and the Silver dimension tables are built. The rest of Silver, Gold, CI/CD and the dashboard are planned (see [Roadmap](#roadmap)).
 
 ## Contents
 
@@ -24,8 +24,8 @@ A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandi
 Mandi prices are published daily but are messy: district names are misspelt, commodity names carry stray line breaks, and some rows have impossible prices. This project:
 
 1. Loads the raw data exactly as received (Bronze).
-2. Cleans, standardises and validates it, keeping bad rows aside for review (Silver).
-3. Models it as a star schema for analysis (Gold).
+2. Cleans, standardises and validates it against the market and commodity dimensions, keeping bad rows aside for review, and models it as a star schema (Silver).
+3. Builds data marts for analysis (Gold).
 4. Shows price trends by commodity, market and district in a Databricks dashboard.
 
 Scope is mandi prices only; weather data is out of scope for now.
@@ -45,8 +45,8 @@ Fields as received: `State`, `District`, `Market`, `Commodity`, `Commodity_Code`
 
 Known quirks the pipeline has to handle:
 
-- District spellings vary (for example `Banaskanth`), so they are mapped to a standard name with an alias lookup.
-- Commodity names can contain `\n`, and 6 commodity codes have two spellings; each code gets one canonical name.
+- District spellings vary (for example `Banaskanth`), so each market's standard district name comes from `dim_market`.
+- Commodity names can contain `\n`, and 6 commodity codes have two spellings; each code gets one standard name in `dim_commodity`.
 - `Variety` is often just `Other`.
 - Prices can arrive as decimals, as non-numbers, or in the wrong order (min > max).
 
@@ -66,20 +66,22 @@ flowchart LR
     subgraph Silver
       CLEAN[("mandi_prices_clean")]
       REJ[("mandi_prices_rejected")]
-    end
-    subgraph Gold
       DIMS[("dim_commodity<br/>dim_market<br/>dim_date")]
       FACT[("fact_mandi_prices")]
+    end
+    subgraph Gold
+      MARTS[("data marts")]
     end
     DASH["Dashboard"]
   end
   RAW --> CLEAN
   RAW --> REJ
   REJ -. "error mode (skips Bronze)" .-> CLEAN
-  CLEAN --> DIMS
+  DIMS -. "validates" .-> CLEAN
   CLEAN --> FACT
   DIMS --> FACT
-  FACT --> DASH
+  FACT --> MARTS
+  MARTS --> DASH
 ```
 
 | Concern | Technology |
@@ -99,8 +101,11 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Bronze | `pipeline_audit` | One row per pipeline run: mode, business date range, status, row counts |
 | Silver | `mandi_prices_clean` | Typed, standardised, de-duplicated; `MERGE` target. Natural key: market + commodity code + variety + grade + arrival date |
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
-| Gold | `dim_commodity`, `dim_market`, `dim_date` | Dimensions |
-| Gold | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date. Variety and grade are degenerate dimensions on the fact |
+| Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the CSV files in `seed/` |
+| Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
+| Gold | data marts | Aggregated tables for the dashboard (to be designed) |
+
+The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/seed_dims`), then repair the rejected rows.
 
 ## Pipeline run modes
 
@@ -108,10 +113,10 @@ Every run records its mode in `_source_mode` (`API`, `FILE` or `BACKFILL`) and w
 
 | Mode | Input | Path | When |
 |---|---|---|---|
-| **File** | A file with one day of data | Bronze → Silver → Gold | Daily |
-| **API** | One day of data from the API | Bronze → Silver → Gold | Daily |
-| **Backfill** | A file only; may hold many days | Bronze → Silver → Gold, for every date in the file | On demand, to load history |
-| **Error** | Rows in `silver.mandi_prices_rejected` with status `RESOLVED` | **Skips Bronze.** Reads the resolved rows directly from Silver and loads them into the target (`mandi_prices_clean`, then Gold) | After someone has fixed rejected rows |
+| **File** | A file with one day of data | Bronze → Silver → Gold marts | Daily |
+| **API** | One day of data from the API | Bronze → Silver → Gold marts | Daily |
+| **Backfill** | A file only; may hold many days | Bronze → Silver → Gold marts, for every date in the file | On demand, to load history |
+| **Error** | Rows in `silver.mandi_prices_rejected` with status `RESOLVED` | **Skips Bronze.** Reads the resolved rows directly from Silver and loads them into the target (`mandi_prices_clean`, then the fact table) | After someone has fixed rejected rows |
 
 How the audit row describes each run:
 
@@ -130,7 +135,8 @@ Rows are rejected (not dropped) when any of these rules fail, so nothing is sile
 - Min price is greater than max price.
 - Modal price is outside the min–max range.
 - Market or commodity code is missing.
-- District has no match in the alias lookup.
+- Market is not in `dim_market`, or commodity code is not in `dim_commodity`.
+- Arrival date is in the future.
 
 Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a `status`:
 
@@ -139,7 +145,7 @@ ERROR ──(fixed and marked)──▶ RESOLVED ──(error mode)──▶ man
   └────(not fixable)───────▶ REJECTED
 ```
 
-`ERROR` means pending a decision, `RESOLVED` means fixed and ready to be loaded by error mode, and `REJECTED` means it stays out for good.
+`ERROR` means pending a decision, `RESOLVED` means fixed and ready to be loaded by error mode, `REJECTED` means it stays out for good, and `LOADED` means it was repaired and merged into clean.
 
 ## Sample data
 
@@ -168,7 +174,7 @@ The values below are **illustrative**, shaped like the real data. They are not p
 
 After someone corrects the price and sets `status = RESOLVED`, an error-mode run loads it into `mandi_prices_clean`.
 
-**4. Gold: `fact_mandi_prices`** (keys point to the dimensions)
+**4. Silver: `fact_mandi_prices`** (keys point to the dimensions)
 
 | market_key | commodity_key | date_key | variety | grade | min_price | max_price | modal_price |
 |---|---|---|---|---|---|---|---|
@@ -202,10 +208,13 @@ Planned inputs; names may change when the code is written.
 ```
 .
 ├── README.md
-└── docs/
-    ├── table-structure.md        Table design (source of truth)
-    ├── table-structure.html      Same, rendered for reading
-    └── high-level-design.html    Architecture diagram with tech stack
+├── docs/
+│   ├── table-structure.md        Table design (source of truth)
+│   ├── table-structure.html      Same, rendered for reading
+│   └── high-level-design.html    Architecture diagram with tech stack
+├── seed/                         CSV files for the silver dimensions
+├── src/                          Databricks notebooks: setup, utility, bronze, seed_dims
+└── tests/                        pytest notebooks, one per source notebook
 ```
 
 ## Roadmap
@@ -213,10 +222,15 @@ Planned inputs; names may change when the code is written.
 - [x] Table structure
 - [x] High-level design diagram
 - [x] README
-- [ ] Bronze load (File, API, Backfill)
-- [ ] Silver standardisation and data quality
+- [x] Bronze load, single-day file (#25)
+- [x] Silver dimension tables and seed files (#27)
+- [ ] Bronze load (API, Backfill)
+- [ ] Silver clean and rejected tables (#30)
 - [ ] Error-mode reprocessing
-- [ ] Gold star schema
+- [ ] Silver fact table
+- [ ] Silver post-load checks
+- [ ] Pipeline audit table
+- [ ] Gold data marts
 - [ ] Dashboard
 - [ ] Azure DevOps CI/CD
 
