@@ -14,7 +14,7 @@
 # MAGIC - `invalid_price`: a price is blank or not a number.
 # MAGIC - `price_le_zero`: a price is zero or negative.
 # MAGIC - `min_gt_max`: min price is greater than max price.
-# MAGIC - `modal_out_of_range`: modal price is below min or above max.
+# MAGIC - `modal_out_of_range`: modal price is below min or above max (checked only when min is not above max).
 # MAGIC - `unknown_market`: market is not in `silver.dim_market`.
 # MAGIC - `unknown_commodity`: commodity code is not in `silver.dim_commodity`.
 # MAGIC - `future_date`: arrival date is after today.
@@ -147,7 +147,8 @@ def load__tables__mandi_prices(run_id: str) -> bool:
              prices_ok & (F.least("d_min", "d_max", "d_modal") <= 0)),
             ("min_gt_max", "Min price is greater than max price", prices_ok & (F.col("d_min") > F.col("d_max"))),
             ("modal_out_of_range", "Modal price is outside the min-max range",
-             prices_ok & ((F.col("d_modal") < F.col("d_min")) | (F.col("d_modal") > F.col("d_max")))),
+             prices_ok & (F.col("d_min") <= F.col("d_max"))
+             & ((F.col("d_modal") < F.col("d_min")) | (F.col("d_modal") > F.col("d_max")))),
             ("unknown_market", "Market is not in dim_market",
              ~is_blank("t_market") & F.col("dm_market_key").isNull()),
             ("unknown_commodity", "Commodity code is not in dim_commodity",
