@@ -1,0 +1,198 @@
+market_key,state,district_name,market_name
+1,Gujarat,Ahmedabad,Ahmedabad APMC
+2,Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC
+3,Gujarat,Ahmedabad,Dhandhuka APMC
+4,Gujarat,Ahmedabad,Dholka APMC
+5,Gujarat,Ahmedabad,Mandal APMC
+6,Gujarat,Ahmedabad,Sanad APMC
+7,Gujarat,Ahmedabad,Viramgam APMC
+8,Gujarat,Amreli,APMC Bagasara
+9,Gujarat,Amreli,APMC KHAMBHA
+10,Gujarat,Amreli,Amreli APMC
+11,Gujarat,Amreli,Babra APMC
+12,Gujarat,Amreli,Bagasara APMC
+13,Gujarat,Amreli,Damnagar APMC
+14,Gujarat,Amreli,Dhari APMC
+15,Gujarat,Amreli,Rajula APMC
+16,Gujarat,Amreli,Savarkundla APMC
+17,Gujarat,Amreli,The Agricultural Produce Market Committee
+18,Gujarat,Amreli,The Agricultural Produce Market Committee-Amreli
+19,Gujarat,Anand,APMC ANAND
+20,Gujarat,Anand,Anand APMC
+21,Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC"
+22,Gujarat,Anand,Borsad APMC
+23,Gujarat,Anand,Khambhat(Grain Market) APMC
+24,Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC
+25,Gujarat,Anand,Tarapur APMC
+26,Gujarat,Anand,Umreth APMC
+27,Gujarat,Banaskantha,Amirgadh APMC
+28,Gujarat,Banaskantha,Bhabhar APMC
+29,Gujarat,Banaskantha,Deesa APMC
+30,Gujarat,Banaskantha,Deesa(Bhildi) APMC
+31,Gujarat,Banaskantha,Deesa(Deesa Veg Yard) APMC
+32,Gujarat,Banaskantha,Dhanera APMC
+33,Gujarat,Banaskantha,Diyodar APMC
+34,Gujarat,Banaskantha,Lakhani APMC
+35,Gujarat,Banaskantha,Palanpur APMC
+36,Gujarat,Banaskantha,Panthawada APMC
+37,Gujarat,Banaskantha,Thara APMC
+38,Gujarat,Banaskantha,Thara(Shihori) APMC
+39,Gujarat,Banaskantha,Tharad APMC
+40,Gujarat,Banaskantha,Tharad(Rah) APMC
+41,Gujarat,Banaskantha,Vadgam APMC
+42,Gujarat,Banaskantha,Vav APMC
+43,Gujarat,Bharuch,Ankleshwar APMC
+44,Gujarat,Bharuch,Bharuch APMC
+45,Gujarat,Bharuch,Valia APMC
+46,Gujarat,Bhavnagar,Bhavnagar APMC
+47,Gujarat,Bhavnagar,Mahuva(Station Road) APMC
+48,Gujarat,Bhavnagar,Palitana APMC
+49,Gujarat,Bhavnagar,Taleja APMC
+50,Gujarat,Botad,Botad APMC
+51,Gujarat,Botad,Botad(Bhabarkot) APMC
+52,Gujarat,Botad,Botad(Haddad) APMC
+53,Gujarat,Chhota Udaipur,Bodeliu APMC
+54,Gujarat,Chhota Udaipur,Hadad     APMC
+55,Gujarat,Chhota Udaipur,Jetpur-Pavi     APMC
+56,Gujarat,Chhota Udaipur,Jetpur-Pavi APMC
+57,Gujarat,Chhota Udaipur,Kalediya APMC
+58,Gujarat,Chhota Udaipur,Modasar APMC
+59,Gujarat,Dahod,Dahod APMC
+60,Gujarat,Dahod,Dahod(Veg. Market) APMC
+61,Gujarat,Dahod,Davgadbaria(Piplod) APMC
+62,Gujarat,Dahod,Devgadhbaria APMC
+63,Gujarat,Dahod,Jhalod APMC
+64,Gujarat,Dahod,Limkheda APMC
+65,Gujarat,Dahod,Zalod(Sanjeli) APMC
+66,Gujarat,Devbhumi Dwarka,Bhanvad APMC
+67,Gujarat,Devbhumi Dwarka,Jam Khambalia APMC
+68,Gujarat,Gandhinagar,Dehgam APMC
+69,Gujarat,Gandhinagar,Dehgam(Rekhiyal) APMC
+70,Gujarat,Gandhinagar,Kalol APMC
+71,Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC"
+72,Gujarat,Gandhinagar,Mansa APMC
+73,Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC
+74,Gujarat,Gir Somnath,Kodinar APMC
+75,Gujarat,Gir Somnath,Talalagir APMC
+76,Gujarat,Gir Somnath,Una APMC
+77,Gujarat,Gir Somnath,Veraval APMC
+78,Gujarat,Jamnagar,Dhrol APMC
+79,Gujarat,Jamnagar,Jam Jodhpur APMC
+80,Gujarat,Jamnagar,Jamnagar APMC
+81,Gujarat,Jamnagar,Kalawad APMC
+82,Gujarat,Junagadh,Bhesan APMC
+83,Gujarat,Junagadh,Junagadh APMC
+84,Gujarat,Junagadh,Kodinar(Dollasa) APMC
+85,Gujarat,Junagadh,Manavdar APMC
+86,Gujarat,Junagadh,Visavadar APMC
+87,Gujarat,Kachchh,Anjar APMC
+88,Gujarat,Kachchh,Bhuj APMC
+89,Gujarat,Kachchh,Rapar APMC
+90,Gujarat,Kheda,Kapadvanj APMC
+91,Gujarat,Kheda,Matar APMC
+92,Gujarat,Kheda,Nadiad APMC
+93,Gujarat,Kheda,Nadiyad(Chaklasi) APMC
+94,Gujarat,Kheda,Nadiyad(Piplag) APMC
+95,Gujarat,Mehsana,Kadi APMC
+96,Gujarat,Mehsana,Kadi(Kadi cotton Yard) APMC
+97,Gujarat,Mehsana,Mehsana APMC
+98,Gujarat,Mehsana,Mehsana(Jornang) APMC
+99,Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC
+100,Gujarat,Mehsana,Unava APMC
+101,Gujarat,Mehsana,Unjha APMC
+102,Gujarat,Mehsana,Vijapur APMC
+103,Gujarat,Mehsana,Vijapur(Gojjariya) APMC
+104,Gujarat,Mehsana,Vijapur(Kukarvada) APMC
+105,Gujarat,Mehsana,Vijapur(Vegetable) APMC
+106,Gujarat,Mehsana,Vijapur(veg) APMC
+107,Gujarat,Mehsana,Visnagar APMC
+108,Gujarat,Morbi,APMC HALVAD
+109,Gujarat,Morbi,Morbi APMC
+110,Gujarat,Morbi,Vankaner APMC
+111,Gujarat,Morbi,Vankaner(Sub yard) APMC
+112,Gujarat,Narmada,Garudeshwal APMC
+113,Gujarat,Narmada,Rajpipla APMC
+114,Gujarat,Navsari,Bilimora APMC
+115,Gujarat,Navsari,Chikhali APMC
+116,Gujarat,Navsari,Navsari APMC
+117,Gujarat,Navsari,Vansda APMC
+118,Gujarat,Navsari,Vansda(Limzar) APMC
+119,Gujarat,Panchmahal,Godhra APMC
+120,Gujarat,Panchmahal,Godhra Kakanpur APMC
+121,Gujarat,Panchmahal,Godhra(Timbaroad) APMC
+122,Gujarat,Panchmahal,Gogamba APMC
+123,Gujarat,Panchmahal,Gogamba(Similiya) APMC
+124,Gujarat,Panchmahal,Morva Hafad APMC
+125,Gujarat,Patan,Chansama APMC
+126,Gujarat,Patan,Harij APMC
+127,Gujarat,Patan,Patan APMC
+128,Gujarat,Patan,"Patan(Veg,Yard Patan) APMC"
+129,Gujarat,Patan,Radhanpur APMC
+130,Gujarat,Patan,Sami APMC
+131,Gujarat,Patan,Siddhpur APMC
+132,Gujarat,Porbandar,Porbandar APMC
+133,Gujarat,Rajkot,Dhoraji APMC
+134,Gujarat,Rajkot,Gondal APMC
+135,Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC
+136,Gujarat,Rajkot,JASDAN APMC
+137,Gujarat,Rajkot,Jasdan APMC
+138,Gujarat,Rajkot,Jasdan(Vichhiya) APMC
+139,Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC
+140,Gujarat,Rajkot,Rajkot APMC
+141,Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC
+142,Gujarat,Rajkot,Upleta APMC
+143,Gujarat,Sabarkantha,APMCKHEDBRAHMA
+144,Gujarat,Sabarkantha,Bayad APMC
+145,Gujarat,Sabarkantha,Bhiloda APMC
+146,Gujarat,Sabarkantha,Dhansura APMC
+147,Gujarat,Sabarkantha,Himatnagar APMC
+148,Gujarat,Sabarkantha,Himatnagar(Veg.Market Himatnagar) APMC
+149,Gujarat,Sabarkantha,Idar APMC
+150,Gujarat,Sabarkantha,Malpur APMC
+151,Gujarat,Sabarkantha,Meghraj APMC
+152,Gujarat,Sabarkantha,Meghraj(Radlavada) APMC
+153,Gujarat,Sabarkantha,Meghraj(Rellavada) APMC
+154,Gujarat,Sabarkantha,Modasa APMC
+155,Gujarat,Sabarkantha,Modasa(Tintoi) APMC
+156,Gujarat,Sabarkantha,Prantij APMC
+157,Gujarat,Sabarkantha,Prantij(Salala) APMC
+158,Gujarat,Sabarkantha,Talod APMC
+159,Gujarat,Sabarkantha,Talod(Harsol) APMC
+160,Gujarat,Sabarkantha,Vadali APMC
+161,Gujarat,Sabarkantha,Vijaynagar(Kundlakap) APMC
+162,Gujarat,Surat,Bardoli APMC
+163,Gujarat,Surat,Bardoli(Kadod) APMC
+164,Gujarat,Surat,Bardoli(Madhi) APMC
+165,Gujarat,Surat,KUKARMUNDA APMC
+166,Gujarat,Surat,Kosamba APMC
+167,Gujarat,Surat,Mahuva(Anaval) APMC
+168,Gujarat,Surat,Mandvi APMC
+169,Gujarat,Surat,Nizar APMC
+170,Gujarat,Surat,Nizar(Kukarmuda) APMC
+171,Gujarat,Surat,Nizar(Rumkitalav) APMC
+172,Gujarat,Surat,Songadh APMC
+173,Gujarat,Surat,Songadh(Badarpada) APMC
+174,Gujarat,Surat,Songadh(Umrada) APMC
+175,Gujarat,Surat,Surat APMC
+176,Gujarat,Surat,Uchhal APMC
+177,Gujarat,Surat,Vyara(Paati) APMC
+178,Gujarat,Surat,Vyra APMC
+179,Gujarat,Surendranagar,Chotila APMC
+180,Gujarat,Surendranagar,Dasada Patadi APMC
+181,Gujarat,Surendranagar,Dhragradhra APMC
+182,Gujarat,Surendranagar,Lakhtar APMC
+183,Gujarat,Surendranagar,Limdi APMC
+184,Gujarat,Surendranagar,Sayala APMC
+185,Gujarat,Surendranagar,Vadhvan APMC
+186,Gujarat,The Dangs,Ahwa-Dang APMC
+187,Gujarat,Vadodara,Nasvadi APMC
+188,Gujarat,Vadodara,Padra APMC
+189,Gujarat,Vadodara,Vadodara(Sayajipura) APMC
+190,Gujarat,Vadodara,Vagodiya APMC
+191,Gujarat,Valsad,Chikli(Khorgam) APMC
+192,Gujarat,Valsad,Pardi APMC
+193,Gujarat,Valsad,Pardi(Motavagachiya) APMC
+194,Gujarat,Valsad,Pardi(Rohinee) APMC
+195,Gujarat,Valsad,Pardi(Ugvada) APMC
+196,Gujarat,Valsad,Pardi(Vapi) APMC
+197,Gujarat,Valsad,Valsad APMC

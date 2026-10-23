@@ -1,0 +1,141 @@
+commodity_key,commodity_code,commodity_name,category,is_perishable
+1,1,Wheat,Cereal,false
+2,2,Paddy (Common),Cereal,false
+3,3,Rice,Cereal,false
+4,4,Maize,Cereal,false
+5,5,Jowar (Sorghum),Cereal,false
+6,6,Bengal Gram (Gram) (Whole),Pulse,false
+7,7,Red Gram,Pulse,false
+8,8,Black Gram (Urd Beans) (Whole),Pulse,false
+9,9,Green Gram (Moong) (Whole),Pulse,false
+10,10,Groundnut,Oilseed,false
+11,11,"Sesamum (Sesame,Gingelly,Til)",Oilseed,false
+12,12,Mustard,Oilseed,false
+13,13,Soyabean,Oilseed,false
+14,14,Sunflower Seed,Oilseed,false
+15,15,Cotton,Cash Crop,false
+16,17,Apple,Fruit,true
+17,18,Orange,Fruit,true
+18,19,Banana,Fruit,true
+19,20,Mango,Fruit,true
+20,21,Pineapple,Fruit,true
+21,22,Grapes,Fruit,true
+22,23,Onion,Vegetable,false
+23,24,Potato,Vegetable,false
+24,25,Garlic,Spice,false
+25,26,Red Chilli,Spice,false
+26,27,Ginger (Dry),Spice,false
+27,28,Bajra (Pearl Millet/Cumbu),Cereal,false
+28,29,Barley (Jau),Cereal,false
+29,34,Cauliflower,Vegetable,true
+30,35,Brinjal,Vegetable,true
+31,42,Cumin Seed (Jeera),Spice,false
+32,43,Coriander (Leaves),Vegetable,true
+33,46,Methi (Leaves),Vegetable,true
+34,47,Methi Seeds,Spice,false
+35,49,Arhar (Tur/Red Gram) (Whole),Pulse,false
+36,50,Green Peas,Vegetable,true
+37,59,Safflower,Oilseed,false
+38,63,Lentil (Masur) (Whole),Pulse,false
+39,64,Field Pea,Pulse,false
+40,65,Raya,Oilseed,false
+41,71,Chikoos (Sapota),Fruit,true
+42,72,Papaya,Fruit,true
+43,73,Water Melon,Fruit,true
+44,75,Guar,Cash Crop,false
+45,76,Taramira,Oilseed,false
+46,77,Mousambi (Sweet Lime),Fruit,true
+47,78,Tomato,Vegetable,true
+48,80,Cluster Beans,Vegetable,true
+49,81,Bitter Gourd,Vegetable,true
+50,82,Bottle Gourd,Vegetable,true
+51,84,Pumpkin,Vegetable,false
+52,85,Bhindi (Ladies Finger),Vegetable,true
+53,87,Green Chilli,Vegetable,true
+54,88,Chilli Capsicum,Vegetable,true
+55,89,Cowpea (Veg),Vegetable,true
+56,90,Banana (Green),Fruit,true
+57,92,Cowpea (Lobia/Karamani),Pulse,false
+58,93,Mataki,Pulse,false
+59,94,Beans,Vegetable,true
+60,97,Other Pulses,Pulse,false
+61,99,Cotton Seed,Cash Crop,false
+62,103,Ginger (Green),Spice,false
+63,108,Coriander Seed,Spice,false
+64,112,Coconut Seed,Fruit,false
+65,113,Big Gram,Pulse,false
+66,114,Kulthi (Horse Gram),Pulse,false
+67,121,Foxtail Millet (Navane),Cereal,false
+68,123,Castor Seed,Oilseed,false
+69,132,Dry Chillies,Spice,false
+70,135,Saunf (Fennel),Spice,false
+71,137,Ajwan,Spice,false
+72,139,Sunhemp,Cash Crop,false
+73,141,Tobacco,Cash Crop,false
+74,152,Sweet Potato,Vegetable,false
+75,153,Carrot,Vegetable,true
+76,154,Cabbage,Vegetable,true
+77,155,Ladies Finger,Vegetable,true
+78,156,Snake Gourd,Vegetable,true
+79,157,Beetroot,Vegetable,true
+80,159,Cucumber (Kheera),Vegetable,true
+81,160,Ridge Gourd (Tori),Vegetable,true
+82,161,Radish,Vegetable,true
+83,164,Capsicum,Vegetable,true
+84,168,Drumstick,Vegetable,true
+85,171,Leafy Vegetable,Vegetable,true
+86,172,Mango (Raw-Ripe),Fruit,true
+87,174,Peas Wet,Vegetable,true
+88,180,Lime,Fruit,true
+89,185,Guava,Fruit,true
+90,187,Karbuja (Musk Melon),Fruit,true
+91,190,Pomegranate,Fruit,true
+92,200,Tender Coconut,Fruit,true
+93,201,Seetapal,Fruit,true
+94,208,Tamarind Seed,Spice,false
+95,237,Millets,Cereal,false
+96,248,Rajgir,Cereal,false
+97,255,Suva (Dill Seed),Spice,false
+98,256,Isabgul (Psyllium),Spice,false
+99,260,Arhar Dal (Tur Dal),Pulse,false
+100,264,Black Gram Dal (Urd Dal),Pulse,false
+101,265,Green Gram Dal (Moong Dal),Pulse,false
+102,267,Groundnut Oil,Oilseed,false
+103,268,Groundnut Seed,Oilseed,false
+104,269,Avare Dal,Pulse,false
+105,281,Alasande Gram,Pulse,false
+106,296,Elephant Yam (Suran)/Amorphophallus,Vegetable,false
+107,297,Yam (Ratalu),Vegetable,false
+108,298,French Beans (Frasbean),Vegetable,true
+109,299,Indian Beans (Seam),Vegetable,true
+110,300,Surat Beans (Papadi),Vegetable,true
+111,301,Pigeon Pea (Arhar Fali),Pulse,false
+112,302,Little Gourd (Kundru),Vegetable,true
+113,303,Pointed Gourd (Parval),Vegetable,true
+114,304,Long Melon (Kakri),Vegetable,true
+115,305,Spiny Gourd (Kartali/Kantola),Vegetable,true
+116,306,Round Gourd,Vegetable,true
+117,307,Rat Tail Radish (Mogari),Vegetable,true
+118,308,Pea Pod,Vegetable,true
+119,309,Turmeric (Raw),Spice,false
+120,310,Lemon,Fruit,true
+121,311,Sponge Gourd,Vegetable,true
+122,312,Groundnut Pods (Raw),Oilseed,false
+123,313,Papaya (Raw),Fruit,true
+124,314,Groundnut (Split),Oilseed,false
+125,318,Colocasia,Vegetable,true
+126,324,Mustard Oil,Oilseed,false
+127,341,Turnip,Vegetable,true
+128,342,Spinach,Vegetable,true
+129,347,Peas (Dry),Pulse,false
+130,349,Tinda,Vegetable,true
+131,350,Galgal (Lemon),Fruit,true
+132,355,Amla (Nelli Kai),Fruit,true
+133,357,Ber (Zizyphus/Borehannu),Fruit,true
+134,358,Onion Green,Vegetable,true
+135,359,Gram Raw (Chholia),Pulse,false
+136,360,Mint (Pudina),Vegetable,true
+137,362,Kabuli Chana (Chickpeas-White),Pulse,false
+138,412,White Peas,Pulse,false
+139,413,Guar Seed (Cluster Beans Seed),Cash Crop,false
+140,444,Asalia,Spice,false
