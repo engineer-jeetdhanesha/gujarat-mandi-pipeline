@@ -262,6 +262,7 @@ def test__valid_row_goes_to_clean():
         commodity_code=f" {COMMODITY_CODE} ",
         grade=" FAQ\n",
         min_price="1600.50",
+        modal_price="1800",
     )
     insert__bronze(run_id, [row])
     run__silver(run_id)
@@ -280,7 +281,7 @@ def test__valid_row_goes_to_clean():
     assert r["variety"] == row["variety"]
     assert r["grade"] == "FAQ"
     assert r["arrival_date"] == date(2026, 1, 1)
-    assert (r["min_price"], r["max_price"], r["modal_price"]) == (Decimal("1600.50"), Decimal("2000.00"), Decimal("1500.00"))
+    assert (r["min_price"], r["max_price"], r["modal_price"]) == (Decimal("1600.50"), Decimal("2000.00"), Decimal("1800.00"))
     assert r["ingested_at"] is not None and r["updated_at"] is not None
 
 # COMMAND ----------
