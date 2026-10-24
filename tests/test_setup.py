@@ -2,13 +2,13 @@
 # MAGIC %md
 # MAGIC # Test: setup
 # MAGIC
-# MAGIC Runs `src/setup`, then checks the default catalog, the `bronze` and `silver` schemas, the
-# MAGIC `bronze.raw_mandi_transactions` table and the six silver tables match `docs/table-structure.md`.
+# MAGIC Runs `src/setup`, then checks the default catalog, the `bronze`, `silver` and `gold` schemas, the
+# MAGIC `bronze.raw_mandi_transactions` table, the six silver tables and the gold mart match `docs/table-structure.md`.
 # MAGIC
 # MAGIC Tests are plain pytest functions run inside this notebook with `ipytest`.
 # MAGIC The notebook fails if any test fails, so it can be used as a job task.
 # MAGIC
-# MAGIC Cleanup: after the tests, the tables and the `bronze` and `silver` schemas are dropped,
+# MAGIC Cleanup: after the tests, the tables and the `bronze`, `silver` and `gold` schemas are dropped,
 # MAGIC but only if this run created them. Existing ones (and their data) are left as they were.
 
 # COMMAND ----------
@@ -126,6 +126,29 @@ EXPECTED_SILVER_COLUMNS = {
     ],
 }
 
+# (name, type) in table order, from docs/table-structure.md.
+EXPECTED_GOLD_COLUMNS = {
+    "mart_price_weekly": [
+        ("year", "int"),
+        ("week_number", "int"),
+        ("week_start", "date"),
+        ("district_name", "string"),
+        ("commodity_code", "int"),
+        ("commodity_name", "string"),
+        ("category", "string"),
+        ("min_price", "decimal(10,2)"),
+        ("max_price", "decimal(10,2)"),
+        ("avg_modal_price", "decimal(10,2)"),
+        ("prev_week_avg_price", "decimal(10,2)"),
+        ("wow_change_pct", "decimal(10,2)"),
+        ("price_records", "bigint"),
+        ("sum_modal_price", "decimal(18,2)"),
+        ("markets_count", "bigint"),
+        ("is_complete_week", "boolean"),
+        ("updated_at", "timestamp"),
+    ],
+}
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -144,6 +167,9 @@ schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'bronze'").
 table_existed = spark.catalog.tableExists(TABLE_NAME)
 silver_schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'silver'").collect()) == 1
 silver_tables_existed = {name: spark.catalog.tableExists(full) for name, full in SILVER_TABLES.items()}
+GOLD_TABLES = {name: f"{test_catalog}.gold.{name}" for name in EXPECTED_GOLD_COLUMNS}
+gold_schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'gold'").collect()) == 1
+gold_tables_existed = {name: spark.catalog.tableExists(full) for name, full in GOLD_TABLES.items()}
 
 # COMMAND ----------
 
@@ -183,11 +209,16 @@ def drop_created_objects():
 
     if not table_existed:
         spark.sql(f"DROP TABLE IF EXISTS {TABLE_NAME}")
+    for name, full in GOLD_TABLES.items():
+        if not gold_tables_existed[name]:
+            spark.sql(f"DROP TABLE IF EXISTS {full}")
     for name, full in SILVER_TABLES.items():
         if not silver_tables_existed[name]:
             spark.sql(f"DROP TABLE IF EXISTS {full}")
     if not schema_existed:
         spark.sql(f"DROP SCHEMA IF EXISTS {test_catalog}.bronze")
+    if not gold_schema_existed:
+        spark.sql(f"DROP SCHEMA IF EXISTS {test_catalog}.gold")
     if not silver_schema_existed:
         spark.sql(f"DROP SCHEMA IF EXISTS {test_catalog}.silver")
 
@@ -265,6 +296,27 @@ def test__silver_table_columns_and_types(table):
     fields = spark.table(SILVER_TABLES[table]).schema.fields
     actual = [(f.name, f.dataType.simpleString()) for f in fields]
     assert actual == EXPECTED_SILVER_COLUMNS[table]
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Test 6: gold schema and tables
+
+# COMMAND ----------
+
+def test__create_schema_gold():
+    """The gold schema exists in the default catalog."""
+    schemas = spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'gold'").collect()
+    assert len(schemas) == 1
+
+
+@pytest.mark.parametrize("table", list(EXPECTED_GOLD_COLUMNS))
+def test__gold_table_columns_and_types(table):
+    """Each gold table exists and has the columns and types of docs/table-structure.md, in order."""
+    assert spark.catalog.tableExists(GOLD_TABLES[table])
+    fields = spark.table(GOLD_TABLES[table]).schema.fields
+    actual = [(f.name, f.dataType.simpleString()) for f in fields]
+    assert actual == EXPECTED_GOLD_COLUMNS[table]
 
 # COMMAND ----------
 
