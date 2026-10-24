@@ -4,7 +4,8 @@
 # MAGIC
 # MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table, then the `silver` schema and the
 # MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`) and the
-# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`),
+# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`) and the
+# MAGIC `silver.fact_mandi_prices` table (loaded by `src/fact`),
 # MAGIC in the workspace's default catalog (`SELECT current_catalog()`), which must already exist.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
@@ -309,6 +310,43 @@ def create__table__mandi_prices_rejected(catalog: str) -> bool:
 
 # COMMAND ----------
 
+def create__table__fact_mandi_prices(catalog: str) -> bool:
+    """Create the silver.fact_mandi_prices Delta table if it does not exist.
+
+    Derived from silver.mandi_prices_clean by src/fact; MERGE target on the grain
+    market x commodity x variety x grade x date.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.silver.fact_mandi_prices (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.silver.fact_mandi_prices (
+                market_key     BIGINT        COMMENT 'FK to dim_market',
+                commodity_key  BIGINT        COMMENT 'FK to dim_commodity',
+                date_key       INT           COMMENT 'FK to dim_date',
+                variety        STRING        COMMENT 'Degenerate dimension',
+                grade          STRING        COMMENT 'Degenerate dimension',
+                min_price      DECIMAL(10,2) COMMENT 'Rs/quintal',
+                max_price      DECIMAL(10,2) COMMENT 'Rs/quintal',
+                modal_price    DECIMAL(10,2) COMMENT 'Rs/quintal',
+                loaded_at      TIMESTAMP     COMMENT 'Fact load time'
+            )
+            USING DELTA
+            COMMENT 'Mandi prices at market x commodity x variety x grade x date, keyed to the dimensions'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.silver.fact_mandi_prices: {e}")
+        return False
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Run
 
@@ -338,6 +376,7 @@ silver_tables = (
     create__table__dim_date,
     create__table__mandi_prices_clean,
     create__table__mandi_prices_rejected,
+    create__table__fact_mandi_prices,
 )
 for create__table in silver_tables:
     table = create__table.__name__.replace("create__table__", "")
