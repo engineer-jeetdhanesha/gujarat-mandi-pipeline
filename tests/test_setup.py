@@ -3,7 +3,7 @@
 # MAGIC # Test: setup
 # MAGIC
 # MAGIC Runs `src/setup`, then checks the default catalog, the `bronze` and `silver` schemas, the
-# MAGIC `bronze.raw_mandi_transactions` table and the five silver tables match `docs/table-structure.md`.
+# MAGIC `bronze.raw_mandi_transactions` table and the six silver tables match `docs/table-structure.md`.
 # MAGIC
 # MAGIC Tests are plain pytest functions run inside this notebook with `ipytest`.
 # MAGIC The notebook fails if any test fails, so it can be used as a job task.
@@ -89,6 +89,17 @@ EXPECTED_SILVER_COLUMNS = {
         ("run_id", "string"),
         ("ingested_at", "timestamp"),
         ("updated_at", "timestamp"),
+    ],
+    "fact_mandi_prices": [
+        ("market_key", "bigint"),
+        ("commodity_key", "bigint"),
+        ("date_key", "int"),
+        ("variety", "string"),
+        ("grade", "string"),
+        ("min_price", "decimal(10,2)"),
+        ("max_price", "decimal(10,2)"),
+        ("modal_price", "decimal(10,2)"),
+        ("loaded_at", "timestamp"),
     ],
     "mandi_prices_rejected": [
         ("state", "string"),
