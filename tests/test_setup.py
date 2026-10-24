@@ -2,13 +2,13 @@
 # MAGIC %md
 # MAGIC # Test: setup
 # MAGIC
-# MAGIC Runs `src/setup`, then checks the default catalog, the `bronze` schema and the
-# MAGIC `bronze.raw_mandi_transactions` table match `docs/table-structure.md`.
+# MAGIC Runs `src/setup`, then checks the default catalog, the `bronze` and `silver` schemas, the
+# MAGIC `bronze.raw_mandi_transactions` table and the five silver tables match `docs/table-structure.md`.
 # MAGIC
 # MAGIC Tests are plain pytest functions run inside this notebook with `ipytest`.
 # MAGIC The notebook fails if any test fails, so it can be used as a job task.
 # MAGIC
-# MAGIC Cleanup: after the tests, the table and the `bronze` schema are dropped,
+# MAGIC Cleanup: after the tests, the tables and the `bronze` and `silver` schemas are dropped,
 # MAGIC but only if this run created them. Existing ones (and their data) are left as they were.
 
 # COMMAND ----------
@@ -42,6 +42,79 @@ EXPECTED_COLUMNS = [
     ("_row_no", "bigint"),
 ]
 
+# (name, type) in table order, from docs/table-structure.md. updated_at has no default: code sets it.
+EXPECTED_SILVER_COLUMNS = {
+    "dim_market": [
+        ("market_key", "bigint"),
+        ("state", "string"),
+        ("district_name", "string"),
+        ("market_name", "string"),
+        ("updated_at", "timestamp"),
+    ],
+    "dim_commodity": [
+        ("commodity_key", "bigint"),
+        ("commodity_code", "int"),
+        ("commodity_name", "string"),
+        ("category", "string"),
+        ("is_perishable", "boolean"),
+        ("updated_at", "timestamp"),
+    ],
+    "dim_date": [
+        ("date_key", "int"),
+        ("date", "date"),
+        ("day", "int"),
+        ("day_name", "string"),
+        ("week_start", "date"),
+        ("month", "int"),
+        ("month_name", "string"),
+        ("quarter", "int"),
+        ("year", "int"),
+        ("is_weekend", "boolean"),
+        ("season", "string"),
+        ("updated_at", "timestamp"),
+    ],
+    "mandi_prices_clean": [
+        ("state", "string"),
+        ("district", "string"),
+        ("district_std", "string"),
+        ("market", "string"),
+        ("commodity_code", "int"),
+        ("commodity", "string"),
+        ("variety", "string"),
+        ("grade", "string"),
+        ("arrival_date", "date"),
+        ("min_price", "decimal(10,2)"),
+        ("max_price", "decimal(10,2)"),
+        ("modal_price", "decimal(10,2)"),
+        ("run_id", "string"),
+        ("ingested_at", "timestamp"),
+        ("updated_at", "timestamp"),
+    ],
+    "mandi_prices_rejected": [
+        ("state", "string"),
+        ("district", "string"),
+        ("market", "string"),
+        ("commodity", "string"),
+        ("commodity_code", "string"),
+        ("variety", "string"),
+        ("grade", "string"),
+        ("arrival_date", "string"),
+        ("min_price", "string"),
+        ("max_price", "string"),
+        ("modal_price", "string"),
+        ("source_mode", "string"),
+        ("file_name", "string"),
+        ("run_id", "string"),
+        ("ingested_at", "timestamp"),
+        ("row_no", "bigint"),
+        ("reject_reason", "string"),
+        ("reject_rule", "string"),
+        ("rejected_at", "timestamp"),
+        ("status", "string"),
+        ("updated_at", "timestamp"),
+    ],
+}
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -54,8 +127,12 @@ EXPECTED_COLUMNS = [
 test_catalog = spark.catalog.currentCatalog()
 TABLE_NAME = f"{test_catalog}.bronze.raw_mandi_transactions"
 
+SILVER_TABLES = {name: f"{test_catalog}.silver.{name}" for name in EXPECTED_SILVER_COLUMNS}
+
 schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'bronze'").collect()) == 1
 table_existed = spark.catalog.tableExists(TABLE_NAME)
+silver_schema_existed = len(spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'silver'").collect()) == 1
+silver_tables_existed = {name: spark.catalog.tableExists(full) for name, full in SILVER_TABLES.items()}
 
 # COMMAND ----------
 
@@ -87,16 +164,21 @@ ipytest.autoconfig(raise_on_error=True, addopts=["-p", "no:cacheprovider"])
 
 @pytest.fixture(scope="module", autouse=True)
 def drop_created_objects():
-    """After the tests, drop the table and schema, only if this run created them.
+    """After the tests, drop the tables and schemas, only those this run created.
 
-    No CASCADE: dropping the schema fails instead of removing anything else in it.
+    No CASCADE: dropping a schema fails instead of removing anything else in it.
     """
     yield
 
     if not table_existed:
         spark.sql(f"DROP TABLE IF EXISTS {TABLE_NAME}")
+    for name, full in SILVER_TABLES.items():
+        if not silver_tables_existed[name]:
+            spark.sql(f"DROP TABLE IF EXISTS {full}")
     if not schema_existed:
         spark.sql(f"DROP SCHEMA IF EXISTS {test_catalog}.bronze")
+    if not silver_schema_existed:
+        spark.sql(f"DROP SCHEMA IF EXISTS {test_catalog}.silver")
 
 # COMMAND ----------
 
@@ -140,6 +222,38 @@ def test__table_columns_and_types():
     fields = spark.table(TABLE_NAME).schema.fields
     actual = [(f.name, f.dataType.simpleString()) for f in fields]
     assert actual == EXPECTED_COLUMNS
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Test 4: silver schema
+
+# COMMAND ----------
+
+def test__create_schema_silver():
+    """The silver schema exists in the default catalog."""
+    schemas = spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'silver'").collect()
+    assert len(schemas) == 1
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Test 5: silver tables
+
+# COMMAND ----------
+
+@pytest.mark.parametrize("table", list(EXPECTED_SILVER_COLUMNS))
+def test__create_silver_table(table):
+    """Each silver table exists."""
+    assert spark.catalog.tableExists(SILVER_TABLES[table])
+
+
+@pytest.mark.parametrize("table", list(EXPECTED_SILVER_COLUMNS))
+def test__silver_table_columns_and_types(table):
+    """Each silver table has the columns and types of docs/table-structure.md, in order."""
+    fields = spark.table(SILVER_TABLES[table]).schema.fields
+    actual = [(f.name, f.dataType.simpleString()) for f in fields]
+    assert actual == EXPECTED_SILVER_COLUMNS[table]
 
 # COMMAND ----------
 
