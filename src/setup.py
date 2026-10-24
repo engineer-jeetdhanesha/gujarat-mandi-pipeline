@@ -1,11 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Setup: bronze and silver
+# MAGIC # Setup: bronze, silver and gold
 # MAGIC
 # MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table, then the `silver` schema and the
 # MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`) and the
 # MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`) and the
-# MAGIC `silver.fact_mandi_prices` table (loaded by `src/fact`),
+# MAGIC `silver.fact_mandi_prices` table (loaded by `src/fact`), then the `gold` schema and the
+# MAGIC `gold.mart_price_weekly` table (loaded by `src/gold`),
 # MAGIC in the workspace's default catalog (`SELECT current_catalog()`), which must already exist.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
@@ -347,13 +348,81 @@ def create__table__fact_mandi_prices(catalog: str) -> bool:
 
 # COMMAND ----------
 
+def create__schema__gold(catalog: str) -> bool:
+    """Create the gold schema if it does not exist.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the schema exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating schema {catalog}.gold (if not exists) ...")
+        spark.sql(f"""
+            CREATE SCHEMA IF NOT EXISTS {catalog}.gold
+            COMMENT 'Data marts for the dashboard'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create schema {catalog}.gold: {e}")
+        return False
+
+# COMMAND ----------
+
+def create__table__mart_price_weekly(catalog: str) -> bool:
+    """Create the gold.mart_price_weekly Delta table if it does not exist.
+
+    Built by src/gold from silver.fact_mandi_prices and the dimensions;
+    one row per district x commodity x week.
+
+    Args:
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.gold.mart_price_weekly (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.gold.mart_price_weekly (
+                year                 INT           COMMENT 'ISO year of the week',
+                week_number          INT           COMMENT 'ISO week number',
+                week_start           DATE          COMMENT 'Monday of the week',
+                district_name        STRING        COMMENT 'Standard district name',
+                commodity_code       INT           COMMENT 'Commodity code',
+                commodity_name       STRING        COMMENT 'Standard commodity name',
+                category             STRING        COMMENT 'Commodity category',
+                min_price            DECIMAL(10,2) COMMENT 'Lowest min price of the week, Rs/quintal',
+                max_price            DECIMAL(10,2) COMMENT 'Highest max price of the week, Rs/quintal',
+                avg_modal_price      DECIMAL(10,2) COMMENT 'sum_modal_price / price_records, Rs/quintal',
+                prev_week_avg_price  DECIMAL(10,2) COMMENT 'avg_modal_price of the week 7 days earlier; NULL if none',
+                wow_change_pct       DECIMAL(10,2) COMMENT 'Week-on-week change in percent (12.5 = +12.5%); NULL if no previous week',
+                price_records        BIGINT        COMMENT 'Number of price rows in the group',
+                sum_modal_price      DECIMAL(18,2) COMMENT 'Sum of modal prices, for exact rollups',
+                markets_count        BIGINT        COMMENT 'Distinct markets reporting',
+                is_complete_week     BOOLEAN       COMMENT 'False if the week starts before the first or ends after the last loaded date',
+                updated_at           TIMESTAMP     COMMENT 'Last MERGE time'
+            )
+            USING DELTA
+            COMMENT 'Weekly prices per district and commodity, with week-on-week change'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.gold.mart_price_weekly: {e}")
+        return False
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
 
 catalog = get__default_catalog()
-print(f"Setting up bronze and silver in catalog: {catalog}")
+print(f"Setting up bronze, silver and gold in catalog: {catalog}")
 
 if not catalog:
     raise RuntimeError("Could not read the default catalog (see the error printed above)")
@@ -383,5 +452,13 @@ for create__table in silver_tables:
     if not create__table(catalog):
         raise RuntimeError(f"Could not create table {catalog}.silver.{table} (see the error printed above)")
     print(f"Table ready: {catalog}.silver.{table}")
+
+if not create__schema__gold(catalog):
+    raise RuntimeError(f"Could not create schema {catalog}.gold (see the error printed above)")
+print(f"Schema ready: {catalog}.gold")
+
+if not create__table__mart_price_weekly(catalog):
+    raise RuntimeError(f"Could not create table {catalog}.gold.mart_price_weekly (see the error printed above)")
+print(f"Table ready: {catalog}.gold.mart_price_weekly")
 
 print("Setup complete")
