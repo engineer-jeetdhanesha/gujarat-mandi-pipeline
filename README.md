@@ -105,7 +105,7 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
 | Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity, with week-on-week change; updated incrementally per run. More marts are planned |
 
-The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/seed_dims`), then repair the rejected rows.
+The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/load_silver_dims`), then repair the rejected rows.
 
 ## Pipeline run modes
 
@@ -216,8 +216,22 @@ Planned inputs; names may change when the code is written.
 │   ├── table-structure.html      Same, rendered for reading
 │   └── high-level-design.html    Architecture diagram with tech stack
 ├── seed/                         CSV files for the silver dimensions
-├── src/                          Databricks notebooks: setup, utility, bronze, seed_dims, silver, fact, gold
-└── tests/                        pytest notebooks, one per source notebook
+├── src/
+│   ├── *.py                      Databricks notebooks: setup, utility, load_bronze, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
+│   │                             (widgets, table reads, MERGE/writes; call lib_mandi)
+│   └── lib_mandi/                transformations, schemas, read options and data quality rules (no Databricks globals)
+├── tests/
+│   ├── test_*.py                 pytest notebooks run on Databricks, one per source notebook
+│   └── unit/                     pytest on the transforms with a local Spark session (for CI)
+├── pytest.ini
+└── requirements-dev.txt
+```
+
+Run the unit tests without Databricks (needs Java 17+ for local Spark):
+
+```
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Roadmap
