@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: silver load
 # MAGIC
-# MAGIC Runs `src/setup` and `src/seed_dims`, then runs `src/silver` as a child notebook on small dummy rows written
+# MAGIC Runs `src/setup` and `src/load_silver_dims`, then runs `src/load_silver_transactions` as a child notebook on small dummy rows written
 # MAGIC to `bronze.raw_mandi_transactions`, and checks what lands in `silver.mandi_prices_clean` and
 # MAGIC `silver.mandi_prices_rejected`: the clean row values, each quality rule, several rules on one row,
 # MAGIC duplicates, row counts, reruns, and the errors for a blank or unknown `run_id`.
@@ -87,7 +87,7 @@ schemas_existed = {
 
 # COMMAND ----------
 
-# MAGIC %run ../src/seed_dims
+# MAGIC %run ../src/load_silver_dims
 
 # COMMAND ----------
 
@@ -135,7 +135,7 @@ LAST_DIM_DATE = spark.table(f"{test_catalog}.silver.dim_date").agg({"date": "max
 
 # COMMAND ----------
 
-def build__row(variety: str, **changes) -> dict:
+def build__row(variety: str, **changes: object) -> dict[str, object]:
     """Build one valid dummy bronze row (the 11 source columns as strings).
 
     Args:
@@ -164,7 +164,7 @@ def build__row(variety: str, **changes) -> dict:
 
 # COMMAND ----------
 
-def insert__bronze(run_id: str, rows: list):
+def insert__bronze(run_id: str, rows: list[dict[str, object]]) -> None:
     """Append dummy rows to bronze under a run id.
 
     Args:
@@ -196,7 +196,7 @@ def insert__bronze(run_id: str, rows: list):
 # COMMAND ----------
 
 def run__silver(run_id: str) -> str:
-    """Run src/silver as a child notebook; raises if the notebook fails.
+    """Run src/load_silver_transactions as a child notebook; raises if the notebook itself fails (blank widget, no catalog).
 
     Args:
         run_id: Value for the run_id widget.
@@ -204,16 +204,16 @@ def run__silver(run_id: str) -> str:
     Returns:
         The notebook's exit value (empty, silver does not call exit).
     """
-    return dbutils.notebook.run("../src/silver", 600, {"run_id": run_id})
+    return dbutils.notebook.run("../src/load_silver_transactions", 600, {"run_id": run_id})
 
 # COMMAND ----------
 
-def get__clean(run_id: str) -> list:
+def get__clean(run_id: str) -> list["Row"]:
     """Return the clean rows written by a run, as a list of Rows."""
     return spark.table(CLEAN).where(f"run_id = '{run_id}'").collect()
 
 
-def get__rejected(run_id: str) -> list:
+def get__rejected(run_id: str) -> list["Row"]:
     """Return the rejected rows of a run, as a list of Rows ordered by row number."""
     return spark.table(REJECTED).where(f"run_id = '{run_id}'").orderBy("row_no").collect()
 
@@ -225,7 +225,7 @@ def get__rejected(run_id: str) -> list:
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def clean_up():
+def clean_up() -> "Generator[None, None, None]":
     """After the tests, delete the dummy rows; drop the tables/schemas only if this run created them.
 
     No CASCADE: dropping a schema fails instead of removing anything else in it.
@@ -250,7 +250,7 @@ def clean_up():
 
 # COMMAND ----------
 
-def test__valid_row_goes_to_clean():
+def test__valid_row_goes_to_clean() -> None:
     """A valid row is trimmed, typed and standardised from the dimensions, and nothing is rejected."""
     run_id = f"{RUN_PREFIX}-valid"
     row = build__row(
@@ -322,7 +322,7 @@ RULE_CASES = [
 
 
 @pytest.mark.parametrize("case, changes, expected_rule", RULE_CASES, ids=[c[0] for c in RULE_CASES])
-def test__rule_rejects_row(case, changes, expected_rule):
+def test__rule_rejects_row(case: str, changes: dict[str, str], expected_rule: str) -> None:
     """A row that breaks one rule goes to rejected with that rule id and nothing reaches clean."""
     run_id = f"{RUN_PREFIX}-rule-{case}"
     row = build__row(case, **changes)
@@ -349,7 +349,7 @@ def test__rule_rejects_row(case, changes, expected_rule):
 
 # COMMAND ----------
 
-def test__several_rules_are_listed_in_order():
+def test__several_rules_are_listed_in_order() -> None:
     """Every failing rule is listed, comma separated in rule order, with matching reasons."""
     run_id = f"{RUN_PREFIX}-several"
     insert__bronze(run_id, [build__row("several", arrival_date="", market="Pytest Unknown Market APMC")])
@@ -363,7 +363,7 @@ def test__several_rules_are_listed_in_order():
     assert "dd/MM/yyyy" in reasons[0] and "dim_market" in reasons[1]
 
 
-def test__dependent_price_rules_are_skipped():
+def test__dependent_price_rules_are_skipped() -> None:
     """A price that is not a number gives only invalid_price, not the rules that compare prices."""
     run_id = f"{RUN_PREFIX}-skipped"
     insert__bronze(run_id, [build__row("skipped", min_price="abc", max_price="0", modal_price="0")])
@@ -379,7 +379,7 @@ def test__dependent_price_rules_are_skipped():
 
 # COMMAND ----------
 
-def test__duplicate_keeps_highest_row_number():
+def test__duplicate_keeps_highest_row_number() -> None:
     """Rows with the same natural key: the highest _row_no goes to clean, the others are rejected as duplicate."""
     run_id = f"{RUN_PREFIX}-dup"
     rows = [build__row("dup", max_price=str(2000 + i)) for i in range(3)]
@@ -396,7 +396,7 @@ def test__duplicate_keeps_highest_row_number():
     assert {r["status"] for r in rejected} == {"REJECTED"}
 
 
-def test__duplicate_keeps_latest_ingested_at_first():
+def test__duplicate_keeps_latest_ingested_at_first() -> None:
     """The latest _ingested_at wins over a higher _row_no."""
     run_id = f"{RUN_PREFIX}-dupts"
     now = datetime.now()
@@ -411,7 +411,7 @@ def test__duplicate_keeps_latest_ingested_at_first():
     assert [(r["row_no"], r["reject_rule"]) for r in get__rejected(run_id)] == [(9, "duplicate")]
 
 
-def test__invalid_row_does_not_win_a_duplicate():
+def test__invalid_row_does_not_win_a_duplicate() -> None:
     """Duplicates are looked for among valid rows: an invalid top row does not push a valid row out of clean."""
     run_id = f"{RUN_PREFIX}-dupinvalid"
     rows = [
@@ -437,7 +437,7 @@ def test__invalid_row_does_not_win_a_duplicate():
 
 # COMMAND ----------
 
-def test__row_counts_add_up():
+def test__row_counts_add_up() -> None:
     """clean + rejected equals the bronze rows of the run, on a mixed batch."""
     run_id = f"{RUN_PREFIX}-counts"
     rows = [
@@ -464,7 +464,7 @@ def test__row_counts_add_up():
 
 # COMMAND ----------
 
-def test__rerun_does_not_duplicate_rows():
+def test__rerun_does_not_duplicate_rows() -> None:
     """Running the same run twice leaves the same rows in clean and in rejected."""
     run_id = f"{RUN_PREFIX}-rerun"
     insert__bronze(run_id, [build__row("rerun"), build__row("rerun-bad", min_price="abc")])
@@ -475,7 +475,7 @@ def test__rerun_does_not_duplicate_rows():
     assert len(get__rejected(run_id)) == 1
 
 
-def test__rerun_keeps_changed_rejected_status():
+def test__rerun_keeps_changed_rejected_status() -> None:
     """A rejected row whose status was changed by hand keeps it when the run is processed again."""
     run_id = f"{RUN_PREFIX}-keepstatus"
     insert__bronze(run_id, [build__row("keepstatus", min_price="abc")])
@@ -488,7 +488,7 @@ def test__rerun_keeps_changed_rejected_status():
     assert rejected[0]["status"] == "RESOLVED"
 
 
-def test__new_run_updates_existing_clean_row():
+def test__new_run_updates_existing_clean_row() -> None:
     """A later run with the same natural key updates the clean row and its run_id; no second row is added."""
     first_run = f"{RUN_PREFIX}-update1"
     second_run = f"{RUN_PREFIX}-update2"
@@ -511,18 +511,17 @@ def test__new_run_updates_existing_clean_row():
 
 # COMMAND ----------
 
-def test__blank_run_id_fails():
+def test__blank_run_id_fails() -> None:
     """A blank run_id raises."""
     with pytest.raises(Exception):
         run__silver("")
 
 
-def test__run_id_without_bronze_rows_fails():
-    """A run_id with no rows in bronze raises and writes nothing."""
+def test__run_id_without_bronze_rows_fails() -> None:
+    """A run_id with no rows in bronze loads nothing."""
     run_id = f"{RUN_PREFIX}-norows"
 
-    with pytest.raises(Exception):
-        run__silver(run_id)
+    run__silver(run_id)
 
     assert len(get__clean(run_id)) == 0
     assert len(get__rejected(run_id)) == 0

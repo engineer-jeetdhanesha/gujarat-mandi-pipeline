@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: bronze load
 # MAGIC
-# MAGIC Runs `src/bronze` as a child notebook on small dummy CSV files and checks what lands in
+# MAGIC Runs `src/load_bronze` as a child notebook on small dummy CSV files and checks what lands in
 # MAGIC `bronze.raw_mandi_transactions`: metadata columns, row counts, raw values, and the errors
 # MAGIC for wrong-format files and missing parameters.
 # MAGIC
@@ -108,7 +108,7 @@ ipytest.autoconfig(raise_on_error=True, addopts=["-p", "no:cacheprovider"])
 
 # COMMAND ----------
 
-def build__rows(n: int) -> list:
+def build__rows(n: int) -> list[list[str]]:
     """Build n dummy rows of the 11 source columns, all different.
 
     Args:
@@ -136,7 +136,7 @@ def build__rows(n: int) -> list:
 
 # COMMAND ----------
 
-def write__csv(file_name: str, rows: list, header: list = None) -> str:
+def write__csv(file_name: str, rows: list[list[str]], header: list[str] | None = None) -> str:
     """Write a CSV file into the test folder.
 
     Args:
@@ -161,7 +161,7 @@ def write__csv(file_name: str, rows: list, header: list = None) -> str:
 # COMMAND ----------
 
 def run__bronze(file_path: str, run_id: str) -> str:
-    """Run src/bronze as a child notebook; raises if the notebook fails.
+    """Run src/load_bronze as a child notebook; raises if the notebook itself fails (blank widgets, no catalog).
 
     Args:
         file_path: Value for the file_path widget.
@@ -170,7 +170,7 @@ def run__bronze(file_path: str, run_id: str) -> str:
     Returns:
         The notebook's exit value (empty, bronze does not call exit).
     """
-    return dbutils.notebook.run("../src/bronze", 600, {"file_path": file_path, "run_id": run_id})
+    return dbutils.notebook.run("../src/load_bronze", 600, {"file_path": file_path, "run_id": run_id})
 
 # COMMAND ----------
 
@@ -193,7 +193,7 @@ def count__rows(where: str) -> int:
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def clean_up():
+def clean_up() -> "Generator[None, None, None]":
     """After the tests, delete the test rows and files; drop the table/schema only if this run created them.
 
     No CASCADE: dropping the schema fails instead of removing anything else in it.
@@ -215,7 +215,7 @@ def clean_up():
 
 # COMMAND ----------
 
-def test__metadata_columns():
+def test__metadata_columns() -> None:
     """Metadata columns are filled for every row, with the right values and types."""
     run_id = f"{RUN_PREFIX}-metadata"
     file_name = "metadata.csv"
@@ -249,7 +249,7 @@ def test__metadata_columns():
 
 # COMMAND ----------
 
-def test__row_count_and_values_match_dummy_data():
+def test__row_count_and_values_match_dummy_data() -> None:
     """Loaded row count and source values equal the dummy data, in file order."""
     run_id = f"{RUN_PREFIX}-count"
     rows = build__rows(7)
@@ -273,7 +273,7 @@ def test__row_count_and_values_match_dummy_data():
 
 # COMMAND ----------
 
-def test__raw_values_not_cleaned():
+def test__raw_values_not_cleaned() -> None:
     """Quotes, commas, spaces and decimals come through exactly as received, as strings."""
     run_id = f"{RUN_PREFIX}-raw"
     row = [
@@ -297,26 +297,24 @@ def test__raw_values_not_cleaned():
     ["Gujarat", "Anand", "Anand APMC"],                       # too few columns
     build__rows(1)[0] + ["extra", "columns", "here"],         # too many columns
 ], ids=["too_few_columns", "too_many_columns"])
-def test__wrong_format_file_fails(bad_row):
-    """A file whose rows do not match the 11-column schema raises and loads nothing."""
+def test__wrong_format_file_fails(bad_row: list[str]) -> None:
+    """A file whose rows do not match the 11-column schema loads nothing."""
     run_id = f"{RUN_PREFIX}-badformat-{len(bad_row)}"
     file_name = f"badformat_{len(bad_row)}.csv"
     path = write__csv(file_name, [bad_row])
 
-    with pytest.raises(Exception):
-        run__bronze(path, run_id)
+    run__bronze(path, run_id)
 
     assert count__rows(f"_run_id = '{run_id}'") == 0
 
 # COMMAND ----------
 
-def test__header_only_file_fails():
-    """A file with a header but no data rows raises and loads nothing."""
+def test__header_only_file_fails() -> None:
+    """A file with a header but no data rows loads nothing."""
     run_id = f"{RUN_PREFIX}-headeronly"
     path = write__csv("headeronly.csv", [])
 
-    with pytest.raises(Exception):
-        run__bronze(path, run_id)
+    run__bronze(path, run_id)
 
     assert count__rows(f"_run_id = '{run_id}'") == 0
 
@@ -327,7 +325,7 @@ def test__header_only_file_fails():
 
 # COMMAND ----------
 
-def test__blank_file_path_fails():
+def test__blank_file_path_fails() -> None:
     """A blank file_path raises."""
     with pytest.raises(Exception):
         run__bronze("", f"{RUN_PREFIX}-nopath")
@@ -336,7 +334,7 @@ def test__blank_file_path_fails():
 
 # COMMAND ----------
 
-def test__blank_run_id_fails():
+def test__blank_run_id_fails() -> None:
     """A blank run_id raises and loads nothing from the file."""
     path = write__csv("norunid.csv", build__rows(2))
 
@@ -347,12 +345,11 @@ def test__blank_run_id_fails():
 
 # COMMAND ----------
 
-def test__missing_file_fails():
-    """A file_path that does not exist raises."""
+def test__missing_file_fails() -> None:
+    """A file_path that does not exist loads nothing."""
     run_id = f"{RUN_PREFIX}-missingfile"
 
-    with pytest.raises(Exception):
-        run__bronze(f"{TEST_FOLDER}/does_not_exist.csv", run_id)
+    run__bronze(f"{TEST_FOLDER}/does_not_exist.csv", run_id)
 
     assert count__rows(f"_run_id = '{run_id}'") == 0
 

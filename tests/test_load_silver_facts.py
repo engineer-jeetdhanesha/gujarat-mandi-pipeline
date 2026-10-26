@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: silver fact load
 # MAGIC
-# MAGIC Runs `src/setup` and `src/seed_dims`, then runs `src/fact` as a child notebook on small dummy rows written to
+# MAGIC Runs `src/setup` and `src/load_silver_dims`, then runs `src/load_silver_facts` as a child notebook on small dummy rows written to
 # MAGIC `silver.mandi_prices_clean`, and checks what lands in `silver.fact_mandi_prices`: the surrogate keys and prices,
 # MAGIC that only the rows of the given run are loaded, reruns and updates, and the errors for a missing dimension key
 # MAGIC and for a blank or unknown `run_id`.
@@ -72,7 +72,7 @@ schemas_existed = {
 
 # COMMAND ----------
 
-# MAGIC %run ../src/seed_dims
+# MAGIC %run ../src/load_silver_dims
 
 # COMMAND ----------
 
@@ -120,7 +120,7 @@ DATE_KEY = 20260101
 
 # COMMAND ----------
 
-def build__row(variety: str, **changes) -> dict:
+def build__row(variety: str, **changes: object) -> dict[str, object]:
     """Build one valid dummy clean row.
 
     Args:
@@ -151,7 +151,7 @@ def build__row(variety: str, **changes) -> dict:
 
 # COMMAND ----------
 
-def insert__clean(run_id: str, rows: list):
+def insert__clean(run_id: str, rows: list[dict[str, object]]) -> None:
     """Append dummy rows to silver.mandi_prices_clean under a run id.
 
     Args:
@@ -165,7 +165,7 @@ def insert__clean(run_id: str, rows: list):
 # COMMAND ----------
 
 def run__fact(run_id: str) -> str:
-    """Run src/fact as a child notebook; raises if the notebook fails.
+    """Run src/load_silver_facts as a child notebook; raises if the notebook itself fails (blank widget, no catalog).
 
     Args:
         run_id: Value for the run_id widget.
@@ -173,11 +173,11 @@ def run__fact(run_id: str) -> str:
     Returns:
         The notebook's exit value (empty, fact does not call exit).
     """
-    return dbutils.notebook.run("../src/fact", 600, {"run_id": run_id})
+    return dbutils.notebook.run("../src/load_silver_facts", 600, {"run_id": run_id})
 
 # COMMAND ----------
 
-def get__fact(variety_suffix: str) -> list:
+def get__fact(variety_suffix: str) -> list["Row"]:
     """Return the fact rows of a dummy variety, as a list of Rows."""
     return spark.table(FACT).where(f"variety = '{RUN_PREFIX}-{variety_suffix}'").collect()
 
@@ -189,7 +189,7 @@ def get__fact(variety_suffix: str) -> list:
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def clean_up():
+def clean_up() -> "Generator[None, None, None]":
     """After the tests, delete the dummy rows; drop the tables/schemas only if this run created them.
 
     No CASCADE: dropping a schema fails instead of removing anything else in it.
@@ -213,7 +213,7 @@ def clean_up():
 
 # COMMAND ----------
 
-def test__fact_row_has_keys_and_prices():
+def test__fact_row_has_keys_and_prices() -> None:
     """A clean row becomes one fact row with the dimension keys, the degenerate columns and the prices."""
     run_id = f"{RUN_PREFIX}-keys"
     insert__clean(run_id, [build__row("keys", min_price=Decimal("1600.50"), modal_price=Decimal("1800.00"))])
@@ -234,7 +234,7 @@ def test__fact_row_has_keys_and_prices():
 
 # COMMAND ----------
 
-def test__only_rows_of_the_run_are_loaded():
+def test__only_rows_of_the_run_are_loaded() -> None:
     """Clean rows of another run are not loaded."""
     run_a = f"{RUN_PREFIX}-onlya"
     run_b = f"{RUN_PREFIX}-onlyb"
@@ -252,7 +252,7 @@ def test__only_rows_of_the_run_are_loaded():
 
 # COMMAND ----------
 
-def test__rerun_does_not_duplicate_rows():
+def test__rerun_does_not_duplicate_rows() -> None:
     """Running the same run twice leaves one fact row per grain."""
     run_id = f"{RUN_PREFIX}-rerun"
     insert__clean(run_id, [build__row("rerun"), build__row("rerun", grade="Local")])
@@ -262,7 +262,7 @@ def test__rerun_does_not_duplicate_rows():
     assert len(get__fact("rerun")) == 2
 
 
-def test__later_run_updates_the_fact_row():
+def test__later_run_updates_the_fact_row() -> None:
     """When a later run updates a clean row, the fact row is updated and no second row is added."""
     first_run = f"{RUN_PREFIX}-update1"
     second_run = f"{RUN_PREFIX}-update2"
@@ -287,28 +287,26 @@ def test__later_run_updates_the_fact_row():
 
 # COMMAND ----------
 
-def test__missing_dimension_key_fails():
-    """A clean row whose market is not in dim_market makes the run fail and loads none of its rows."""
+def test__missing_dimension_key_fails() -> None:
+    """A clean row whose market is not in dim_market stops the load: none of the run's rows are loaded."""
     run_id = f"{RUN_PREFIX}-nokey"
     insert__clean(run_id, [build__row("nokey-ok"), build__row("nokey-bad", market="Pytest Unknown Market APMC")])
 
-    with pytest.raises(Exception):
-        run__fact(run_id)
+    run__fact(run_id)
 
     assert len(get__fact("nokey-ok")) == 0
     assert len(get__fact("nokey-bad")) == 0
 
 
-def test__blank_run_id_fails():
+def test__blank_run_id_fails() -> None:
     """A blank run_id raises."""
     with pytest.raises(Exception):
         run__fact("")
 
 
-def test__run_id_without_clean_rows_fails():
-    """A run_id with no rows in clean raises."""
-    with pytest.raises(Exception):
-        run__fact(f"{RUN_PREFIX}-norows")
+def test__run_id_without_clean_rows_fails() -> None:
+    """A run_id with no rows in clean loads nothing."""
+    run__fact(f"{RUN_PREFIX}-norows")
 
 # COMMAND ----------
 

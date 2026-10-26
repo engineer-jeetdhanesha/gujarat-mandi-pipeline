@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: gold weekly mart
 # MAGIC
-# MAGIC Runs `src/setup` and `src/seed_dims`, then runs `src/gold` as a child notebook on small dummy data, and checks
+# MAGIC Runs `src/setup` and `src/load_silver_dims`, then runs `src/load_gold` as a child notebook on small dummy data, and checks
 # MAGIC what lands in `gold.mart_price_weekly`: the aggregates, week-on-week change (including a missing week),
 # MAGIC `is_complete_week`, that only the weeks a run touched (plus the week before and after) are rewritten, reruns,
 # MAGIC and the errors for a blank or unknown `run_id`.
@@ -77,7 +77,7 @@ schemas_existed = {
 
 # COMMAND ----------
 
-# MAGIC %run ../src/seed_dims
+# MAGIC %run ../src/load_silver_dims
 
 # COMMAND ----------
 
@@ -133,7 +133,7 @@ spark.createDataFrame(
 
 # COMMAND ----------
 
-def new__commodity() -> dict:
+def new__commodity() -> dict[str, object]:
     """Add a dummy commodity to dim_commodity and return its key, code and name."""
     _commodity_counter[0] += 1
     n = _commodity_counter[0]
@@ -151,7 +151,9 @@ def new__commodity() -> dict:
 
 # COMMAND ----------
 
-def add__week(run_id: str, commodity: dict, monday: date, prices: list, touch: bool = True):
+def add__week(
+    run_id: str, commodity: dict[str, object], monday: date, prices: list[tuple[str, str, str, str]], touch: bool = True
+) -> None:
     """Add fact rows for one week, and a clean row for the run so the week counts as touched.
 
     Args:
@@ -206,7 +208,7 @@ def add__week(run_id: str, commodity: dict, monday: date, prices: list, touch: b
 # COMMAND ----------
 
 def run__gold(run_id: str) -> str:
-    """Run src/gold as a child notebook; raises if the notebook fails.
+    """Run src/load_gold as a child notebook; raises if the notebook itself fails (blank widget, no catalog).
 
     Args:
         run_id: Value for the run_id widget.
@@ -214,11 +216,11 @@ def run__gold(run_id: str) -> str:
     Returns:
         The notebook's exit value (empty, gold does not call exit).
     """
-    return dbutils.notebook.run("../src/gold", 600, {"run_id": run_id})
+    return dbutils.notebook.run("../src/load_gold", 600, {"run_id": run_id})
 
 # COMMAND ----------
 
-def get__mart(commodity: dict) -> dict:
+def get__mart(commodity: dict[str, object]) -> dict[date, "Row"]:
     """Return the mart rows of a dummy commodity as a dict of week_start -> Row."""
     rows = spark.table(MART).where(f"commodity_code = {commodity['code']}").collect()
     return {r["week_start"]: r for r in rows}
@@ -231,7 +233,7 @@ def get__mart(commodity: dict) -> dict:
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def clean_up():
+def clean_up() -> "Generator[None, None, None]":
     """After the tests, delete the dummy rows; drop the tables/schemas only if this run created them.
 
     No CASCADE: dropping a schema fails instead of removing anything else in it.
@@ -258,7 +260,7 @@ def clean_up():
 
 # COMMAND ----------
 
-def test__weekly_aggregates():
+def test__weekly_aggregates() -> None:
     """One week with three fact rows from two markets gives the right min, max, average, sum and counts."""
     run_id = f"{RUN_PREFIX}-agg"
     c = new__commodity()
@@ -288,7 +290,7 @@ def test__weekly_aggregates():
 
 # COMMAND ----------
 
-def test__week_on_week_change_and_missing_week():
+def test__week_on_week_change_and_missing_week() -> None:
     """The change compares with the week exactly 7 days earlier; a missing week gives NULL, not an older week."""
     run_id = f"{RUN_PREFIX}-wow"
     c = new__commodity()
@@ -306,7 +308,7 @@ def test__week_on_week_change_and_missing_week():
     assert mart[W4]["prev_week_avg_price"] is None and mart[W4]["wow_change_pct"] is None
 
 
-def test__is_complete_week():
+def test__is_complete_week() -> None:
     """A week that ends after the last loaded date is incomplete; earlier full weeks are complete."""
     run_id = f"{RUN_PREFIX}-complete"
     c = new__commodity()
@@ -328,7 +330,7 @@ def test__is_complete_week():
 
 # COMMAND ----------
 
-def test__only_affected_weeks_are_rewritten():
+def test__only_affected_weeks_are_rewritten() -> None:
     """A run touching one week rewrites that week, the week before and the week after, and nothing else."""
     first_run = f"{RUN_PREFIX}-inc1"
     second_run = f"{RUN_PREFIX}-inc2"
@@ -367,7 +369,7 @@ def test__only_affected_weeks_are_rewritten():
 
 # COMMAND ----------
 
-def test__rerun_does_not_duplicate_rows():
+def test__rerun_does_not_duplicate_rows() -> None:
     """Running the same run twice leaves one row per week with the same values."""
     run_id = f"{RUN_PREFIX}-rerun"
     c = new__commodity()
@@ -388,16 +390,19 @@ def test__rerun_does_not_duplicate_rows():
 
 # COMMAND ----------
 
-def test__blank_run_id_fails():
+def test__blank_run_id_fails() -> None:
     """A blank run_id raises."""
     with pytest.raises(Exception):
         run__gold("")
 
 
-def test__run_id_without_clean_rows_fails():
-    """A run_id with no rows in clean raises."""
-    with pytest.raises(Exception):
-        run__gold(f"{RUN_PREFIX}-norows")
+def test__run_id_without_clean_rows_fails() -> None:
+    """A run_id with no rows in clean loads nothing."""
+    before = spark.table(MART).count()
+
+    run__gold(f"{RUN_PREFIX}-norows")
+
+    assert spark.table(MART).count() == before
 
 # COMMAND ----------
 

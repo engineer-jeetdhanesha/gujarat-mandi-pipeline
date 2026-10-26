@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Test: seed dimensions
 # MAGIC
-# MAGIC Runs `src/setup` and `src/seed_dims`, then checks that each dimension table holds exactly the rows of its
+# MAGIC Runs `src/setup` and `src/load_silver_dims`, then checks that each dimension table holds exactly the rows of its
 # MAGIC seed CSV (`dim_market`, `dim_commodity`, `dim_date`): `EXCEPT ALL` in both directions returns nothing.
 # MAGIC `updated_at` is not compared; the CSV does not have it.
 # MAGIC
@@ -53,7 +53,7 @@ schemas_existed = {
 
 # COMMAND ----------
 
-# MAGIC %run ../src/seed_dims
+# MAGIC %run ../src/load_silver_dims
 
 # COMMAND ----------
 
@@ -75,7 +75,7 @@ ipytest.autoconfig(raise_on_error=True, addopts=["-p", "no:cacheprovider"])
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def drop_created_objects():
+def drop_created_objects() -> "Generator[None, None, None]":
     """After the tests, drop the tables and schemas, only those this run created.
 
     No CASCADE: dropping a schema fails instead of removing anything else in it.
@@ -94,16 +94,16 @@ def drop_created_objects():
 # MAGIC %md
 # MAGIC ## Test: table matches file
 # MAGIC
-# MAGIC `seeds` and `seed_dir` come from `src/seed_dims`; each test gets the full file path and the table name. Both sides are compared as strings:
+# MAGIC `seeds` and `seed_dir` come from `src/load_silver_dims`; each test gets the full file path and the table name. Both sides are compared as strings:
 # MAGIC the CSV as read, the table with its columns cast to STRING (this also checks the casts).
 
 # COMMAND ----------
 
 # (file path, table name) for each seed.
-SEED_FILES = [(f"{seed_dir}/{file_name}", table_name) for file_name, table_name in seeds]
+SEED_FILES = [(f"{seed_dir}/{file_name}", table_name) for file_name, table_name, _ in seeds]
 
 
-def read__seed_file(file_path: str):
+def read__seed_file(file_path: str) -> "DataFrame":
     """Read a seed CSV with all columns as STRING."""
     return (
         spark.read
@@ -115,7 +115,7 @@ def read__seed_file(file_path: str):
 
 
 @pytest.mark.parametrize("file_path, table_name", SEED_FILES)
-def test__table_matches_seed_file(file_path, table_name):
+def test__table_matches_seed_file(file_path: str, table_name: str) -> None:
     """The table has exactly the rows of the seed file (EXCEPT ALL, both ways)."""
     file_df = read__seed_file(file_path)
     table_df = spark.table(table_name).drop("updated_at")

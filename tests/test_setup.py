@@ -200,7 +200,7 @@ ipytest.autoconfig(raise_on_error=True, addopts=["-p", "no:cacheprovider"])
 # COMMAND ----------
 
 @pytest.fixture(scope="module", autouse=True)
-def drop_created_objects():
+def drop_created_objects() -> "Generator[None, None, None]":
     """After the tests, drop the tables and schemas, only those this run created.
 
     No CASCADE: dropping a schema fails instead of removing anything else in it.
@@ -229,7 +229,7 @@ def drop_created_objects():
 
 # COMMAND ----------
 
-def test__get_default_catalog():
+def test__get_default_catalog() -> None:
     """get__default_catalog returns the workspace's current catalog name."""
     name = get__default_catalog()
     assert isinstance(name, str) and name
@@ -242,7 +242,7 @@ def test__get_default_catalog():
 
 # COMMAND ----------
 
-def test__create_schema_bronze():
+def test__create_schema_bronze() -> None:
     """The bronze schema exists in the default catalog."""
     schemas = spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'bronze'").collect()
     assert len(schemas) == 1
@@ -254,12 +254,12 @@ def test__create_schema_bronze():
 
 # COMMAND ----------
 
-def test__create_table_raw_mandi_transactions():
+def test__create_table_raw_mandi_transactions() -> None:
     """The bronze.raw_mandi_transactions table exists."""
     assert spark.catalog.tableExists(TABLE_NAME)
 
 
-def test__table_columns_and_types():
+def test__table_columns_and_types() -> None:
     """Source columns are all STRING; metadata columns keep their own types."""
     fields = spark.table(TABLE_NAME).schema.fields
     actual = [(f.name, f.dataType.simpleString()) for f in fields]
@@ -272,7 +272,7 @@ def test__table_columns_and_types():
 
 # COMMAND ----------
 
-def test__create_schema_silver():
+def test__create_schema_silver() -> None:
     """The silver schema exists in the default catalog."""
     schemas = spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'silver'").collect()
     assert len(schemas) == 1
@@ -285,13 +285,13 @@ def test__create_schema_silver():
 # COMMAND ----------
 
 @pytest.mark.parametrize("table", list(EXPECTED_SILVER_COLUMNS))
-def test__create_silver_table(table):
+def test__create_silver_table(table: str) -> None:
     """Each silver table exists."""
     assert spark.catalog.tableExists(SILVER_TABLES[table])
 
 
 @pytest.mark.parametrize("table", list(EXPECTED_SILVER_COLUMNS))
-def test__silver_table_columns_and_types(table):
+def test__silver_table_columns_and_types(table: str) -> None:
     """Each silver table has the columns and types of docs/table-structure.md, in order."""
     fields = spark.table(SILVER_TABLES[table]).schema.fields
     actual = [(f.name, f.dataType.simpleString()) for f in fields]
@@ -304,14 +304,14 @@ def test__silver_table_columns_and_types(table):
 
 # COMMAND ----------
 
-def test__create_schema_gold():
+def test__create_schema_gold() -> None:
     """The gold schema exists in the default catalog."""
     schemas = spark.sql(f"SHOW SCHEMAS IN {test_catalog} LIKE 'gold'").collect()
     assert len(schemas) == 1
 
 
 @pytest.mark.parametrize("table", list(EXPECTED_GOLD_COLUMNS))
-def test__gold_table_columns_and_types(table):
+def test__gold_table_columns_and_types(table: str) -> None:
     """Each gold table exists and has the columns and types of docs/table-structure.md, in order."""
     assert spark.catalog.tableExists(GOLD_TABLES[table])
     fields = spark.table(GOLD_TABLES[table]).schema.fields
