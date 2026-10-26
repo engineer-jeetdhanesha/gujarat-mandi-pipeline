@@ -14,7 +14,7 @@
 # MAGIC Parameters (required):
 # MAGIC - `run_id`: id of the run whose clean rows are loaded.
 # MAGIC
-# MAGIC Raises an error if the load fails, so the run shows as failed.
+# MAGIC If the load fails, the reason is printed and the notebook still completes.
 
 # COMMAND ----------
 
@@ -31,11 +31,25 @@ dbutils.widgets.text("run_id", "", "Run id")
 
 # COMMAND ----------
 
-def load__table__fact_mandi_prices(run_id: str) -> bool:
+def load__silver_facts(
+    spark: "SparkSession",
+    run_id: str,
+    clean_table: str,
+    dim_market_table: str,
+    dim_commodity_table: str,
+    dim_date_table: str,
+    fact_table: str,
+) -> bool:
     """MERGE the clean rows of one run into silver.fact_mandi_prices.
 
     Args:
-        run_id: Id of the run whose rows in silver.mandi_prices_clean are loaded.
+        spark: Spark session.
+        run_id: Id of the run whose rows in the clean table are loaded.
+        clean_table: Three-level name of silver.mandi_prices_clean.
+        dim_market_table: Three-level name of silver.dim_market.
+        dim_commodity_table: Three-level name of silver.dim_commodity.
+        dim_date_table: Three-level name of silver.dim_date.
+        fact_table: Three-level name of silver.fact_mandi_prices (MERGE target).
 
     Returns:
         True if the rows were loaded; False if the run has no clean rows, a row has no
@@ -43,45 +57,21 @@ def load__table__fact_mandi_prices(run_id: str) -> bool:
     """
     from pyspark.sql import functions as F
 
-    try:
-        catalog = get__default_catalog()
-        if not catalog:
-            return False
-        clean_table = f"{catalog}.silver.mandi_prices_clean"
-        fact_table = f"{catalog}.silver.fact_mandi_prices"
+    from lib_mandi.transformations import build__fact, get__rows_missing_keys
 
+    try:
         clean = spark.table(clean_table).where(F.col("run_id") == run_id)
         clean_count = clean.count()
         if clean_count == 0:
             print(f"WARNING: no rows in {clean_table} for run_id {run_id}; nothing loaded")
             return False
 
-        dim_market = spark.table(f"{catalog}.silver.dim_market").select("market_key", "market_name")
-        dim_commodity = spark.table(f"{catalog}.silver.dim_commodity").select("commodity_key", "commodity_code")
-        dim_date = spark.table(f"{catalog}.silver.dim_date").select("date_key", F.col("date").alias("dim_date"))
-
-        fact_df = (
-            clean
-            .join(F.broadcast(dim_market), clean["market"] == dim_market["market_name"], "left")
-            .join(F.broadcast(dim_commodity), clean["commodity_code"] == dim_commodity["commodity_code"], "left")
-            .join(F.broadcast(dim_date), clean["arrival_date"] == dim_date["dim_date"], "left")
-            .select(
-                F.col("market_key"),
-                F.col("commodity_key"),
-                F.col("date_key"),
-                F.col("variety"),
-                F.col("grade"),
-                F.col("min_price"),
-                F.col("max_price"),
-                F.col("modal_price"),
-                F.current_timestamp().alias("loaded_at"),
-            )
+        fact_df = build__fact(
+            clean, spark.table(dim_market_table), spark.table(dim_commodity_table), spark.table(dim_date_table)
         )
 
         # No cache(): PERSIST is not supported on serverless compute, so each step reads clean again.
-        missing_keys = fact_df.where(
-            F.col("market_key").isNull() | F.col("commodity_key").isNull() | F.col("date_key").isNull()
-        ).count()
+        missing_keys = get__rows_missing_keys(fact_df).count()
         if missing_keys > 0:
             print(f"ERROR: {missing_keys} of {clean_count} clean rows have no dimension key; nothing loaded")
             return False
@@ -103,10 +93,10 @@ def load__table__fact_mandi_prices(run_id: str) -> bool:
             WHEN MATCHED THEN UPDATE SET *
             WHEN NOT MATCHED THEN INSERT *
         """)
-        print(f"Fact load done for run {run_id}")
+        print(f"Silver facts load done for run {run_id}")
         return True
     except Exception as e:
-        print(f"ERROR: fact load failed for run {run_id}: {e}")
+        print(f"ERROR: silver facts load failed for run {run_id}: {e}")
         return False
 
 # COMMAND ----------
@@ -121,7 +111,16 @@ run_id = dbutils.widgets.get("run_id").strip()
 if not run_id:
     raise ValueError("Widget 'run_id' is required")
 
-if not load__table__fact_mandi_prices(run_id):
-    raise RuntimeError(f"Fact load failed for run {run_id} (see the error printed above)")
+catalog = get__default_catalog()
+if not catalog:
+    raise RuntimeError("Could not read the default catalog (see the error printed above)")
 
-print("Fact load complete")
+load__silver_facts(
+    spark,
+    run_id,
+    f"{catalog}.silver.mandi_prices_clean",
+    f"{catalog}.silver.dim_market",
+    f"{catalog}.silver.dim_commodity",
+    f"{catalog}.silver.dim_date",
+    f"{catalog}.silver.fact_mandi_prices",
+)

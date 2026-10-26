@@ -3,10 +3,10 @@
 # MAGIC # Setup: bronze, silver and gold
 # MAGIC
 # MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table, then the `silver` schema and the
-# MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`) and the
-# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`) and the
-# MAGIC `silver.fact_mandi_prices` table (loaded by `src/fact`), then the `gold` schema and the
-# MAGIC `gold.mart_price_weekly` table (loaded by `src/gold`),
+# MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/load_silver_dims`) and the
+# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/load_silver_transactions`) and the
+# MAGIC `silver.fact_mandi_prices` table (loaded by `src/load_silver_facts`), then the `gold` schema and the
+# MAGIC `gold.mart_price_weekly` table (loaded by `src/load_gold`),
 # MAGIC in the workspace's default catalog (`SELECT current_catalog()`), which must already exist.
 # MAGIC
 # MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
@@ -118,7 +118,7 @@ def create__schema__silver(catalog: str) -> bool:
 def create__table__dim_market(catalog: str) -> bool:
     """Create the silver.dim_market Delta table if it does not exist.
 
-    Loaded from seed/dim_market.csv by src/seed_dims.
+    Loaded from seed/dim_market.csv by src/load_silver_dims.
 
     Args:
         catalog: Unity Catalog name, e.g. "mandi_dev".
@@ -150,7 +150,7 @@ def create__table__dim_market(catalog: str) -> bool:
 def create__table__dim_commodity(catalog: str) -> bool:
     """Create the silver.dim_commodity Delta table if it does not exist.
 
-    Loaded from seed/dim_commodity.csv by src/seed_dims.
+    Loaded from seed/dim_commodity.csv by src/load_silver_dims.
 
     Args:
         catalog: Unity Catalog name, e.g. "mandi_dev".
@@ -183,7 +183,7 @@ def create__table__dim_commodity(catalog: str) -> bool:
 def create__table__dim_date(catalog: str) -> bool:
     """Create the silver.dim_date Delta table if it does not exist.
 
-    Loaded from seed/dim_date.csv by src/seed_dims.
+    Loaded from seed/dim_date.csv by src/load_silver_dims.
 
     Args:
         catalog: Unity Catalog name, e.g. "mandi_dev".
@@ -222,7 +222,7 @@ def create__table__dim_date(catalog: str) -> bool:
 def create__table__mandi_prices_clean(catalog: str) -> bool:
     """Create the silver.mandi_prices_clean Delta table if it does not exist.
 
-    Typed and standardised rows that passed the quality rules; MERGE target of src/silver.
+    Typed and standardised rows that passed the quality rules; MERGE target of src/load_silver_transactions.
     Natural key: market + commodity_code + variety + grade + arrival_date.
 
     Args:
@@ -314,7 +314,7 @@ def create__table__mandi_prices_rejected(catalog: str) -> bool:
 def create__table__fact_mandi_prices(catalog: str) -> bool:
     """Create the silver.fact_mandi_prices Delta table if it does not exist.
 
-    Derived from silver.mandi_prices_clean by src/fact; MERGE target on the grain
+    Derived from silver.mandi_prices_clean by src/load_silver_facts; MERGE target on the grain
     market x commodity x variety x grade x date.
 
     Args:
@@ -374,7 +374,7 @@ def create__schema__gold(catalog: str) -> bool:
 def create__table__mart_price_weekly(catalog: str) -> bool:
     """Create the gold.mart_price_weekly Delta table if it does not exist.
 
-    Built by src/gold from silver.fact_mandi_prices and the dimensions;
+    Built by src/load_gold from silver.fact_mandi_prices and the dimensions;
     one row per district x commodity x week.
 
     Args:

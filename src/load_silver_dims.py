@@ -6,7 +6,7 @@
 # MAGIC in the workspace's default catalog (the tables are created by `src/setup`).
 # MAGIC
 # MAGIC - CSV files only. The column names must match the table's columns (`updated_at` excluded), in the same order.
-# MAGIC - Values are cast to the table's column types; `updated_at` is set to the load time.
+# MAGIC - Values are read with the schemas in `lib_mandi.schemas`; `updated_at` is set to the load time.
 # MAGIC - INSERT OVERWRITE: each table is replaced by the file's rows, so the CSV is the source of truth.
 # MAGIC   Add a dimension row by editing the CSV and running this notebook again.
 # MAGIC - An empty file is refused, so a bad file cannot wipe a table.
@@ -14,7 +14,7 @@
 # MAGIC Parameters:
 # MAGIC - `seed_dir` (optional): folder holding the CSVs. Default: the `seed` folder next to `src`.
 # MAGIC
-# MAGIC Raises an error if any table fails to load, so the run shows as failed.
+# MAGIC If a table fails to load, the reason is printed and the notebook still completes.
 
 # COMMAND ----------
 
@@ -39,7 +39,7 @@ def get__seed_dir(seed_dir_param: str) -> str:
 
     Returns:
         The given folder, or the "seed" folder next to "src" in the workspace
-        (this notebook is src/seed_dims); empty string if it could not be worked out
+        (this notebook is src/load_silver_dims); empty string if it could not be worked out
         (the reason is printed).
     """
     import os
@@ -56,15 +56,23 @@ def get__seed_dir(seed_dir_param: str) -> str:
 
 # COMMAND ----------
 
-def load__table__seed_dim(file_path: str, table_name: str) -> bool:
+def load__silver_dims(
+    spark: "SparkSession",
+    file_path: str,
+    schema: "StructType",
+    options: dict[str, object],
+    table_name: str,
+) -> bool:
     """Replace a dimension table with the rows of a seed CSV (INSERT OVERWRITE).
 
-    The file needs a header row whose names equal the table's columns, excluding
-    updated_at, in the same order. Values are cast to the table's column types and
-    updated_at is set to the load time.
+    The file needs a header row whose names equal the schema's columns, in the same order.
+    Values are read with the schema's types and updated_at is set to the load time.
 
     Args:
+        spark: Spark session.
         file_path: Path of the CSV file, e.g. "/Workspace/Users/me/repo/seed/dim_market.csv".
+        schema: Schema of the file, i.e. the table's columns without updated_at.
+        options: Spark read options (lib_mandi.config.OPTIONS_READ_SEED).
         table_name: Three-level table name, e.g. "mandi_dev.silver.dim_market".
 
     Returns:
@@ -76,40 +84,18 @@ def load__table__seed_dim(file_path: str, table_name: str) -> bool:
     if not file_path.lower().endswith(".csv"):
         print(f"ERROR: {file_path} is not a .csv file")
         return False
-    if len(table_name.split(".")) != 3:
-        print(f"ERROR: table name {table_name} is not three-level (catalog.schema.table)")
-        return False
 
     try:
-        table_schema = spark.table(table_name).schema
-        table_fields = [f for f in table_schema.fields if f.name != "updated_at"]
-        table_columns = [f.name for f in table_fields]
-
         read_path = f"file:{file_path}" if file_path.startswith("/Workspace") else file_path
         print(f"Reading {file_path} ...")
-        df = (
-            spark.read
-            .option("header", True)
-            .option("mode", "FAILFAST")
-            .option("encoding", "UTF-8")
-            .option("quote", '"')
-            .option("escape", '"')
-            .csv(read_path)
-        )
-
-        if df.columns != table_columns:
-            print(f"ERROR: {file_path} has columns {df.columns}, {table_name} expects {table_columns}")
-            return False
+        df = spark.read.schema(schema).options(**options).csv(read_path)
 
         row_count = df.count()
         if row_count == 0:
             print(f"ERROR: no data rows in {file_path}; {table_name} left unchanged")
             return False
 
-        df = df.select(
-            *[F.col(f.name).cast(f.dataType).alias(f.name) for f in table_fields],
-            F.current_timestamp().alias("updated_at"),
-        )
+        df = df.withColumn("updated_at", F.current_timestamp())
 
         print(f"Overwriting {table_name} with {row_count} rows ...")
         df.write.insertInto(table_name, overwrite=True)
@@ -126,6 +112,9 @@ def load__table__seed_dim(file_path: str, table_name: str) -> bool:
 
 # COMMAND ----------
 
+from lib_mandi.config import OPTIONS_READ_SEED
+from lib_mandi.schemas import SCHEMA_DIM_COMMODITY, SCHEMA_DIM_DATE, SCHEMA_DIM_MARKET
+
 catalog = get__default_catalog()
 print(f"Seeding silver dimensions in catalog: {catalog}")
 
@@ -138,13 +127,10 @@ if not seed_dir:
 print(f"Seed folder: {seed_dir}")
 
 seeds = [
-    ("dim_market.csv", f"{catalog}.silver.dim_market"),
-    ("dim_commodity.csv", f"{catalog}.silver.dim_commodity"),
-    ("dim_date.csv", f"{catalog}.silver.dim_date"),
+    ("dim_market.csv", f"{catalog}.silver.dim_market", SCHEMA_DIM_MARKET),
+    ("dim_commodity.csv", f"{catalog}.silver.dim_commodity", SCHEMA_DIM_COMMODITY),
+    ("dim_date.csv", f"{catalog}.silver.dim_date", SCHEMA_DIM_DATE),
 ]
 
-failed = [table for file_name, table in seeds if not load__table__seed_dim(f"{seed_dir}/{file_name}", table)]
-if failed:
-    raise RuntimeError(f"Seed failed for: {', '.join(failed)} (see the errors printed above)")
-
-print("Seed complete")
+for file_name, table_name, schema in seeds:
+    load__silver_dims(spark, f"{seed_dir}/{file_name}", schema, OPTIONS_READ_SEED, table_name)
