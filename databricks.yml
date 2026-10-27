@@ -14,18 +14,9 @@ sync:
     - requirements-dev.txt
 
 variables:
-  catalog:
-    description: Unity Catalog that holds the bronze, silver and gold schemas
-    default: gujarat_mandi_pipeline_dev_ws
   file_path:
     description: Source CSV path for the bronze load (set per run)
     default: ""
-  spark_version:
-    description: Databricks Runtime of the job cluster
-    default: 16.4.x-scala2.12
-  node_type_id:
-    description: VM type of the job cluster
-    default: Standard_D2ds_v6
 
 targets:
   dev:
@@ -33,5 +24,3 @@ targets:
     default: true
     workspace:
       host: https://adb-7405617239301071.11.azuredatabricks.net
-    variables:
-      catalog: gujarat_mandi_pipeline_dev_ws
