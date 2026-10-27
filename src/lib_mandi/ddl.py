@@ -1,69 +1,62 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # Setup: bronze and silver
-# MAGIC
-# MAGIC Creates the `bronze` schema and the `bronze.raw_mandi_transactions` table, then the `silver` schema and the
-# MAGIC `silver.dim_market`, `silver.dim_commodity` and `silver.dim_date` tables (loaded by `src/seed_dims`) and the
-# MAGIC `silver.mandi_prices_clean` and `silver.mandi_prices_rejected` tables (loaded by `src/silver`) and the
-# MAGIC `silver.fact_mandi_prices` table (loaded by `src/fact`),
-# MAGIC in the workspace's default catalog (`SELECT current_catalog()`), which must already exist.
-# MAGIC
-# MAGIC Safe to re-run: every statement uses `IF NOT EXISTS`.
-# MAGIC Note: `IF NOT EXISTS` skips an existing table even if its columns differ; it never alters it.
-# MAGIC
-# MAGIC Raises an error if any step fails, so the run shows as failed.
+"""Create the schemas and tables of the pipeline. Safe to re-run: every statement uses IF NOT EXISTS.
 
-# COMMAND ----------
+IF NOT EXISTS skips an existing table even if its columns differ; it never alters it. Each function takes
+the catalog and schema as parameters (only the table name is fixed), handles its own errors, prints the
+reason and returns False.
+"""
 
-# MAGIC %run ./utility
+from __future__ import annotations
 
-# COMMAND ----------
+from typing import TYPE_CHECKING
 
-# MAGIC %md
-# MAGIC ## Functions
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
 
-# COMMAND ----------
 
-def create__schema__bronze(catalog: str) -> bool:
-    """Create the bronze schema if it does not exist.
+def create__schema(spark: SparkSession, catalog: str, schema: str, comment: str) -> bool:
+    """Create a schema if it does not exist.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema name, e.g. "bronze".
+        comment: Description stored with the schema.
 
     Returns:
         True if the schema exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating schema {catalog}.bronze (if not exists) ...")
+        print(f"Creating schema {catalog}.{schema} (if not exists) ...")
         spark.sql(f"""
-            CREATE SCHEMA IF NOT EXISTS {catalog}.bronze
-            COMMENT 'Raw data stored exactly as received'
+            CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}
+            COMMENT '{comment}'
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create schema {catalog}.bronze: {e}")
+        print(f"ERROR: could not create schema {catalog}.{schema}: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__raw_mandi_transactions(catalog: str) -> bool:
-    """Create the bronze.raw_mandi_transactions Delta table if it does not exist.
+def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the raw_mandi_transactions Delta table if it does not exist.
 
     All source columns are STRING; typing happens in silver.
     Append only; duplicates are removed in silver. No partitioning.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.bronze.raw_mandi_transactions (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.raw_mandi_transactions (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.bronze.raw_mandi_transactions (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.raw_mandi_transactions (
                 state           STRING    COMMENT 'As received (always Gujarat)',
                 district        STRING    COMMENT 'Raw district spelling (e.g. Banaskanth)',
                 market          STRING    COMMENT 'APMC yard name, raw',
@@ -86,50 +79,28 @@ def create__table__raw_mandi_transactions(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.bronze.raw_mandi_transactions: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.raw_mandi_transactions: {e}")
         return False
 
-# COMMAND ----------
 
-def create__schema__silver(catalog: str) -> bool:
-    """Create the silver schema if it does not exist.
+def create__table__dim_market(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the dim_market Delta table if it does not exist.
 
-    Args:
-        catalog: Unity Catalog name, e.g. "mandi_dev".
-
-    Returns:
-        True if the schema exists afterwards; False if creating it failed
-        (the reason is printed).
-    """
-    try:
-        print(f"Creating schema {catalog}.silver (if not exists) ...")
-        spark.sql(f"""
-            CREATE SCHEMA IF NOT EXISTS {catalog}.silver
-            COMMENT 'Cleaned, typed and standardised data, dimensions and facts'
-        """)
-        return True
-    except Exception as e:
-        print(f"ERROR: could not create schema {catalog}.silver: {e}")
-        return False
-
-# COMMAND ----------
-
-def create__table__dim_market(catalog: str) -> bool:
-    """Create the silver.dim_market Delta table if it does not exist.
-
-    Loaded from seed/dim_market.csv by src/seed_dims.
+    Loaded from seed/dim_market.csv by src/load_silver_dims.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.dim_market (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.dim_market (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.dim_market (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_market (
                 market_key     BIGINT    COMMENT 'Surrogate key',
                 state          STRING    COMMENT 'Gujarat',
                 district_name  STRING    COMMENT 'Standard district name',
@@ -141,27 +112,28 @@ def create__table__dim_market(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.dim_market: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.dim_market: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__dim_commodity(catalog: str) -> bool:
-    """Create the silver.dim_commodity Delta table if it does not exist.
+def create__table__dim_commodity(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the dim_commodity Delta table if it does not exist.
 
-    Loaded from seed/dim_commodity.csv by src/seed_dims.
+    Loaded from seed/dim_commodity.csv by src/load_silver_dims.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.dim_commodity (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.dim_commodity (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.dim_commodity (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_commodity (
                 commodity_key   BIGINT    COMMENT 'Surrogate key',
                 commodity_code  INT       COMMENT 'Agmarknet commodity code, natural key',
                 commodity_name  STRING    COMMENT 'Standard commodity name',
@@ -174,27 +146,28 @@ def create__table__dim_commodity(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.dim_commodity: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.dim_commodity: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__dim_date(catalog: str) -> bool:
-    """Create the silver.dim_date Delta table if it does not exist.
+def create__table__dim_date(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the dim_date Delta table if it does not exist.
 
-    Loaded from seed/dim_date.csv by src/seed_dims.
+    Loaded from seed/dim_date.csv by src/load_silver_dims.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.dim_date (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.dim_date (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.dim_date (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_date (
                 date_key    INT       COMMENT 'yyyyMMdd',
                 date        DATE      COMMENT 'Calendar date, natural key',
                 day         INT       COMMENT 'Day of month',
@@ -213,28 +186,29 @@ def create__table__dim_date(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.dim_date: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.dim_date: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__mandi_prices_clean(catalog: str) -> bool:
-    """Create the silver.mandi_prices_clean Delta table if it does not exist.
+def create__table__mandi_prices_clean(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the mandi_prices_clean Delta table if it does not exist.
 
-    Typed and standardised rows that passed the quality rules; MERGE target of src/silver.
+    Typed and standardised rows that passed the quality rules; MERGE target of src/load_silver_transactions.
     Natural key: market + commodity_code + variety + grade + arrival_date.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.mandi_prices_clean (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.mandi_prices_clean (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.mandi_prices_clean (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.mandi_prices_clean (
                 state           STRING        COMMENT 'Trimmed',
                 district        STRING        COMMENT 'Raw district (trimmed)',
                 district_std    STRING        COMMENT 'Standard district name from silver.dim_market',
@@ -256,28 +230,29 @@ def create__table__mandi_prices_clean(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.mandi_prices_clean: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.mandi_prices_clean: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__mandi_prices_rejected(catalog: str) -> bool:
-    """Create the silver.mandi_prices_rejected Delta table if it does not exist.
+def create__table__mandi_prices_rejected(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the mandi_prices_rejected Delta table if it does not exist.
 
     Rows that failed a quality rule, with the raw values kept. run_id, file_name and row_no
     identify the bronze row.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.mandi_prices_rejected (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.mandi_prices_rejected (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.mandi_prices_rejected (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.mandi_prices_rejected (
                 state           STRING    COMMENT 'As received',
                 district        STRING    COMMENT 'As received',
                 market          STRING    COMMENT 'As received',
@@ -305,28 +280,29 @@ def create__table__mandi_prices_rejected(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.mandi_prices_rejected: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.mandi_prices_rejected: {e}")
         return False
 
-# COMMAND ----------
 
-def create__table__fact_mandi_prices(catalog: str) -> bool:
-    """Create the silver.fact_mandi_prices Delta table if it does not exist.
+def create__table__fact_mandi_prices(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the fact_mandi_prices Delta table if it does not exist.
 
-    Derived from silver.mandi_prices_clean by src/fact; MERGE target on the grain
+    Derived from silver.mandi_prices_clean by src/load_silver_facts; MERGE target on the grain
     market x commodity x variety x grade x date.
 
     Args:
+        spark: Spark session.
         catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
     Returns:
         True if the table exists afterwards; False if creating it failed
         (the reason is printed).
     """
     try:
-        print(f"Creating table {catalog}.silver.fact_mandi_prices (if not exists) ...")
+        print(f"Creating table {catalog}.{schema}.fact_mandi_prices (if not exists) ...")
         spark.sql(f"""
-            CREATE TABLE IF NOT EXISTS {catalog}.silver.fact_mandi_prices (
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_mandi_prices (
                 market_key     BIGINT        COMMENT 'FK to dim_market',
                 commodity_key  BIGINT        COMMENT 'FK to dim_commodity',
                 date_key       INT           COMMENT 'FK to dim_date',
@@ -342,46 +318,51 @@ def create__table__fact_mandi_prices(catalog: str) -> bool:
         """)
         return True
     except Exception as e:
-        print(f"ERROR: could not create table {catalog}.silver.fact_mandi_prices: {e}")
+        print(f"ERROR: could not create table {catalog}.{schema}.fact_mandi_prices: {e}")
         return False
 
-# COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Run
+def create__table__mart_price_weekly(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the mart_price_weekly Delta table if it does not exist.
 
-# COMMAND ----------
+    Built by src/load_gold from silver.fact_mandi_prices and the dimensions;
+    one row per district x commodity x week.
 
-catalog = get__default_catalog()
-print(f"Setting up bronze and silver in catalog: {catalog}")
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "silver".
 
-if not catalog:
-    raise RuntimeError("Could not read the default catalog (see the error printed above)")
-
-if not create__schema__bronze(catalog):
-    raise RuntimeError(f"Could not create schema {catalog}.bronze (see the error printed above)")
-print(f"Schema ready: {catalog}.bronze")
-
-if not create__table__raw_mandi_transactions(catalog):
-    raise RuntimeError(f"Could not create table {catalog}.bronze.raw_mandi_transactions (see the error printed above)")
-print(f"Table ready: {catalog}.bronze.raw_mandi_transactions")
-
-if not create__schema__silver(catalog):
-    raise RuntimeError(f"Could not create schema {catalog}.silver (see the error printed above)")
-print(f"Schema ready: {catalog}.silver")
-
-silver_tables = (
-    create__table__dim_market,
-    create__table__dim_commodity,
-    create__table__dim_date,
-    create__table__mandi_prices_clean,
-    create__table__mandi_prices_rejected,
-    create__table__fact_mandi_prices,
-)
-for create__table in silver_tables:
-    table = create__table.__name__.replace("create__table__", "")
-    if not create__table(catalog):
-        raise RuntimeError(f"Could not create table {catalog}.silver.{table} (see the error printed above)")
-    print(f"Table ready: {catalog}.silver.{table}")
-
-print("Setup complete")
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.{schema}.mart_price_weekly (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.mart_price_weekly (
+                year                 INT           COMMENT 'ISO year of the week',
+                week_number          INT           COMMENT 'ISO week number',
+                week_start           DATE          COMMENT 'Monday of the week',
+                district_name        STRING        COMMENT 'Standard district name',
+                commodity_code       INT           COMMENT 'Commodity code',
+                commodity_name       STRING        COMMENT 'Standard commodity name',
+                category             STRING        COMMENT 'Commodity category',
+                min_price            DECIMAL(10,2) COMMENT 'Lowest min price of the week, Rs/quintal',
+                max_price            DECIMAL(10,2) COMMENT 'Highest max price of the week, Rs/quintal',
+                avg_modal_price      DECIMAL(10,2) COMMENT 'sum_modal_price / price_records, Rs/quintal',
+                prev_week_avg_price  DECIMAL(10,2) COMMENT 'avg_modal_price of the week 7 days earlier; NULL if none',
+                wow_change_pct       DECIMAL(10,2) COMMENT 'Week-on-week change in percent (12.5 = +12.5%); NULL if no previous week',
+                price_records        BIGINT        COMMENT 'Number of price rows in the group',
+                sum_modal_price      DECIMAL(18,2) COMMENT 'Sum of modal prices, for exact rollups',
+                markets_count        BIGINT        COMMENT 'Distinct markets reporting',
+                is_complete_week     BOOLEAN       COMMENT 'False if the week starts before the first or ends after the last loaded date',
+                updated_at           TIMESTAMP     COMMENT 'Last MERGE time'
+            )
+            USING DELTA
+            COMMENT 'Weekly prices per district and commodity, with week-on-week change'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.{schema}.mart_price_weekly: {e}")
+        return False

@@ -1,13 +1,18 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # Utility: shared helpers
-# MAGIC
-# MAGIC Helper functions used by the other notebooks. Run it at the top of each notebook with `%run ./utility`.
+"""Small helpers shared by the notebooks."""
 
-# COMMAND ----------
+from __future__ import annotations
 
-def get__default_catalog() -> str:
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
+
+
+def get__default_catalog(spark: SparkSession) -> str:
     """Return the name of the workspace's current (default) catalog.
+
+    Args:
+        spark: Spark session.
 
     Returns:
         Catalog name, e.g. "mandi_dev"; empty string if it could not be read

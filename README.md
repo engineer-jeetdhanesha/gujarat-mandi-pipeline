@@ -103,9 +103,9 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
 | Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the CSV files in `seed/` |
 | Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
-| Gold | data marts | Aggregated tables for the dashboard (to be designed) |
+| Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity, with week-on-week change; updated incrementally per run. More marts are planned |
 
-The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/seed_dims`), then repair the rejected rows.
+The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/load_silver_dims`), then repair the rejected rows.
 
 ## Pipeline run modes
 
@@ -216,8 +216,22 @@ Planned inputs; names may change when the code is written.
 │   ├── table-structure.html      Same, rendered for reading
 │   └── high-level-design.html    Architecture diagram with tech stack
 ├── seed/                         CSV files for the silver dimensions
-├── src/                          Databricks notebooks: setup, utility, bronze, seed_dims
-└── tests/                        pytest notebooks, one per source notebook
+├── src/
+│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
+│   │                             (widgets, catalog lookup and the extract -> transform -> load calls)
+│   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
+├── tests/
+│   ├── test_*.ipynb              pytest notebooks run on Databricks, one per source notebook
+│   └── unit/                     pytest on the transforms with a local Spark session (for CI)
+├── pytest.ini
+└── requirements-dev.txt
+```
+
+Run the unit tests without Databricks (needs Java 17+ for local Spark):
+
+```
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Roadmap
@@ -228,12 +242,13 @@ Planned inputs; names may change when the code is written.
 - [x] Bronze load, single-day file (#25)
 - [x] Silver dimension tables and seed files (#27)
 - [ ] Bronze load (API, Backfill)
-- [ ] Silver clean and rejected tables (#30)
+- [x] Silver clean and rejected tables (#30)
 - [ ] Error-mode reprocessing
-- [ ] Silver fact table
+- [x] Silver fact table (#34)
 - [ ] Silver post-load checks
 - [ ] Pipeline audit table
-- [ ] Gold data marts
+- [ ] Gold weekly price mart (#32)
+- [ ] More gold marts
 - [ ] Dashboard
 - [ ] Azure DevOps CI/CD
 
