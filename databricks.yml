@@ -35,6 +35,8 @@ targets:
     permissions:
       - user_name: engineer.jeetdhanesha@gmail.com
         level: CAN_MANAGE
+      - service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
+        level: CAN_MANAGE
 
   prod:
     mode: production
@@ -45,4 +47,6 @@ targets:
       service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
     permissions:
       - user_name: engineer.jeetdhanesha@gmail.com
+        level: CAN_MANAGE
+      - service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
         level: CAN_MANAGE
