@@ -5,15 +5,15 @@ import pytest
 from pyspark.sql import DataFrame, SparkSession
 
 from lib_mandi import transformations as t
-from lib_mandi.dq_rules import DQ_RULES
-from lib_mandi.schemas import SCHEMA_SOURCE
+from lib_mandi.dq_checks import dq_check__missing_market
+from lib_mandi.config import SCHEMA_SOURCE
 
 
 # --- bronze ---
 
 def test__ingest_metadata_numbers_rows_in_order(spark: SparkSession) -> None:
     df = spark.createDataFrame([("Gujarat",) + ("x",) * 10, ("Gujarat",) + ("y",) * 10], SCHEMA_SOURCE)
-    rows = t.add__ingest_metadata(df, "run1", "f.csv").orderBy("_row_no").collect()
+    rows = t.transform__bronze(df, "run1", "f.csv").orderBy("_row_no").collect()
     assert [r["_row_no"] for r in rows] == [1, 2]
     assert [r["district"] for r in rows] == ["x", "y"]
     assert {(r["_run_id"], r["_file_name"], r["_source_mode"]) for r in rows} == {("run1", "f.csv", "FILE")}
@@ -54,7 +54,9 @@ def bronze_df(spark: SparkSession, rows: list[dict[str, object]]) -> DataFrame:
 
 def split(spark: SparkSession, rows: list[dict[str, object]]) -> tuple[DataFrame, DataFrame]:
     """Returns (clean, rejected) for the bronze rows."""
-    return t.split__clean_rejected(bronze_df(spark, rows), *silver_dims(spark), "run1", SCHEMA_SOURCE, DQ_RULES)
+    result = t.transform__silver_transactions(bronze_df(spark, rows), *silver_dims(spark), "run1", SCHEMA_SOURCE)
+    assert result is not None
+    return result
 
 
 def test__valid_row_goes_to_clean_with_trimmed_values(spark: SparkSession) -> None:
@@ -141,21 +143,19 @@ def fact_clean_df(spark: SparkSession, rows: list[tuple]) -> DataFrame:
 
 def test__build_fact_looks_up_keys(spark: SparkSession) -> None:
     clean = fact_clean_df(spark, [("M1", 100, date(2026, 1, 5), "Other", "FAQ", Decimal("1"), Decimal("3"), Decimal("2"))])
-    out = t.build__fact(clean, *fact_dims(spark))
+    out = t.transform__silver_facts(clean, *fact_dims(spark))
+    assert out is not None
     assert out.columns == [
         "market_key", "commodity_key", "date_key", "variety", "grade",
         "min_price", "max_price", "modal_price", "loaded_at",
     ]
     row = out.first()
     assert (row["market_key"], row["commodity_key"], row["date_key"]) == (1, 10, 20260105)
-    assert t.get__rows_missing_keys(out).count() == 0
 
 
-def test__unknown_market_has_null_key_and_is_found(spark: SparkSession) -> None:
+def test__unknown_market_returns_none(spark: SparkSession) -> None:
     clean = fact_clean_df(spark, [("Nope", 100, date(2026, 1, 5), "Other", "FAQ", Decimal("1"), Decimal("3"), Decimal("2"))])
-    out = t.build__fact(clean, *fact_dims(spark))
-    assert out.count() == 1
-    assert t.get__rows_missing_keys(out).count() == 1
+    assert t.transform__silver_facts(clean, *fact_dims(spark)) is None
 
 
 # --- gold: weekly mart ---
@@ -195,7 +195,9 @@ def run_gold(
     spark: SparkSession, fact_rows: list[tuple[int, date, str, str, str]], clean_dates: list[date]
 ) -> DataFrame:
     market, commodity, dt = gold_dims(spark)
-    return t.build__weekly_mart(gold_clean_df(spark, clean_dates), gold_fact_df(spark, fact_rows), market, commodity, dt)
+    out = t.transform__gold_weekly_mart(gold_clean_df(spark, clean_dates), gold_fact_df(spark, fact_rows), market, commodity, dt)
+    assert out is not None
+    return out
 
 
 def test__weekly_aggregates_and_wow_change(spark: SparkSession) -> None:
@@ -249,3 +251,33 @@ def test__only_rewrite_weeks_are_returned(spark: SparkSession) -> None:
         [date(2026, 12, 14)],
     )
     assert sorted(r["week_start"] for r in out.collect()) == [MON1, MON2, MON3]
+
+
+def test__gold_returns_none_without_fact_rows_for_the_weeks(spark: SparkSession) -> None:
+    market, commodity, dt = gold_dims(spark)
+    fact = gold_fact_df(spark, [(1, date(2026, 12, 28), "10", "30", "20")])
+    clean = gold_clean_df(spark, [date(2026, 12, 7)])
+    assert t.transform__gold_weekly_mart(clean, fact, market, commodity, dt) is None
+
+
+# --- silver: dimensions ---
+
+def test__silver_dims_adds_updated_at(spark: SparkSession) -> None:
+    df = spark.createDataFrame([(1, "M1")], ["market_key", "market_name"])
+    out = t.transform__silver_dims(df)
+    assert out is not None
+    assert out.columns == ["market_key", "market_name", "updated_at"]
+    assert out.first()["updated_at"] is not None
+
+
+# --- dq checks ---
+
+def test__dq_check_appends_rule_id_and_reason_only_to_failing_rows(spark: SparkSession) -> None:
+    df = spark.createDataFrame(
+        [("", ["earlier"], ["Earlier reason"]), ("M1", [], [])],
+        "t_market string, rule_ids array<string>, rule_reasons array<string>",
+    )
+    rows = {r["t_market"]: r for r in dq_check__missing_market(df).collect()}
+    assert rows[""]["rule_ids"] == ["earlier", "missing_market"]
+    assert rows[""]["rule_reasons"] == ["Earlier reason", "Market is missing"]
+    assert rows["M1"]["rule_ids"] == [] and rows["M1"]["rule_reasons"] == []
