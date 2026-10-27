@@ -6,7 +6,7 @@
 # MAGIC in the workspace's default catalog (the tables are created by `src/setup`).
 # MAGIC
 # MAGIC - CSV files only. The column names must match the table's columns (`updated_at` excluded), in the same order.
-# MAGIC - Values are read with the schemas in `lib_mandi.schemas`; `updated_at` is set to the load time.
+# MAGIC - Values are read with the schemas in `lib_mandi.config`; `updated_at` is set to the load time.
 # MAGIC - INSERT OVERWRITE: each table is replaced by the file's rows, so the CSV is the source of truth.
 # MAGIC   Add a dimension row by editing the CSV and running this notebook again.
 # MAGIC - An empty file is refused, so a bad file cannot wipe a table.
@@ -19,10 +19,6 @@
 # COMMAND ----------
 
 dbutils.widgets.text("seed_dir", "", "Seed folder (optional)")
-
-# COMMAND ----------
-
-# MAGIC %run ./utility
 
 # COMMAND ----------
 
@@ -56,66 +52,18 @@ def get__seed_dir(seed_dir_param: str) -> str:
 
 # COMMAND ----------
 
-def load__silver_dims(
-    spark: "SparkSession",
-    file_path: str,
-    schema: "StructType",
-    options: dict[str, object],
-    table_name: str,
-) -> bool:
-    """Replace a dimension table with the rows of a seed CSV (INSERT OVERWRITE).
-
-    The file needs a header row whose names equal the schema's columns, in the same order.
-    Values are read with the schema's types and updated_at is set to the load time.
-
-    Args:
-        spark: Spark session.
-        file_path: Path of the CSV file, e.g. "/Workspace/Users/me/repo/seed/dim_market.csv".
-        schema: Schema of the file, i.e. the table's columns without updated_at.
-        options: Spark read options (lib_mandi.config.OPTIONS_READ_SEED).
-        table_name: Three-level table name, e.g. "mandi_dev.silver.dim_market".
-
-    Returns:
-        True if the table was loaded; False if an input is invalid, the file is empty
-        or the load failed (the reason is printed). The table is unchanged on False.
-    """
-    from pyspark.sql import functions as F
-
-    if not file_path.lower().endswith(".csv"):
-        print(f"ERROR: {file_path} is not a .csv file")
-        return False
-
-    try:
-        read_path = f"file:{file_path}" if file_path.startswith("/Workspace") else file_path
-        print(f"Reading {file_path} ...")
-        df = spark.read.schema(schema).options(**options).csv(read_path)
-
-        row_count = df.count()
-        if row_count == 0:
-            print(f"ERROR: no data rows in {file_path}; {table_name} left unchanged")
-            return False
-
-        df = df.withColumn("updated_at", F.current_timestamp())
-
-        print(f"Overwriting {table_name} with {row_count} rows ...")
-        df.write.insertInto(table_name, overwrite=True)
-        print(f"Loaded {row_count} rows into {table_name}")
-        return True
-    except Exception as e:
-        print(f"ERROR: seed load failed for {table_name}: {e}")
-        return False
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Run
 
 # COMMAND ----------
 
-from lib_mandi.config import OPTIONS_READ_SEED
-from lib_mandi.schemas import SCHEMA_DIM_COMMODITY, SCHEMA_DIM_DATE, SCHEMA_DIM_MARKET
+from lib_mandi.config import OPTIONS_READ_SEED, SCHEMA_DIM_COMMODITY, SCHEMA_DIM_DATE, SCHEMA_DIM_MARKET
+from lib_mandi.extract import extract__silver_dims
+from lib_mandi.load import load__silver_dims
+from lib_mandi.transformations import transform__silver_dims
+from lib_mandi.utility import get__default_catalog
 
-catalog = get__default_catalog()
+catalog = get__default_catalog(spark)
 print(f"Seeding silver dimensions in catalog: {catalog}")
 
 if not catalog:
@@ -133,4 +81,8 @@ seeds = [
 ]
 
 for file_name, table_name, schema in seeds:
-    load__silver_dims(spark, f"{seed_dir}/{file_name}", schema, OPTIONS_READ_SEED, table_name)
+    df = extract__silver_dims(spark, f"{seed_dir}/{file_name}", schema, OPTIONS_READ_SEED)
+    if df is not None:
+        df = transform__silver_dims(df)
+    if df is not None:
+        load__silver_dims(df, table_name)

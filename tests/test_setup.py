@@ -192,6 +192,8 @@ import sys
 import ipytest
 import pytest
 
+from lib_mandi.utility import get__default_catalog
+
 # Keep pytest from writing __pycache__ into the Git folder.
 sys.dont_write_bytecode = True
 
@@ -231,7 +233,7 @@ def drop_created_objects() -> "Generator[None, None, None]":
 
 def test__get_default_catalog() -> None:
     """get__default_catalog returns the workspace's current catalog name."""
-    name = get__default_catalog()
+    name = get__default_catalog(spark)
     assert isinstance(name, str) and name
     assert name == spark.catalog.currentCatalog()
 
