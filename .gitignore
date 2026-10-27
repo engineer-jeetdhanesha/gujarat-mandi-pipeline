@@ -3,3 +3,6 @@ __pycache__/
 spark-warehouse/
 metastore_db/
 derby.log
+
+# Databricks bundle state
+.databricks/

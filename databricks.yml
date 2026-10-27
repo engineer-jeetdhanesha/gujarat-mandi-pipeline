@@ -1,0 +1,26 @@
+bundle:
+  name: gujarat-mandi-pipeline
+
+include:
+  - resources/*.yml
+
+sync:
+  exclude:
+    - .vscode
+    - .claude
+    - docs
+    - tests
+    - pytest.ini
+    - requirements-dev.txt
+
+variables:
+  file_path:
+    description: Source CSV path for the bronze load (set per run)
+    default: ""
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-7405617239301071.11.azuredatabricks.net
