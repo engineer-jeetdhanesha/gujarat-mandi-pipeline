@@ -217,9 +217,9 @@ Planned inputs; names may change when the code is written.
 │   └── high-level-design.html    Architecture diagram with tech stack
 ├── seed/                         CSV files for the silver dimensions
 ├── src/
-│   ├── *.py                      Databricks notebooks: setup, utility, load_bronze, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
-│   │                             (widgets, table reads, MERGE/writes; call lib_mandi)
-│   └── lib_mandi/                transformations, schemas, read options and data quality rules (no Databricks globals)
+│   ├── *.py                      Databricks notebooks: setup, load_bronze, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
+│   │                             (widgets, catalog lookup and the extract -> transform -> load calls)
+│   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
 ├── tests/
 │   ├── test_*.py                 pytest notebooks run on Databricks, one per source notebook
 │   └── unit/                     pytest on the transforms with a local Spark session (for CI)
