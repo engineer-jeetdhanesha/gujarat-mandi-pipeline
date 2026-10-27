@@ -1,0 +1,33 @@
+resources:
+  jobs:
+    mandi_setup:
+      name: mandi_setup
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+
+      parameters:
+        - name: run_id
+          default: "{{job.run_id}}"
+
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../src/setup.ipynb
+
+        - task_key: load_bronze_dims
+          depends_on:
+            - task_key: setup
+          notebook_task:
+            notebook_path: ../src/load_bronze_dims.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"
+
+        - task_key: load_silver_dims
+          depends_on:
+            - task_key: load_bronze_dims
+          notebook_task:
+            notebook_path: ../src/load_silver_dims.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"

@@ -38,6 +38,32 @@ def create__schema(spark: SparkSession, catalog: str, schema: str, comment: str)
         return False
 
 
+def create__volume(spark: SparkSession, catalog: str, schema: str, volume: str, comment: str) -> bool:
+    """Create a managed volume if it does not exist.
+
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the volume is created in, e.g. "bronze"; it must exist.
+        volume: Volume name, e.g. "landing_zone".
+        comment: Description stored with the volume.
+
+    Returns:
+        True if the volume exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating volume {catalog}.{schema}.{volume} (if not exists) ...")
+        spark.sql(f"""
+            CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume}
+            COMMENT '{comment}'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create volume {catalog}.{schema}.{volume}: {e}")
+        return False
+
+
 def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, schema: str) -> bool:
     """Create the raw_mandi_transactions Delta table if it does not exist.
 
@@ -80,6 +106,128 @@ def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, sch
         return True
     except Exception as e:
         print(f"ERROR: could not create table {catalog}.{schema}.raw_mandi_transactions: {e}")
+        return False
+
+
+def create__table__raw_dim_market(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the raw_dim_market Delta table if it does not exist.
+
+    Loaded from seed/dim_market.csv by src/load_bronze_dims. All seed columns are STRING; typing and checks happen in silver.
+    Append only. No partitioning.
+
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "bronze".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.{schema}.raw_dim_market (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.raw_dim_market (
+                market_key     STRING    COMMENT 'Market key as in the file',
+                state          STRING    COMMENT 'State',
+                district_name  STRING    COMMENT 'Standard district name',
+                market_name    STRING    COMMENT 'APMC yard name',
+                _ingested_at   TIMESTAMP COMMENT 'Load time',
+                _source_mode   STRING    COMMENT 'FILE',
+                _file_name     STRING    COMMENT 'Seed file',
+                _run_id        STRING    COMMENT 'Run that loaded the row',
+                _row_no        BIGINT    COMMENT 'Row number within the file'
+            )
+            USING DELTA
+            COMMENT 'Raw dim_market seed rows stored as received, one batch per run'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.{schema}.raw_dim_market: {e}")
+        return False
+
+
+def create__table__raw_dim_commodity(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the raw_dim_commodity Delta table if it does not exist.
+
+    Loaded from seed/dim_commodity.csv by src/load_bronze_dims. All seed columns are STRING; typing and checks happen in silver.
+    Append only. No partitioning.
+
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "bronze".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.{schema}.raw_dim_commodity (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.raw_dim_commodity (
+                commodity_key  STRING    COMMENT 'Commodity key as in the file',
+                commodity_code STRING    COMMENT 'Agmarknet commodity code',
+                commodity_name STRING    COMMENT 'Standard commodity name',
+                category       STRING    COMMENT 'Category',
+                is_perishable  STRING    COMMENT 'true / false',
+                _ingested_at   TIMESTAMP COMMENT 'Load time',
+                _source_mode   STRING    COMMENT 'FILE',
+                _file_name     STRING    COMMENT 'Seed file',
+                _run_id        STRING    COMMENT 'Run that loaded the row',
+                _row_no        BIGINT    COMMENT 'Row number within the file'
+            )
+            USING DELTA
+            COMMENT 'Raw dim_commodity seed rows stored as received, one batch per run'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.{schema}.raw_dim_commodity: {e}")
+        return False
+
+
+def create__table__raw_dim_date(spark: SparkSession, catalog: str, schema: str) -> bool:
+    """Create the raw_dim_date Delta table if it does not exist.
+
+    Loaded from seed/dim_date.csv by src/load_bronze_dims. All seed columns are STRING; typing and checks happen in silver.
+    Append only. No partitioning.
+
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the table is created in, e.g. "bronze".
+
+    Returns:
+        True if the table exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating table {catalog}.{schema}.raw_dim_date (if not exists) ...")
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {catalog}.{schema}.raw_dim_date (
+                date_key       STRING    COMMENT 'yyyyMMdd as in the file',
+                date           STRING    COMMENT 'yyyy-MM-dd',
+                day            STRING    COMMENT 'Day of month',
+                day_name       STRING    COMMENT 'Day name',
+                week_start     STRING    COMMENT 'Monday of the week',
+                month          STRING    COMMENT 'Month number',
+                month_name     STRING    COMMENT 'Month name',
+                quarter        STRING    COMMENT 'Quarter',
+                year           STRING    COMMENT 'Year',
+                is_weekend     STRING    COMMENT 'true / false',
+                season         STRING    COMMENT 'Season',
+                _ingested_at   TIMESTAMP COMMENT 'Load time',
+                _source_mode   STRING    COMMENT 'FILE',
+                _file_name     STRING    COMMENT 'Seed file',
+                _run_id        STRING    COMMENT 'Run that loaded the row',
+                _row_no        BIGINT    COMMENT 'Row number within the file'
+            )
+            USING DELTA
+            COMMENT 'Raw dim_date seed rows stored as received, one batch per run'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create table {catalog}.{schema}.raw_dim_date: {e}")
         return False
 
 

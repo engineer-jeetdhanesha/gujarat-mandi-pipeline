@@ -26,7 +26,37 @@ SCHEMA_SOURCE = StructType([
     StructField("modal_price", StringType(), True),
 ])
 
-# Seed files: the columns of the silver dimension tables, without updated_at.
+# Seed files as received (bronze): every value is kept as a string.
+SCHEMA_RAW_DIM_MARKET = StructType([
+    StructField("market_key", StringType(), True),
+    StructField("state", StringType(), True),
+    StructField("district_name", StringType(), True),
+    StructField("market_name", StringType(), True),
+])
+
+SCHEMA_RAW_DIM_COMMODITY = StructType([
+    StructField("commodity_key", StringType(), True),
+    StructField("commodity_code", StringType(), True),
+    StructField("commodity_name", StringType(), True),
+    StructField("category", StringType(), True),
+    StructField("is_perishable", StringType(), True),
+])
+
+SCHEMA_RAW_DIM_DATE = StructType([
+    StructField("date_key", StringType(), True),
+    StructField("date", StringType(), True),
+    StructField("day", StringType(), True),
+    StructField("day_name", StringType(), True),
+    StructField("week_start", StringType(), True),
+    StructField("month", StringType(), True),
+    StructField("month_name", StringType(), True),
+    StructField("quarter", StringType(), True),
+    StructField("year", StringType(), True),
+    StructField("is_weekend", StringType(), True),
+    StructField("season", StringType(), True),
+])
+
+# Seed files, typed: the columns of the silver dimension tables, without updated_at.
 SCHEMA_DIM_MARKET = StructType([
     StructField("market_key", LongType(), True),
     StructField("state", StringType(), True),
@@ -55,6 +85,27 @@ SCHEMA_DIM_DATE = StructType([
     StructField("is_weekend", BooleanType(), True),
     StructField("season", StringType(), True),
 ])
+
+
+# Data quality rules of the silver dimensions: columns that must be filled, column sets that must be
+# unique, and (dim_date only) the date column that must have no gaps.
+RULES_DIM_MARKET = {
+    "not_null_columns": ["market_key", "state", "district_name", "market_name"],
+    "unique_columns": [["market_key"], ["state", "district_name", "market_name"]],
+    "date_column": "",
+}
+
+RULES_DIM_COMMODITY = {
+    "not_null_columns": ["commodity_key", "commodity_code", "commodity_name"],
+    "unique_columns": [["commodity_key"], ["commodity_code"]],
+    "date_column": "",
+}
+
+RULES_DIM_DATE = {
+    "not_null_columns": ["date_key", "date", "week_start"],
+    "unique_columns": [["date_key"], ["date"]],
+    "date_column": "date",
+}
 
 
 # Source file: fail on any row that does not fit the schema.

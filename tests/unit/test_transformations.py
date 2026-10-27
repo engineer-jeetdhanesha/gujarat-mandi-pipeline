@@ -262,12 +262,62 @@ def test__gold_returns_none_without_fact_rows_for_the_weeks(spark: SparkSession)
 
 # --- silver: dimensions ---
 
-def test__silver_dims_adds_updated_at(spark: SparkSession) -> None:
-    df = spark.createDataFrame([(1, "M1")], ["market_key", "market_name"])
-    out = t.transform__silver_dims(df)
+DIM_MARKET_RAW = "market_key string, state string, district_name string, market_name string"
+
+
+def transform__market(spark: SparkSession, rows: list[tuple[str, str, str, str]]) -> DataFrame | None:
+    from lib_mandi.config import RULES_DIM_MARKET, SCHEMA_DIM_MARKET
+
+    return t.transform__silver_dims(
+        spark.createDataFrame(rows, DIM_MARKET_RAW),
+        SCHEMA_DIM_MARKET,
+        RULES_DIM_MARKET["not_null_columns"],
+        RULES_DIM_MARKET["unique_columns"],
+        RULES_DIM_MARKET["date_column"],
+    )
+
+
+def test__silver_dims_casts_to_the_silver_types_and_adds_updated_at(spark: SparkSession) -> None:
+    out = transform__market(spark, [("1", "Gujarat", "Ahmedabad", "M1")])
     assert out is not None
-    assert out.columns == ["market_key", "market_name", "updated_at"]
+    assert out.columns == ["market_key", "state", "district_name", "market_name", "updated_at"]
+    assert dict(out.dtypes)["market_key"] == "bigint"
     assert out.first()["updated_at"] is not None
+
+
+def test__silver_dims_refuses_a_value_that_is_not_the_right_type(spark: SparkSession) -> None:
+    assert transform__market(spark, [("abc", "Gujarat", "Ahmedabad", "M1")]) is None
+
+
+def test__silver_dims_refuses_an_empty_key_or_name(spark: SparkSession) -> None:
+    assert transform__market(spark, [(None, "Gujarat", "Ahmedabad", "M1")]) is None
+    assert transform__market(spark, [("1", "Gujarat", "Ahmedabad", None)]) is None
+
+
+def test__silver_dims_refuses_a_duplicate_key(spark: SparkSession) -> None:
+    assert transform__market(spark, [("1", "Gujarat", "Ahmedabad", "M1"), ("1", "Gujarat", "Surat", "M2")]) is None
+
+
+def test__silver_dims_refuses_a_duplicate_natural_key(spark: SparkSession) -> None:
+    assert transform__market(spark, [("1", "Gujarat", "Ahmedabad", "M1"), ("2", "Gujarat", "Ahmedabad", "M1")]) is None
+
+
+def test__silver_dims_date_refuses_a_missing_day(spark: SparkSession) -> None:
+    from lib_mandi.config import RULES_DIM_DATE, SCHEMA_DIM_DATE
+
+    def run(days: list[str]) -> DataFrame | None:
+        rows = [(d.replace("-", ""), d, "1", "Mon", d, "1", "Jan", "1", "2026", "false", "Rabi") for d in days]
+        df = spark.createDataFrame(rows, ", ".join(f"{f.name} string" for f in SCHEMA_DIM_DATE.fields))
+        return t.transform__silver_dims(
+            df,
+            SCHEMA_DIM_DATE,
+            RULES_DIM_DATE["not_null_columns"],
+            RULES_DIM_DATE["unique_columns"],
+            RULES_DIM_DATE["date_column"],
+        )
+
+    assert run(["2026-01-01", "2026-01-02", "2026-01-03"]) is not None
+    assert run(["2026-01-01", "2026-01-03"]) is None
 
 
 # --- dq checks ---

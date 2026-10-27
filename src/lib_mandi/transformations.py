@@ -54,19 +54,58 @@ def transform__bronze(df: DataFrame, run_id: str, file_name: str) -> DataFrame |
 # ---------------------------------------------------------------------------
 
 
-def transform__silver_dims(df: DataFrame) -> DataFrame | None:
-    """Add updated_at (load time) to the rows of a seed file.
+def transform__silver_dims(
+    df: DataFrame,
+    schema: StructType,
+    not_null_columns: list[str],
+    unique_columns: list[list[str]],
+    date_column: str,
+) -> DataFrame | None:
+    """Check the bronze seed rows, cast them to the silver types and add updated_at (load time).
+
+    The checks are in lib_mandi.dq_checks: values castable to the type, columns filled, column sets
+    unique and, if date_column is given, no missing days. If any check fails nothing is returned.
 
     Args:
-        df: Rows read from a seed file.
+        df: Bronze seed rows (string columns, optionally with the _ metadata columns).
+        schema: Silver types of the columns (lib_mandi.config.SCHEMA_DIM_*).
+        not_null_columns: Columns that must be filled.
+        unique_columns: Column sets that must each be unique.
+        date_column: DATE column that must have no missing days; empty to skip.
 
     Returns:
-        The rows with updated_at; None if it failed (the reason is printed).
+        The rows in the columns of the silver table plus updated_at; None if a check failed or the
+        transform failed (the problems are printed).
     """
     from pyspark.sql import functions as F
 
+    from lib_mandi.dq_checks import (
+        dq_check__dim_cast,
+        dq_check__dim_date_gaps,
+        dq_check__dim_not_null,
+        dq_check__dim_unique,
+    )
+
     try:
-        return df.withColumn("updated_at", F.current_timestamp())
+        problems = dq_check__dim_cast(df, schema)
+        if problems:
+            for problem in problems:
+                print(f"ERROR: {problem}")
+            return None
+
+        typed = df.select(*[F.col(f"`{f.name}`").cast(f.dataType).alias(f.name) for f in schema.fields])
+
+        problems = dq_check__dim_not_null(typed, not_null_columns)
+        for columns in unique_columns:
+            problems += dq_check__dim_unique(typed, columns)
+        if date_column:
+            problems += dq_check__dim_date_gaps(typed, date_column)
+        if problems:
+            for problem in problems:
+                print(f"ERROR: {problem}")
+            return None
+
+        return typed.withColumn("updated_at", F.current_timestamp())
     except Exception as e:
         print(f"ERROR: silver dimension transform failed: {e}")
         return None
