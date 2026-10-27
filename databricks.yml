@@ -25,7 +25,7 @@ variables:
     default: 16.4.x-scala2.12
   node_type_id:
     description: VM type of the job cluster
-    default: Standard_D4ds_v6
+    default: Standard_D2ds_v6
 
 targets:
   dev:
