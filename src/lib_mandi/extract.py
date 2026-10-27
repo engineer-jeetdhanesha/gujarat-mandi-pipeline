@@ -38,17 +38,17 @@ def extract__bronze(
         return None
 
 
-def extract__silver_dims(
+def extract__bronze_dims(
     spark: SparkSession, file_path: str, schema: StructType, options: dict[str, object]
 ) -> DataFrame | None:
-    """Read one seed CSV file.
+    """Read one seed CSV file, every column as a string.
 
     The file needs a header row whose names equal the schema's columns, in the same order.
 
     Args:
         spark: Spark session.
         file_path: Path of the CSV file, e.g. "/Workspace/Users/me/repo/seed/dim_market.csv".
-        schema: Schema of the file, i.e. the table's columns without updated_at.
+        schema: Schema of the file with string columns (lib_mandi.config.SCHEMA_RAW_DIM_*).
         options: Spark read options (lib_mandi.config.OPTIONS_READ_SEED).
 
     Returns:
@@ -64,11 +64,37 @@ def extract__silver_dims(
         print(f"Reading {file_path} ...")
         df = spark.read.schema(schema).options(**options).csv(read_path)
         if df.count() == 0:
-            print(f"ERROR: no data rows in {file_path}; table left unchanged")
+            print(f"ERROR: no data rows in {file_path}; nothing loaded")
             return None
         return df
     except Exception as e:
         print(f"ERROR: could not read {file_path}: {e}")
+        return None
+
+
+def extract__silver_dims(spark: SparkSession, run_id: str, bronze_table: str) -> DataFrame | None:
+    """Read the rows one run loaded into a bronze seed table.
+
+    Args:
+        spark: Spark session.
+        run_id: Id of the run that loaded the seed file (bronze _run_id).
+        bronze_table: Three-level table name, e.g. "mandi_dev.bronze.raw_dim_market".
+
+    Returns:
+        The rows of the run; None if the run has no rows in the table or the read failed
+        (the reason is printed).
+    """
+    from pyspark.sql import functions as F
+
+    try:
+        print(f"Reading run {run_id} from {bronze_table} ...")
+        df = spark.table(bronze_table).where(F.col("_run_id") == run_id)
+        if df.count() == 0:
+            print(f"ERROR: no rows for run {run_id} in {bronze_table}; silver table left unchanged")
+            return None
+        return df
+    except Exception as e:
+        print(f"ERROR: could not read {bronze_table}: {e}")
         return None
 
 

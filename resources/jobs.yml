@@ -42,13 +42,24 @@ resources:
               file_path: "{{job.parameters.file_path}}"
               fail_on_error: "true"
 
-        - task_key: load_silver_dims
+        - task_key: load_bronze_dims
           depends_on:
             - task_key: load_bronze
           job_cluster_key: pipeline_cluster
           notebook_task:
+            notebook_path: ../src/load_bronze_dims.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"
+
+        - task_key: load_silver_dims
+          depends_on:
+            - task_key: load_bronze_dims
+          job_cluster_key: pipeline_cluster
+          notebook_task:
             notebook_path: ../src/load_silver_dims.ipynb
             base_parameters:
+              run_id: "{{job.parameters.run_id}}"
               fail_on_error: "true"
 
         - task_key: load_silver_transactions

@@ -25,6 +25,9 @@ Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mand
 | _run_id | STRING | Run that loaded the row (joins audit) |
 | _row_no | BIGINT | Row number within the file/API page |
 
+### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, append-only
+Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run appends the rows of its seed file, so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
+
 ### bronze.pipeline_audit — one row per pipeline run
 | Column | Type | Description |
 |---|---|---|
@@ -111,7 +114,9 @@ Natural key: `market_name`
 | season | STRING | Kharif (Jun–Oct) / Rabi (Nov–Mar) / Zaid (Apr–May) |
 | updated_at | TIMESTAMP | Last seed load |
 
-The dimension tables are loaded from the CSV files in `seed/` (same columns as the table, except `updated_at`) with INSERT OVERWRITE, so the CSV is the source of truth. A new market or commodity is added by editing the CSV and loading it again. A row whose market or commodity code is not in the dimensions is rejected in Silver.
+The dimension tables are loaded from the CSV files in `seed/`: first as received into `bronze.raw_dim_*` (`src/load_bronze_dims`), then, after the checks, into silver with INSERT OVERWRITE (`src/load_silver_dims`), so the CSV is the source of truth. A new market or commodity is added by editing the CSV and loading it again. A row whose market or commodity code is not in the dimensions is rejected in Silver.
+
+Checks before a dimension is written (if any fails, the table is left unchanged and the task fails): every value castable to the column type; the key columns filled; the key unique; no duplicate natural key (market: state + district + market name; commodity: commodity code; date: the date); and, for `dim_date`, no missing day between the first and the last date.
 
 ### silver.fact_mandi_prices — grain: market × commodity × variety × grade × date (derived from clean)
 | Column | Type | Description |

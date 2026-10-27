@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pyspark.sql import DataFrame
+    from pyspark.sql.types import StructType
 
 
 def dq_check__missing_market(df: DataFrame) -> DataFrame:
@@ -180,3 +181,97 @@ def dq_check__duplicate(df: DataFrame) -> DataFrame:
             ).otherwise(F.col("rule_reasons")),
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Silver dimensions: each check returns a list of problems (empty when the rows pass).
+# ---------------------------------------------------------------------------
+
+
+def dq_check__dim_cast(df: DataFrame, schema: StructType) -> list[str]:
+    """Filled values that cannot be cast to the type in the schema.
+
+    Args:
+        df: Rows with string columns (bronze).
+        schema: Silver types of the columns (lib_mandi.config.SCHEMA_DIM_*).
+
+    Returns:
+        One problem per column that has such values.
+    """
+    from pyspark.sql import functions as F
+
+    fields = [f for f in schema.fields if f.dataType.simpleString() != "string"]
+    if not fields:
+        return []
+    counts = df.agg(*[
+        F.sum(
+            F.when(F.col(f"`{f.name}`").isNotNull() & F.expr(f"try_cast(`{f.name}` AS {f.dataType.simpleString()})").isNull(), 1).otherwise(0)
+        ).alias(f.name)
+        for f in fields
+    ]).first()
+    return [
+        f"{counts[f.name]} value(s) of '{f.name}' are not a valid {f.dataType.simpleString()}"
+        for f in fields
+        if counts[f.name]
+    ]
+
+
+def dq_check__dim_not_null(df: DataFrame, columns: list[str]) -> list[str]:
+    """Columns that must be filled but have empty values.
+
+    Args:
+        df: Typed rows.
+        columns: Columns that must be filled.
+
+    Returns:
+        One problem per column that has empty values.
+    """
+    from pyspark.sql import functions as F
+
+    counts = df.agg(*[F.sum(F.col(f"`{c}`").isNull().cast("int")).alias(c) for c in columns]).first()
+    return [f"{counts[c]} row(s) have an empty '{c}'" for c in columns if counts[c]]
+
+
+def dq_check__dim_unique(df: DataFrame, columns: list[str]) -> list[str]:
+    """Values of the column set that appear more than once.
+
+    Args:
+        df: Typed rows.
+        columns: Columns that together must be unique.
+
+    Returns:
+        One problem naming the columns and up to 3 example values; empty if the set is unique.
+    """
+    from pyspark.sql import functions as F
+
+    duplicates = df.groupBy(*[f"`{c}`" for c in columns]).count().where(F.col("count") > 1)
+    total = duplicates.count()
+    if total == 0:
+        return []
+    examples = [tuple(r[c] for c in columns) for r in duplicates.limit(3).collect()]
+    return [f"{total} duplicate value(s) of ({', '.join(columns)}), for example {examples}"]
+
+
+def dq_check__dim_date_gaps(df: DataFrame, date_column: str) -> list[str]:
+    """Days missing between the first and the last date.
+
+    Args:
+        df: Typed rows.
+        date_column: Name of the DATE column.
+
+    Returns:
+        One problem with the number of missing days; empty if every day is there.
+    """
+    from pyspark.sql import functions as F
+
+    row = df.agg(
+        F.min(date_column).alias("first_day"),
+        F.max(date_column).alias("last_day"),
+        F.countDistinct(date_column).alias("days"),
+    ).first()
+    if row["first_day"] is None:
+        return []
+    expected = (row["last_day"] - row["first_day"]).days + 1
+    if expected == row["days"]:
+        return []
+    return [f"{expected - row['days']} day(s) are missing between {row['first_day']} and {row['last_day']} in '{date_column}'"]

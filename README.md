@@ -99,14 +99,15 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Layer | Table | Purpose |
 |---|---|---|
 | Bronze | `raw_mandi_transactions` | Raw rows, all `STRING`, append-only, with lineage columns (`_run_id`, `_source_mode`, `_file_name`, …) |
+| Bronze | `raw_dim_market`, `raw_dim_commodity`, `raw_dim_date` | The seed CSV files as received (all `STRING`), appended per run, so a bad file stays visible before silver is touched |
 | Bronze | `pipeline_audit` | One row per pipeline run: mode, business date range, status, row counts |
 | Silver | `mandi_prices_clean` | Typed, standardised, de-duplicated; `MERGE` target. Natural key: market + commodity code + variety + grade + arrival date |
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
-| Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the CSV files in `seed/` |
+| Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the bronze seed tables after checks (keys filled and unique, no duplicate natural keys, castable values, no missing days in `dim_date`) |
 | Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
 | Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity, with week-on-week change; updated incrementally per run. More marts are planned |
 
-The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run the seed again (`src/load_silver_dims`), then repair the rejected rows.
+The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then repair the rejected rows.
 
 ## Pipeline run modes
 
@@ -218,7 +219,7 @@ databricks bundle deploy -t dev
 databricks bundle run mandi_pipeline -t dev --params file_path=<source csv path>
 ```
 
-`mandi_pipeline` runs `setup`, `load_bronze`, `load_silver_dims`, `load_silver_transactions`, `load_silver_facts` and `load_gold`, one after the other. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the job sets it to `true`, so a failed load fails the task.
+`mandi_pipeline` runs `setup`, `load_bronze`, `load_bronze_dims`, `load_silver_dims`, `load_silver_transactions`, `load_silver_facts` and `load_gold`, one after the other. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the job sets it to `true`, so a failed load fails the task.
 
 ## Repository layout
 
@@ -234,7 +235,7 @@ databricks bundle run mandi_pipeline -t dev --params file_path=<source csv path>
 │   └── high-level-design.html    Architecture diagram with tech stack
 ├── seed/                         CSV files for the silver dimensions
 ├── src/
-│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
+│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_bronze_dims, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
 │   │                             (widgets, catalog lookup and the extract -> transform -> load calls)
 │   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
 ├── tests/
@@ -258,6 +259,7 @@ pytest
 - [x] README
 - [x] Bronze load, single-day file (#25)
 - [x] Silver dimension tables and seed files (#27)
+- [ ] Bronze seed layer with dimension checks (#38)
 - [ ] Bronze load (API, Backfill)
 - [x] Silver clean and rejected tables (#30)
 - [ ] Error-mode reprocessing
