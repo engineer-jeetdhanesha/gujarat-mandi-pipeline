@@ -24,3 +24,25 @@ targets:
     default: true
     workspace:
       host: https://adb-7405617239301071.11.azuredatabricks.net
+
+  uat:
+    mode: production
+    workspace:
+      host: https://adb-7405618434508183.3.azuredatabricks.net
+      root_path: /Workspace/Users/7b6c1128-258e-47a7-ab23-195029fb260c/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
+    permissions:
+      - user_name: engineer.jeetdhanesha@gmail.com
+        level: CAN_MANAGE
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-7405605581298117.17.azuredatabricks.net
+      root_path: /Workspace/Users/47b5ebd0-4696-40d1-bd0a-02b71ce98a10/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
+    permissions:
+      - user_name: engineer.jeetdhanesha@gmail.com
+        level: CAN_MANAGE

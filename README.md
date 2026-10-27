@@ -211,7 +211,7 @@ Planned inputs; names may change when the code is written.
 
 ## Deploy with Databricks Asset Bundles
 
-Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). Only the `dev` target exists for now; it uses the workspace's default catalog (`gujarat_mandi_pipeline_dev_ws`) and runs on serverless compute.
+Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). There is one target per environment, each in its own workspace: `dev` (your own folder, runs as you), `uat` and `prod` (`mode: production`, deployed to the service principal's folder and run as that principal: `sp-mandi-uat`, `sp-mandi-prod`). Every target runs on serverless compute and uses its workspace's default catalog, so the notebooks need no catalog setting. Use `-t uat` or `-t prod` with the matching CLI profile for the other two.
 
 ```
 databricks bundle validate -t dev
