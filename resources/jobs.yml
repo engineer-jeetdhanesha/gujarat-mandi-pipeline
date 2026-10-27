@@ -31,15 +31,6 @@ resources:
           notebook_task:
             notebook_path: ../src/setup.ipynb
 
-        - task_key: load_silver_dims
-          depends_on:
-            - task_key: setup
-          job_cluster_key: pipeline_cluster
-          notebook_task:
-            notebook_path: ../src/load_silver_dims.ipynb
-            base_parameters:
-              fail_on_error: "true"
-
         - task_key: load_bronze
           depends_on:
             - task_key: setup
@@ -51,10 +42,18 @@ resources:
               file_path: "{{job.parameters.file_path}}"
               fail_on_error: "true"
 
+        - task_key: load_silver_dims
+          depends_on:
+            - task_key: load_bronze
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_silver_dims.ipynb
+            base_parameters:
+              fail_on_error: "true"
+
         - task_key: load_silver_transactions
           depends_on:
             - task_key: load_silver_dims
-            - task_key: load_bronze
           job_cluster_key: pipeline_cluster
           notebook_task:
             notebook_path: ../src/load_silver_transactions.ipynb

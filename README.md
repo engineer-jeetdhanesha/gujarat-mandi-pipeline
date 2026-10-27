@@ -218,7 +218,7 @@ databricks bundle deploy -t dev
 databricks bundle run mandi_pipeline -t dev --params file_path=<source csv path>
 ```
 
-`mandi_pipeline` runs `setup`, then `load_silver_dims` and `load_bronze`, then `load_silver_transactions`, `load_silver_facts` and `load_gold`. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the job sets it to `true`, so a failed load fails the task.
+`mandi_pipeline` runs `setup`, `load_bronze`, `load_silver_dims`, `load_silver_transactions`, `load_silver_facts` and `load_gold`, one after the other. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the job sets it to `true`, so a failed load fails the task.
 
 ## Repository layout
 
