@@ -38,7 +38,6 @@ resources:
         - task_key: load_silver_dims
           depends_on:
             - task_key: load_bronze_dims
-          job_cluster_key: pipeline_cluster
           notebook_task:
             notebook_path: ../src/load_silver_dims.ipynb
             base_parameters:
