@@ -38,6 +38,32 @@ def create__schema(spark: SparkSession, catalog: str, schema: str, comment: str)
         return False
 
 
+def create__volume(spark: SparkSession, catalog: str, schema: str, volume: str, comment: str) -> bool:
+    """Create a managed volume if it does not exist.
+
+    Args:
+        spark: Spark session.
+        catalog: Unity Catalog name, e.g. "mandi_dev".
+        schema: Schema the volume is created in, e.g. "bronze"; it must exist.
+        volume: Volume name, e.g. "landing_zone".
+        comment: Description stored with the volume.
+
+    Returns:
+        True if the volume exists afterwards; False if creating it failed
+        (the reason is printed).
+    """
+    try:
+        print(f"Creating volume {catalog}.{schema}.{volume} (if not exists) ...")
+        spark.sql(f"""
+            CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume}
+            COMMENT '{comment}'
+        """)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not create volume {catalog}.{schema}.{volume}: {e}")
+        return False
+
+
 def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, schema: str) -> bool:
     """Create the raw_mandi_transactions Delta table if it does not exist.
 
