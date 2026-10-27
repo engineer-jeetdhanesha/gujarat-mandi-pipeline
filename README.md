@@ -15,6 +15,7 @@ A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandi
 - [Sample data](#sample-data)
 - [Environments and CI/CD](#environments-and-cicd)
 - [Configuration](#configuration)
+- [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles)
 - [Repository layout](#repository-layout)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -193,7 +194,8 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 
 - **Environments:** `mandi_dev` for development and testing, `mandi_prod` for the scheduled production run.
 - **CI/CD (planned):** Azure DevOps builds, tests and deploys the pipeline to Databricks, promoting from dev to prod.
-- **Scheduling (planned):** the daily File/API run is a Databricks job; Backfill and Error runs are started on demand with a mode parameter.
+- **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/jobs.yml`) deploys the notebooks and two jobs: `mandi_pipeline` (the load workflow) and `mandi_tests` (the Databricks test notebooks). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
+- **Scheduling (planned):** the daily File/API run will be a schedule on `mandi_pipeline` in the prod target; Backfill and Error runs are started on demand with a mode parameter.
 
 ## Configuration
 
@@ -206,11 +208,27 @@ Planned inputs; names may change when the code is written.
 | `arrival_date` | The day to load (File and API modes) |
 | API key | data.gov.in key, stored as a Databricks secret, never in the repo |
 
+## Deploy with Databricks Asset Bundles
+
+Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). Only the `dev` target exists for now; it uses the catalog `mandi_dev` and runs on a single-node job cluster.
+
+```
+databricks bundle validate -t dev
+databricks bundle deploy -t dev
+databricks bundle run mandi_pipeline -t dev --params file_path=<source csv path>
+databricks bundle run mandi_tests -t dev
+```
+
+`mandi_pipeline` runs `setup`, then `load_silver_dims` and `load_bronze`, then `load_silver_transactions`, `load_silver_facts` and `load_gold`. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, so the test notebooks still see a failed load as "nothing written"); the job sets it to `true`, so a failed load fails the task.
+
 ## Repository layout
 
 ```
 .
 ├── README.md
+├── databricks.yml                Databricks Asset Bundle (variables and targets)
+├── resources/
+│   └── jobs.yml                  Jobs: mandi_pipeline (workflow) and mandi_tests
 ├── docs/
 │   ├── table-structure.md        Table design (source of truth)
 │   ├── table-structure.html      Same, rendered for reading

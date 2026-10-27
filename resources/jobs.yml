@@ -1,0 +1,161 @@
+resources:
+  jobs:
+    mandi_pipeline:
+      name: mandi_pipeline
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+
+      parameters:
+        - name: run_id
+          default: "{{job.run_id}}"
+        - name: file_path
+          default: ${var.file_path}
+
+      job_clusters:
+        - job_cluster_key: pipeline_cluster
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type_id}
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+              spark.databricks.sql.initial.catalog.name: ${var.catalog}
+            custom_tags:
+              ResourceClass: SingleNode
+
+      tasks:
+        - task_key: setup
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/setup.ipynb
+
+        - task_key: load_silver_dims
+          depends_on:
+            - task_key: setup
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_silver_dims.ipynb
+            base_parameters:
+              fail_on_error: "true"
+
+        - task_key: load_bronze
+          depends_on:
+            - task_key: setup
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_bronze.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              file_path: "{{job.parameters.file_path}}"
+              fail_on_error: "true"
+
+        - task_key: load_silver_transactions
+          depends_on:
+            - task_key: load_silver_dims
+            - task_key: load_bronze
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_silver_transactions.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"
+
+        - task_key: load_silver_facts
+          depends_on:
+            - task_key: load_silver_transactions
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_silver_facts.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"
+
+        - task_key: load_gold
+          depends_on:
+            - task_key: load_silver_facts
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../src/load_gold.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              fail_on_error: "true"
+
+    mandi_tests:
+      name: mandi_tests
+      max_concurrent_runs: 1
+      timeout_seconds: 7200
+
+      job_clusters:
+        - job_cluster_key: pipeline_cluster
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type_id}
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+              spark.databricks.sql.initial.catalog.name: ${var.catalog}
+            custom_tags:
+              ResourceClass: SingleNode
+
+      tasks:
+        - task_key: test_setup
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_setup.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
+
+        - task_key: test_load_bronze
+          depends_on:
+            - task_key: test_setup
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_load_bronze.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
+
+        - task_key: test_load_silver_dims
+          depends_on:
+            - task_key: test_load_bronze
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_load_silver_dims.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
+
+        - task_key: test_load_silver_transactions
+          depends_on:
+            - task_key: test_load_silver_dims
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_load_silver_transactions.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
+
+        - task_key: test_load_silver_facts
+          depends_on:
+            - task_key: test_load_silver_transactions
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_load_silver_facts.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
+
+        - task_key: test_load_gold
+          depends_on:
+            - task_key: test_load_silver_facts
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../tests/test_load_gold.ipynb
+          libraries:
+            - pypi:
+                package: ipytest
