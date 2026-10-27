@@ -5,14 +5,18 @@ include:
   - resources/*.yml
 
 sync:
-  include:
-    - src
-    - seed
+  exclude:
+    - .vscode
+    - .claude
+    - docs
+    - tests
+    - pytest.ini
+    - requirements-dev.txt
 
 variables:
   catalog:
     description: Unity Catalog that holds the bronze, silver and gold schemas
-    default: mandi_dev
+    default: gujarat_mandi_pipeline_dev_ws
   file_path:
     description: Source CSV path for the bronze load (set per run)
     default: ""
@@ -30,4 +34,4 @@ targets:
     workspace:
       host: https://adb-7405617239301071.11.azuredatabricks.net
     variables:
-      catalog: mandi_dev
+      catalog: gujarat_mandi_pipeline_dev_ws

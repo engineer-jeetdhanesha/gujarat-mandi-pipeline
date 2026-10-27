@@ -210,7 +210,7 @@ Planned inputs; names may change when the code is written.
 
 ## Deploy with Databricks Asset Bundles
 
-Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). Only the `dev` target exists for now; it uses the catalog `mandi_dev` and runs on a single-node job cluster.
+Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). Only the `dev` target exists for now; it uses the workspace catalog `gujarat_mandi_pipeline_dev_ws` and runs on a single-node job cluster.
 
 ```
 databricks bundle validate -t dev
