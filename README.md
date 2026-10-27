@@ -194,7 +194,7 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 
 - **Environments:** `mandi_dev` for development and testing, `mandi_prod` for the scheduled production run.
 - **CI/CD (planned):** Azure DevOps builds, tests and deploys the pipeline to Databricks, promoting from dev to prod.
-- **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/jobs.yml`) deploys the notebooks and two jobs: `mandi_pipeline` (the load workflow) and `mandi_tests` (the Databricks test notebooks). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
+- **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/jobs.yml`) deploys the notebooks and the `mandi_pipeline` job (the load workflow). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
 - **Scheduling (planned):** the daily File/API run will be a schedule on `mandi_pipeline` in the prod target; Backfill and Error runs are started on demand with a mode parameter.
 
 ## Configuration
@@ -216,10 +216,9 @@ Needs the Databricks CLI and a logged-in profile (`databricks auth login --profi
 databricks bundle validate -t dev
 databricks bundle deploy -t dev
 databricks bundle run mandi_pipeline -t dev --params file_path=<source csv path>
-databricks bundle run mandi_tests -t dev
 ```
 
-`mandi_pipeline` runs `setup`, then `load_silver_dims` and `load_bronze`, then `load_silver_transactions`, `load_silver_facts` and `load_gold`. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, so the test notebooks still see a failed load as "nothing written"); the job sets it to `true`, so a failed load fails the task.
+`mandi_pipeline` runs `setup`, then `load_silver_dims` and `load_bronze`, then `load_silver_transactions`, `load_silver_facts` and `load_gold`. `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the job sets it to `true`, so a failed load fails the task.
 
 ## Repository layout
 
@@ -228,7 +227,7 @@ databricks bundle run mandi_tests -t dev
 ├── README.md
 ├── databricks.yml                Databricks Asset Bundle (variables and targets)
 ├── resources/
-│   └── jobs.yml                  Jobs: mandi_pipeline (workflow) and mandi_tests
+│   └── jobs.yml                  Job: mandi_pipeline (the load workflow)
 ├── docs/
 │   ├── table-structure.md        Table design (source of truth)
 │   ├── table-structure.html      Same, rendered for reading

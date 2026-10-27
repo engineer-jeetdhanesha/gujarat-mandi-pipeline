@@ -8,9 +8,6 @@ sync:
   include:
     - src
     - seed
-    - tests
-  exclude:
-    - tests/unit
 
 variables:
   catalog:
