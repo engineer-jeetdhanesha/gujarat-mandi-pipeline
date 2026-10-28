@@ -242,12 +242,20 @@ databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
 │   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
 ├── tests/
 │   ├── test_*.ipynb              pytest notebooks run on Databricks, one per source notebook
-│   └── unit/                     pytest on the transforms with a local Spark session (for CI)
+│   └── unit/                     function tests: one file per lib_mandi module, local Spark with Delta (for CI)
 ├── pytest.ini
 └── requirements-dev.txt
 ```
 
-Run the unit tests without Databricks (needs Java 17+ for local Spark):
+Tests have three layers:
+
+| Layer | What it tests | Where it runs |
+|---|---|---|
+| Function tests (`tests/unit`) | `extract`, `transformations`, `dq_checks`, `load`, `utility` and `config` of `lib_mandi`, including the edge cases | Local Spark with Delta; the pull request stage of CI |
+| Notebook tests (`tests/test_*.ipynb`) | Each notebook on Databricks, with dummy data | Dev workspace |
+| End to end | `mandi_setup` then `mandi_daily` with the sample file | UAT, after each deploy |
+
+Run the function tests without Databricks (needs Java 17+ for local Spark; the first run downloads the Delta jar):
 
 ```
 pip install -r requirements-dev.txt
