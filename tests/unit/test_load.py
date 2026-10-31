@@ -1,3 +1,5 @@
+"""Tests for lib_mandi.load: appending, replacing and MERGE into local Delta tables."""
+
 from datetime import date
 from pathlib import Path
 
@@ -11,7 +13,7 @@ from lib_mandi.config import (
     SCHEMA_RAW_DIM_MARKET,
     SCHEMA_SOURCE,
 )
-from lib_mandi.extract import extract__bronze, extract__bronze_dims, extract__silver_dims
+from lib_mandi.extract import extract__bronze_dims, extract__seed_file, extract__source_file
 from lib_mandi.load import (
     load__bronze,
     load__gold_weekly_mart,
@@ -44,9 +46,18 @@ WEEK_1, WEEK_2 = date(2026, 12, 7), date(2026, 12, 14)
 # --- bronze ---
 
 def test__load_bronze_appends_the_rows_with_their_metadata(spark: SparkSession, tmp_path: Path) -> None:
+    """Bronze appends the rows with metadata on every load.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
     path = tmp_path / "mandi_2026-01-05.csv"
     path.write_text(SOURCE_HEADER + SOURCE_ROW + SOURCE_ROW.replace(",10,", ",11,"))
-    df = extract__bronze(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
     df = transform__bronze(df, "run1", path.name)
     # An empty table with the same columns as the file plus the metadata columns.
     df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_a")
@@ -62,9 +73,18 @@ def test__load_bronze_appends_the_rows_with_their_metadata(spark: SparkSession, 
 
 
 def test__load_bronze_returns_false_and_adds_nothing_when_the_columns_do_not_fit(spark: SparkSession, tmp_path: Path) -> None:
+    """Returns False and adds nothing when the columns do not fit.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
     path = tmp_path / "mandi_2026-01-05.csv"
     path.write_text(SOURCE_HEADER + SOURCE_ROW)
-    df = extract__bronze(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
     df = transform__bronze(df, "run1", path.name)
     # A table with only two of the columns.
     spark.createDataFrame([("9", "run0")], "min_price string, _run_id string").write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_b")
@@ -75,9 +95,18 @@ def test__load_bronze_returns_false_and_adds_nothing_when_the_columns_do_not_fit
 
 
 def test__load_bronze_keeps_duplicate_rows_of_a_seed_file(spark: SparkSession, tmp_path: Path) -> None:
+    """Duplicate seed rows are kept in bronze.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
     path = tmp_path / "dim_market.csv"
     path.write_text(DIM_HEADER + "1,Gujarat,Ahmedabad,M1\n1,Gujarat,Ahmedabad,M1\n")
-    df = extract__bronze_dims(spark, str(path), SCHEMA_RAW_DIM_MARKET, OPTIONS_READ_SEED)
+    df = extract__seed_file(spark, str(path), SCHEMA_RAW_DIM_MARKET, OPTIONS_READ_SEED)
     df = transform__bronze(df, "run1", path.name)
     df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_c")
 
@@ -92,6 +121,14 @@ def test__load_bronze_keeps_duplicate_rows_of_a_seed_file(spark: SparkSession, t
 # --- silver dimensions ---
 
 def test__silver_dims_loads_the_rows_of_the_run_and_replaces_the_table(spark: SparkSession) -> None:
+    """Silver dims hold exactly the rows of the run after the load.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Bronze holds the seed rows of run1 and an older run0; silver still holds a row from before.
     spark.sql(f"CREATE TABLE test_load_dims_a_raw ({RAW_DIM_MARKET_COLUMNS}) USING delta")
     spark.sql("INSERT INTO test_load_dims_a_raw VALUES ('1', 'Gujarat', 'Ahmedabad', 'M1', 'run1'), ('2', 'Gujarat', 'Surat', 'M2', 'run1'), ('9', 'x', 'x', 'other run', 'run0')")
@@ -99,7 +136,7 @@ def test__silver_dims_loads_the_rows_of_the_run_and_replaces_the_table(spark: Sp
     spark.sql("INSERT INTO test_load_dims_a_silver VALUES (99, 'x', 'x', 'old', current_timestamp())")
 
     # extract -> transform -> load, the same three calls as the load_silver_dims notebook.
-    df = extract__silver_dims(spark, "run1", "test_load_dims_a_raw")
+    df = extract__bronze_dims(spark, "run1", "test_load_dims_a_raw")
     df = transform__silver_dims(
         df,
         SCHEMA_DIM_MARKET,
@@ -116,13 +153,21 @@ def test__silver_dims_loads_the_rows_of_the_run_and_replaces_the_table(spark: Sp
 
 
 def test__silver_dims_leaves_the_table_unchanged_when_a_check_fails(spark: SparkSession) -> None:
+    """A failed check loads nothing and keeps the old rows.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Both rows have market_key 1, so the unique check refuses them.
     spark.sql(f"CREATE TABLE test_load_dims_b_raw ({RAW_DIM_MARKET_COLUMNS}) USING delta")
     spark.sql("INSERT INTO test_load_dims_b_raw VALUES ('1', 'Gujarat', 'Ahmedabad', 'M1', 'run1'), ('1', 'Gujarat', 'Surat', 'M2', 'run1')")
     spark.sql(f"CREATE TABLE test_load_dims_b_silver ({DIM_MARKET_COLUMNS}) USING delta")
     spark.sql("INSERT INTO test_load_dims_b_silver VALUES (99, 'x', 'x', 'old', current_timestamp())")
 
-    df = extract__silver_dims(spark, "run1", "test_load_dims_b_raw")
+    df = extract__bronze_dims(spark, "run1", "test_load_dims_b_raw")
     df = transform__silver_dims(
         df,
         SCHEMA_DIM_MARKET,
@@ -137,6 +182,14 @@ def test__silver_dims_leaves_the_table_unchanged_when_a_check_fails(spark: Spark
 
 
 def test__load_silver_dims_returns_false_for_a_missing_table(spark: SparkSession) -> None:
+    """Returns False for a missing table.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame(
         [(1, "Gujarat", "Ahmedabad", "M1")], "market_key bigint, state string, district_name string, market_name string"
     )
@@ -147,6 +200,14 @@ def test__load_silver_dims_returns_false_for_a_missing_table(spark: SparkSession
 # --- silver transactions ---
 
 def test__load_silver_transactions_inserts_new_rows_and_updates_a_row_with_the_same_key(spark: SparkSession) -> None:
+    """MERGE inserts new keys and updates existing ones.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_tx_a_clean ({CLEAN_COLUMNS}) USING delta")
     spark.sql(f"CREATE TABLE test_load_tx_a_rejected ({REJECTED_COLUMNS}) USING delta")
     no_rejected = spark.createDataFrame([], REJECTED_COLUMNS)
@@ -167,6 +228,14 @@ def test__load_silver_transactions_inserts_new_rows_and_updates_a_row_with_the_s
 
 
 def test__load_silver_transactions_matches_rows_with_an_empty_variety_and_grade(spark: SparkSession) -> None:
+    """MERGE matches null variety and grade (null-safe).
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_tx_b_clean ({CLEAN_COLUMNS}) USING delta")
     spark.sql(f"CREATE TABLE test_load_tx_b_rejected ({REJECTED_COLUMNS}) USING delta")
     no_rejected = spark.createDataFrame([], REJECTED_COLUMNS)
@@ -181,6 +250,14 @@ def test__load_silver_transactions_matches_rows_with_an_empty_variety_and_grade(
 
 
 def test__load_silver_transactions_inserts_a_rejected_row_only_once(spark: SparkSession) -> None:
+    """Rejected rows are insert-only: a rerun does not change them.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_tx_c_clean ({CLEAN_COLUMNS}) USING delta")
     spark.sql(f"CREATE TABLE test_load_tx_c_rejected ({REJECTED_COLUMNS}) USING delta")
     no_clean = spark.createDataFrame([], CLEAN_COLUMNS)
@@ -199,6 +276,14 @@ def test__load_silver_transactions_inserts_a_rejected_row_only_once(spark: Spark
 
 
 def test__load_silver_transactions_returns_false_for_a_missing_table(spark: SparkSession) -> None:
+    """Returns False for a missing table.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_tx_d_rejected ({REJECTED_COLUMNS}) USING delta")
     clean = spark.createDataFrame([("M1", 100, "Other", "FAQ", DAY, 20, "run1")], CLEAN_COLUMNS)
     no_rejected = spark.createDataFrame([], REJECTED_COLUMNS)
@@ -209,6 +294,14 @@ def test__load_silver_transactions_returns_false_for_a_missing_table(spark: Spar
 # --- silver facts ---
 
 def test__load_silver_facts_inserts_new_rows_and_updates_a_row_with_the_same_key(spark: SparkSession) -> None:
+    """MERGE inserts new keys and updates existing ones.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_fact_a ({FACT_COLUMNS}) USING delta")
     first_run = spark.createDataFrame(
         [(1, 10, 20260105, "Other", "FAQ", 20), (2, 10, 20260105, "Other", "FAQ", 25)], FACT_COLUMNS
@@ -223,6 +316,14 @@ def test__load_silver_facts_inserts_new_rows_and_updates_a_row_with_the_same_key
 
 
 def test__load_silver_facts_matches_rows_with_an_empty_variety_and_grade(spark: SparkSession) -> None:
+    """MERGE matches null variety and grade (null-safe).
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_fact_b ({FACT_COLUMNS}) USING delta")
     first_run = spark.createDataFrame([(1, 10, 20260105, None, None, 20)], FACT_COLUMNS)
     second_run = spark.createDataFrame([(1, 10, 20260105, None, None, 21)], FACT_COLUMNS)
@@ -235,6 +336,14 @@ def test__load_silver_facts_matches_rows_with_an_empty_variety_and_grade(spark: 
 
 
 def test__load_silver_facts_returns_false_for_a_missing_table(spark: SparkSession) -> None:
+    """Returns False for a missing table.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([(1, 10, 20260105, "Other", "FAQ", 20)], FACT_COLUMNS)
 
     assert load__silver_facts(spark, df, "test_no_such_table") is False
@@ -243,6 +352,14 @@ def test__load_silver_facts_returns_false_for_a_missing_table(spark: SparkSessio
 # --- gold weekly mart ---
 
 def test__load_gold_updates_an_existing_week_and_inserts_new_ones(spark: SparkSession) -> None:
+    """MERGE updates an existing week and inserts new ones.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     spark.sql(f"CREATE TABLE test_load_gold_a ({MART_COLUMNS}) USING delta")
     spark.sql("INSERT INTO test_load_gold_a VALUES ('D1', 100, DATE'2026-12-07', 30)")
     # D1 week 1 already exists (new average 31); D1 week 2 and D2 week 1 are new.
@@ -257,6 +374,14 @@ def test__load_gold_updates_an_existing_week_and_inserts_new_ones(spark: SparkSe
 
 
 def test__load_gold_returns_false_for_a_missing_table(spark: SparkSession) -> None:
+    """Returns False for a missing table.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([("D1", 100, WEEK_1, 31)], MART_COLUMNS)
 
     assert load__gold_weekly_mart(spark, df, "test_no_such_table") is False

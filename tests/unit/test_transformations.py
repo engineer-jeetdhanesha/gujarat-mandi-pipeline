@@ -1,3 +1,5 @@
+"""Tests for lib_mandi.transformations: bronze, silver, fact, gold and dimension logic."""
+
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -16,6 +18,14 @@ from lib_mandi.config import (
 # --- bronze ---
 
 def test__bronze_adds_metadata_and_numbers_the_rows_in_file_order(spark: SparkSession) -> None:
+    """Adds run id, file name, source mode, time and row numbers from 1.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([("Gujarat",) + ("x",) * 10, ("Gujarat",) + ("y",) * 10], SCHEMA_SOURCE)
 
     rows = t.transform__bronze(df, "run1", "f.csv").orderBy("_row_no").collect()
@@ -45,6 +55,14 @@ VALID_ROW = {
 
 
 def test__valid_row_goes_to_clean_with_trimmed_values(spark: SparkSession) -> None:
+    """A valid row goes to clean with trimmed, typed values.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     bronze = spark.createDataFrame([{**VALID_ROW, "market": "  M1 ", "variety": " Other "}], BRONZE_SCHEMA)
     # The dimensions the row is looked up in: one market, one commodity, one date.
     market = spark.createDataFrame([(1, "M1", "Ahmedabad")], ["market_key", "market_name", "district_name"])
@@ -63,20 +81,30 @@ def test__valid_row_goes_to_clean_with_trimmed_values(spark: SparkSession) -> No
 @pytest.mark.parametrize(
     "changes, rule",
     [
-        ({"market": " "}, "missing_market"),
-        ({"commodity_code": ""}, "missing_commodity_code"),
-        ({"arrival_date": "2026-01-05"}, "invalid_date"),
-        ({"min_price": "abc"}, "invalid_price"),
-        ({"min_price": "0", "modal_price": "20"}, "price_le_zero"),
-        ({"min_price": "40"}, "min_gt_max"),
-        ({"modal_price": "99"}, "modal_out_of_range"),
-        ({"market": "Nowhere"}, "unknown_market"),
-        ({"commodity_code": "999"}, "unknown_commodity"),
-        ({"arrival_date": "05/01/2999"}, "future_date,unknown_date"),  # a future date is not in dim_date either
-        ({"arrival_date": "06/01/2026"}, "unknown_date"),
+        pytest.param({"market": " "}, "missing_market", id="missing_market"),
+        pytest.param({"commodity_code": ""}, "missing_commodity_code", id="missing_commodity_code"),
+        pytest.param({"arrival_date": "2026-01-05"}, "invalid_date", id="invalid_date"),
+        pytest.param({"min_price": "abc"}, "invalid_price", id="invalid_price"),
+        pytest.param({"min_price": "0", "modal_price": "20"}, "price_le_zero", id="price_le_zero"),
+        pytest.param({"min_price": "40"}, "min_gt_max", id="min_gt_max"),
+        pytest.param({"modal_price": "99"}, "modal_out_of_range", id="modal_out_of_range"),
+        pytest.param({"market": "Nowhere"}, "unknown_market", id="unknown_market"),
+        pytest.param({"commodity_code": "999"}, "unknown_commodity", id="unknown_commodity"),
+        pytest.param({"arrival_date": "05/01/2999"}, "future_date,unknown_date", id="future_and_unknown_date"),  # a future date is not in dim_date either
+        pytest.param({"arrival_date": "06/01/2026"}, "unknown_date", id="unknown_date"),
     ],
 )
 def test__a_rule_sends_the_row_to_rejected(spark: SparkSession, changes: dict[str, str], rule: str) -> None:
+    """A row breaking one rule goes to rejected with that rule.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        changes: Bronze column overrides on a valid row.
+        rule: Expected reject_rule.
+
+    Returns:
+        None.
+    """
     bronze = spark.createDataFrame([{**VALID_ROW, **changes}], BRONZE_SCHEMA)
     market = spark.createDataFrame([(1, "M1", "Ahmedabad")], ["market_key", "market_name", "district_name"])
     commodity = spark.createDataFrame([(10, 100, "Wheat")], ["commodity_key", "commodity_code", "commodity_name"])
@@ -92,6 +120,14 @@ def test__a_rule_sends_the_row_to_rejected(spark: SparkSession, changes: dict[st
 
 
 def test__several_failed_rules_are_listed_in_order(spark: SparkSession) -> None:
+    """Several failed rules are listed in check order.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     bronze = spark.createDataFrame([{**VALID_ROW, "market": "", "commodity_code": ""}], BRONZE_SCHEMA)
     market = spark.createDataFrame([(1, "M1", "Ahmedabad")], ["market_key", "market_name", "district_name"])
     commodity = spark.createDataFrame([(10, 100, "Wheat")], ["commodity_key", "commodity_code", "commodity_name"])
@@ -103,6 +139,14 @@ def test__several_failed_rules_are_listed_in_order(spark: SparkSession) -> None:
 
 
 def test__price_rules_that_need_a_valid_price_are_skipped(spark: SparkSession) -> None:
+    """Price comparisons are skipped when a price is invalid.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # min_price is not a number and modal_price is negative: only the first problem is reported.
     bronze = spark.createDataFrame([{**VALID_ROW, "min_price": "abc", "modal_price": "-1"}], BRONZE_SCHEMA)
     market = spark.createDataFrame([(1, "M1", "Ahmedabad")], ["market_key", "market_name", "district_name"])
@@ -115,6 +159,14 @@ def test__price_rules_that_need_a_valid_price_are_skipped(spark: SparkSession) -
 
 
 def test__duplicate_keeps_the_latest_ingested_then_the_highest_row_no(spark: SparkSession) -> None:
+    """Of duplicates, latest load then highest row number stays in clean.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Three valid rows with the same natural key.
     bronze = spark.createDataFrame(
         [
@@ -137,6 +189,14 @@ def test__duplicate_keeps_the_latest_ingested_then_the_highest_row_no(spark: Spa
 
 
 def test__an_invalid_row_does_not_win_a_duplicate(spark: SparkSession) -> None:
+    """An invalid row is rejected for its error, not as a duplicate.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Row 2 has the same key and a higher row number, but its price is invalid.
     bronze = spark.createDataFrame(
         [{**VALID_ROW, "_row_no": 1}, {**VALID_ROW, "_row_no": 2, "min_price": "abc"}], BRONZE_SCHEMA
@@ -153,6 +213,14 @@ def test__an_invalid_row_does_not_win_a_duplicate(spark: SparkSession) -> None:
 
 
 def test__every_row_ends_up_in_clean_or_rejected(spark: SparkSession) -> None:
+    """No row is lost: clean plus rejected equals the input.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     bronze = spark.createDataFrame(
         [{**VALID_ROW}, {**VALID_ROW, "market": "", "_row_no": 2}, {**VALID_ROW, "_row_no": 3}], BRONZE_SCHEMA
     )
@@ -169,6 +237,14 @@ def test__every_row_ends_up_in_clean_or_rejected(spark: SparkSession) -> None:
 # --- silver: fact ---
 
 def test__fact_rows_get_the_keys_of_the_dimensions(spark: SparkSession) -> None:
+    """Fact rows get market, commodity and date keys.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     clean = spark.createDataFrame(
         [("M1", 100, date(2026, 1, 5), "Other", "FAQ", Decimal("1"), Decimal("3"), Decimal("2"))],
         "market string, commodity_code int, arrival_date date, variety string, grade string, "
@@ -189,6 +265,14 @@ def test__fact_rows_get_the_keys_of_the_dimensions(spark: SparkSession) -> None:
 
 
 def test__fact_returns_none_for_a_market_that_is_not_in_the_dimension(spark: SparkSession) -> None:
+    """An unknown market gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     clean = spark.createDataFrame(
         [("Nope", 100, date(2026, 1, 5), "Other", "FAQ", Decimal("1"), Decimal("3"), Decimal("2"))],
         "market string, commodity_code int, arrival_date date, variety string, grade string, "
@@ -214,6 +298,14 @@ FACT_SCHEMA = (
 
 
 def test__weekly_aggregates_and_week_on_week_change(spark: SparkSession) -> None:
+    """Weekly counts, prices and week-on-week change.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # District D1 has markets 1 and 2. Week 1 has two rows, week 2 has one.
     fact = spark.createDataFrame(
         [
@@ -249,6 +341,14 @@ def test__weekly_aggregates_and_week_on_week_change(spark: SparkSession) -> None
 
 
 def test__a_missing_previous_week_gives_no_change(spark: SparkSession) -> None:
+    """No previous week means no week-on-week change.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Only week 3 has data; week 2 is missing, so there is nothing to compare with.
     fact = spark.createDataFrame(
         [(1, 10, 20261221, "Other", "FAQ", Decimal("10"), Decimal("30"), Decimal("20"), None)], FACT_SCHEMA
@@ -268,6 +368,14 @@ def test__a_missing_previous_week_gives_no_change(spark: SparkSession) -> None:
 
 
 def test__a_week_is_complete_only_inside_the_loaded_dates(spark: SparkSession) -> None:
+    """A week is complete only if all its days are loaded.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Loaded dates run from Wednesday 9 December to Tuesday 22 December.
     fact = spark.createDataFrame(
         [
@@ -298,6 +406,14 @@ def test__a_week_is_complete_only_inside_the_loaded_dates(spark: SparkSession) -
 
 
 def test__only_the_weeks_around_the_run_are_returned(spark: SparkSession) -> None:
+    """Returns the touched weeks plus the weeks before and after.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Facts exist for four weeks, but the run only touched week 2.
     fact = spark.createDataFrame(
         [
@@ -323,6 +439,14 @@ def test__only_the_weeks_around_the_run_are_returned(spark: SparkSession) -> Non
 
 
 def test__gold_returns_none_when_the_fact_has_no_rows_for_the_weeks(spark: SparkSession) -> None:
+    """No facts for the touched weeks gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # The fact only has 28 December, the run touched 7 December.
     fact = spark.createDataFrame(
         [(1, 10, 20261228, "Other", "FAQ", Decimal("10"), Decimal("30"), Decimal("20"), None)], FACT_SCHEMA
@@ -347,6 +471,14 @@ DIM_DATE_RAW = ", ".join(f"{field.name} string" for field in SCHEMA_DIM_DATE.fie
 
 
 def test__silver_dims_cast_to_the_silver_types_and_add_updated_at(spark: SparkSession) -> None:
+    """Casts to silver types and adds updated_at.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([("1", "Gujarat", "Ahmedabad", "M1")], DIM_MARKET_RAW)
 
     out = t.transform__silver_dims(
@@ -359,6 +491,14 @@ def test__silver_dims_cast_to_the_silver_types_and_add_updated_at(spark: SparkSe
 
 
 def test__silver_dims_refuse_a_value_that_is_not_the_right_type(spark: SparkSession) -> None:
+    """A value that cannot be cast gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([("abc", "Gujarat", "Ahmedabad", "M1")], DIM_MARKET_RAW)
 
     out = t.transform__silver_dims(
@@ -369,6 +509,14 @@ def test__silver_dims_refuse_a_value_that_is_not_the_right_type(spark: SparkSess
 
 
 def test__silver_dims_refuse_an_empty_key(spark: SparkSession) -> None:
+    """An empty key gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([(None, "Gujarat", "Ahmedabad", "M1")], DIM_MARKET_RAW)
 
     out = t.transform__silver_dims(
@@ -379,6 +527,14 @@ def test__silver_dims_refuse_an_empty_key(spark: SparkSession) -> None:
 
 
 def test__silver_dims_refuse_an_empty_name(spark: SparkSession) -> None:
+    """An empty name gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame([("1", "Gujarat", "Ahmedabad", None)], DIM_MARKET_RAW)
 
     out = t.transform__silver_dims(
@@ -389,6 +545,14 @@ def test__silver_dims_refuse_an_empty_name(spark: SparkSession) -> None:
 
 
 def test__silver_dims_refuse_a_duplicate_key(spark: SparkSession) -> None:
+    """A duplicate key gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # Two different markets with the same market_key.
     df = spark.createDataFrame([("1", "Gujarat", "Ahmedabad", "M1"), ("1", "Gujarat", "Surat", "M2")], DIM_MARKET_RAW)
 
@@ -400,6 +564,14 @@ def test__silver_dims_refuse_a_duplicate_key(spark: SparkSession) -> None:
 
 
 def test__silver_dims_refuse_a_duplicate_natural_key(spark: SparkSession) -> None:
+    """A duplicate natural key gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # The same state, district and market name under two keys.
     df = spark.createDataFrame([("1", "Gujarat", "Ahmedabad", "M1"), ("2", "Gujarat", "Ahmedabad", "M1")], DIM_MARKET_RAW)
 
@@ -411,6 +583,14 @@ def test__silver_dims_refuse_a_duplicate_natural_key(spark: SparkSession) -> Non
 
 
 def test__silver_dim_date_accepts_days_without_gaps(spark: SparkSession) -> None:
+    """Consecutive days pass the gap check.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     df = spark.createDataFrame(
         [
             ("20260101", "2026-01-01", "1", "Thursday", "2025-12-29", "1", "January", "1", "2026", "false", "Rabi"),
@@ -428,6 +608,14 @@ def test__silver_dim_date_accepts_days_without_gaps(spark: SparkSession) -> None
 
 
 def test__silver_dim_date_refuses_a_missing_day(spark: SparkSession) -> None:
+    """A missing day gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
     # 2 January is missing between 1 January and 3 January.
     df = spark.createDataFrame(
         [

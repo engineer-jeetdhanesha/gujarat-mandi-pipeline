@@ -1,3 +1,5 @@
+"""Shared pytest fixtures for the unit tests."""
+
 from collections.abc import Generator
 
 import pytest
@@ -9,8 +11,13 @@ from pyspark.sql import SparkSession
 def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, None, None]:
     """One local Spark session with Delta for the whole test run.
 
-    Tables are created in a temporary warehouse, so they disappear when the run ends and
-    nothing is written into the repository. Each test uses its own table names.
+    Tables live in a temporary warehouse, so nothing is written into the repository.
+
+    Args:
+        tmp_path_factory: Creates the temporary warehouse folder.
+
+    Returns:
+        The shared SparkSession; stopped after the last test.
     """
     builder = (
         SparkSession.builder.master("local[1]")
@@ -22,6 +29,8 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Generator[SparkSession, N
         # Delta is needed for MERGE INTO, which the silver and gold loads use.
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        # Databricks writes Delta by default; plain Spark writes Parquet, which clashes with the Delta test tables.
+        .config("spark.sql.sources.default", "delta")
     )
     session = configure_spark_with_delta_pip(builder).getOrCreate()
     yield session

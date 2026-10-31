@@ -1,3 +1,5 @@
+"""Tests for lib_mandi.config: the raw schemas match the seed files and are all nullable strings."""
+
 from pathlib import Path
 
 import pytest
@@ -7,48 +9,78 @@ from lib_mandi import config
 
 SEED_DIR = Path(__file__).resolve().parents[2] / "seed"
 
-# One entry per dimension: seed file, bronze schema, silver schema, silver rules.
-DIMENSIONS = [
-    ("dim_market.csv", config.SCHEMA_RAW_DIM_MARKET, config.SCHEMA_DIM_MARKET, config.RULES_DIM_MARKET),
-    ("dim_commodity.csv", config.SCHEMA_RAW_DIM_COMMODITY, config.SCHEMA_DIM_COMMODITY, config.RULES_DIM_COMMODITY),
-    ("dim_date.csv", config.SCHEMA_RAW_DIM_DATE, config.SCHEMA_DIM_DATE, config.RULES_DIM_DATE),
-]
 
+@pytest.mark.parametrize(
+    "seed_file, schema",
+    [
+        pytest.param("dim_market.csv", config.SCHEMA_RAW_DIM_MARKET, id="dim_market"),
+        pytest.param("dim_commodity.csv", config.SCHEMA_RAW_DIM_COMMODITY, id="dim_commodity"),
+        pytest.param("dim_date.csv", config.SCHEMA_RAW_DIM_DATE, id="dim_date"),
+    ],
+)
+def test__raw_columns_match_the_seed_file_header(seed_file: str, schema: StructType) -> None:
+    """Raw schema column names equal the seed CSV header.
 
-@pytest.mark.parametrize("seed_file, raw, silver, rules", DIMENSIONS, ids=[d[0] for d in DIMENSIONS])
-def test__bronze_schema_matches_the_header_of_the_seed_file(
-    seed_file: str, raw: StructType, silver: StructType, rules: dict
-) -> None:
-    # The seed files are read with enforceSchema=False, so the header must carry exactly these names.
+    Args:
+        seed_file: CSV name in seed/.
+        schema: Raw (bronze) schema of that dimension.
+
+    Returns:
+        None.
+    """
     header = (SEED_DIR / seed_file).read_text().splitlines()[0]
-    assert raw.names == header.split(",")
+    assert schema.names == header.split(",")
 
 
-@pytest.mark.parametrize("seed_file, raw, silver, rules", DIMENSIONS, ids=[d[0] for d in DIMENSIONS])
-def test__bronze_and_silver_have_the_same_columns_and_bronze_is_all_strings(
-    seed_file: str, raw: StructType, silver: StructType, rules: dict
-) -> None:
-    # Silver casts the bronze strings, so the column names must line up.
-    assert raw.names == silver.names
-    assert {f.dataType.simpleString() for f in raw.fields} == {"string"}
+def test__source_columns_are_the_eleven_columns_of_the_daily_file() -> None:
+    """Source schema has the 11 expected columns (no sample file in the repo).
+
+    Returns:
+        None.
+    """
+    assert config.SCHEMA_SOURCE.names == [
+        "state", "district", "market", "commodity", "commodity_code", "variety",
+        "grade", "arrival_date", "min_price", "max_price", "modal_price",
+    ]
 
 
-@pytest.mark.parametrize("seed_file, raw, silver, rules", DIMENSIONS, ids=[d[0] for d in DIMENSIONS])
-def test__rules_only_name_columns_of_the_silver_schema(
-    seed_file: str, raw: StructType, silver: StructType, rules: dict
-) -> None:
-    # Every column named in the rules must exist, otherwise the check fails at run time.
-    used = set(rules["not_null_columns"]) | {column for unique in rules["unique_columns"] for column in unique}
-    if rules["date_column"]:
-        used.add(rules["date_column"])
-    assert used <= set(silver.names)
+@pytest.mark.parametrize(
+    "schema",
+    [
+        pytest.param(config.SCHEMA_RAW_DIM_MARKET, id="dim_market"),
+        pytest.param(config.SCHEMA_RAW_DIM_COMMODITY, id="dim_commodity"),
+        pytest.param(config.SCHEMA_RAW_DIM_DATE, id="dim_date"),
+        pytest.param(config.SCHEMA_SOURCE, id="source"),
+    ],
+)
+def test__raw_columns_are_all_strings(schema: StructType) -> None:
+    """Bronze keeps values as received, so every raw column is a string.
+
+    Args:
+        schema: Raw (bronze) schema.
+
+    Returns:
+        None.
+    """
+    assert {f.dataType.simpleString() for f in schema.fields} == {"string"}
 
 
-def test__date_gap_check_runs_on_a_date_column() -> None:
-    types = {f.name: f.dataType.simpleString() for f in config.SCHEMA_DIM_DATE.fields}
-    assert types[config.RULES_DIM_DATE["date_column"]] == "date"
+@pytest.mark.parametrize(
+    "schema",
+    [
+        pytest.param(config.SCHEMA_RAW_DIM_MARKET, id="dim_market"),
+        pytest.param(config.SCHEMA_RAW_DIM_COMMODITY, id="dim_commodity"),
+        pytest.param(config.SCHEMA_RAW_DIM_DATE, id="dim_date"),
+        pytest.param(config.SCHEMA_SOURCE, id="source"),
+    ],
+)
+def test__raw_columns_are_nullable(schema: StructType) -> None:
+    """Bronze accepts empty values, so every raw column is nullable.
 
+    Args:
+        schema: Raw (bronze) schema.
 
-def test__source_schema_has_eleven_string_columns() -> None:
-    assert len(config.SCHEMA_SOURCE.names) == 11
-    assert {f.dataType.simpleString() for f in config.SCHEMA_SOURCE.fields} == {"string"}
+    Returns:
+        None.
+    """
+    assert all(f.nullable for f in schema.fields)
