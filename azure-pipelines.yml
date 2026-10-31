@@ -1,5 +1,5 @@
 # Azure Pipelines definition for the Gujarat mandi bundle.
-# Stage 1 (CI) checks every change. The UAT and prod deploy stages are added in later pull requests.
+# CI checks every change. Deploy UAT runs after a merge to main. The prod stage is added in a later commit.
 
 # When does a run start?
 trigger:                      # on a push ...
@@ -10,6 +10,13 @@ trigger:                      # on a push ...
 pr:                           # on a pull request ...
   branches:
     include: [main]           # ... that targets main
+
+# Choices shown when you start a run by hand ("Run pipeline"). Automatic runs use the default.
+parameters:
+  - name: runSetup
+    displayName: Run mandi_setup in UAT before mandi_daily (tick it when the schema changes)
+    type: boolean
+    default: false
 
 # Which machine runs the steps? A fresh Microsoft-hosted Linux VM for every run.
 pool:
@@ -78,19 +85,7 @@ stages:
         displayName: Validate bundle (uat)
         timeoutInMinutes: 10
         steps:
-          # Download the pinned CLI and check it against the published checksum before running it.
-          - script: |
-              set -euo pipefail
-              base="https://github.com/databricks/cli/releases/download/v$(DATABRICKS_CLI_VERSION)"
-              zip="databricks_cli_$(DATABRICKS_CLI_VERSION)_linux_amd64.zip"
-              dir="$(Agent.TempDirectory)/databricks-cli"
-              mkdir -p "$dir"
-              curl -fsSL -o "$dir/$zip" "$base/$zip"
-              curl -fsSL -o "$dir/SHA256SUMS" "$base/databricks_cli_$(DATABRICKS_CLI_VERSION)_SHA256SUMS"
-              (cd "$dir" && sha256sum --check --ignore-missing SHA256SUMS)
-              unzip -q -o "$dir/$zip" -d "$dir"
-              echo "##vso[task.prependpath]$dir"          # later steps can call "databricks"
-            displayName: Install Databricks CLI
+          - template: azure-pipelines/templates/install-databricks-cli.yml
 
           # AzureCLI@2 signs in to Azure as the service connection's identity, with no stored secret, and then
           # runs the script. DATABRICKS_AUTH_TYPE=azure-cli makes the Databricks CLI reuse that sign-in.
@@ -105,3 +100,61 @@ stages:
                 export DATABRICKS_AUTH_TYPE=azure-cli
                 databricks --version
                 databricks bundle validate -t uat
+
+  # Runs only for a push to main (a merged PR) and only if CI passed. A PR or a tag run skips it.
+  - stage: DeployUAT
+    displayName: Deploy UAT
+    dependsOn: CI
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    variables:
+      # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
+      UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_sample.csv
+    jobs:
+      # A "deployment" job is tied to an environment (uat), which keeps a history of what was deployed and
+      # is where approvals and checks can be added later.
+      - deployment: deploy_uat
+        displayName: Deploy bundle to UAT and run it
+        environment: uat
+        timeoutInMinutes: 90
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self        # a deployment job does not fetch the code by itself
+
+                - template: azure-pipelines/templates/install-databricks-cli.yml
+
+                # Upload the bundle (notebooks, library, job definitions) to UAT and create or update the jobs.
+                - task: AzureCLI@2
+                  displayName: Deploy bundle (uat)
+                  inputs:
+                    azureSubscription: sc-mandi-uat
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle deploy -t uat
+
+                # Only when the runSetup box was ticked. "bundle run" waits for the job and fails the step
+                # (and so the run) when the job fails.
+                - ${{ if eq(parameters.runSetup, true) }}:
+                    - task: AzureCLI@2
+                      displayName: Run mandi_setup (uat)
+                      inputs:
+                        azureSubscription: sc-mandi-uat
+                        scriptType: bash
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          export DATABRICKS_AUTH_TYPE=azure-cli
+                          databricks bundle run mandi_setup -t uat
+
+                # The end-to-end check of the new code: bronze, silver, facts and gold for the sample file.
+                - task: AzureCLI@2
+                  displayName: Run mandi_daily (uat)
+                  inputs:
+                    azureSubscription: sc-mandi-uat
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle run mandi_daily -t uat --params file_path=$(UAT_SOURCE_FILE)
