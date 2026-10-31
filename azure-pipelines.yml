@@ -1,0 +1,71 @@
+# Azure Pipelines definition for the Gujarat mandi bundle.
+# Stage 1 (CI) checks every change. The UAT and prod deploy stages are added in later pull requests.
+
+# When does a run start?
+trigger:                      # on a push ...
+  branches:
+    include: [main]           # ... to main (after a merge)
+  tags:
+    include: ['v*']           # ... of a release tag such as v1.0.0
+pr:                           # on a pull request ...
+  branches:
+    include: [main]           # ... that targets main
+
+# Which machine runs the steps? A fresh Microsoft-hosted Linux VM for every run.
+pool:
+  vmImage: ubuntu-24.04
+
+variables:
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip   # pip keeps downloaded packages here
+
+stages:
+  - stage: CI
+    displayName: CI
+    jobs:
+      - job: test
+        displayName: Lint and unit tests
+        timeoutInMinutes: 30                  # a stuck Spark session must not hang the run
+        steps:
+          - task: UsePythonVersion@0
+            displayName: Use Python 3.12
+            inputs:
+              versionSpec: '3.12'
+
+          # Restore the pip cache from an earlier run; it is saved again when this run succeeds.
+          # The key changes when requirements-dev.txt changes, which starts a fresh cache.
+          - task: Cache@2
+            displayName: Cache pip packages
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements-dev.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements-dev.txt
+            displayName: Install dependencies
+
+          # Cheapest check first: finds unused or undefined names and unsorted imports in about a second.
+          - script: ruff check src/lib_mandi tests/unit
+            displayName: Lint (ruff)
+
+          # Spark needs Java; Microsoft-hosted images already contain Java 17.
+          # --junitxml writes a result file that the next step shows in the Tests tab.
+          - script: |
+              if [ -n "${JAVA_HOME_17_X64:-}" ]; then
+                export JAVA_HOME="$JAVA_HOME_17_X64"
+                export PATH="$JAVA_HOME/bin:$PATH"
+              fi
+              java -version
+              pytest tests/unit --junitxml="$(Build.ArtifactStagingDirectory)/unit-test-results.xml"
+            displayName: Unit tests (pytest, local Spark and Delta)
+
+          # condition: succeededOrFailed() publishes the results even when a test failed, which is when they matter.
+          - task: PublishTestResults@2
+            displayName: Publish test results
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/unit-test-results.xml'
+              testRunTitle: Unit tests

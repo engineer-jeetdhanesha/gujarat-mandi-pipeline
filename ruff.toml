@@ -1,0 +1,11 @@
+# Lint settings (run: ruff check src/lib_mandi tests/unit).
+# Notebooks are left out: their %run and dbutils lines are not plain Python.
+target-version = "py312"
+line-length = 120
+extend-exclude = ["*.ipynb"]
+
+[lint]
+# E/W = pycodestyle, F = pyflakes (real bugs: unused or undefined names), I = import order.
+select = ["E", "W", "F", "I"]
+# Line length is not enforced: there is no formatter, and long one-line table setups in tests read better unwrapped.
+ignore = ["E501"]
