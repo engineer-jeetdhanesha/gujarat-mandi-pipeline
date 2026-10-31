@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from pyspark.sql.types import StructType
 
 
-def extract__bronze(
+def extract__source_file(
     spark: SparkSession, file_path: str, schema: StructType, options: dict[str, object]
 ) -> DataFrame | None:
     """Read one source CSV file.
@@ -29,7 +29,7 @@ def extract__bronze(
     try:
         print(f"Reading {file_path} ...")
         df = spark.read.schema(schema).options(**options).csv(file_path)
-        if df.count() == 0:
+        if df.first() is None:
             print(f"WARNING: no data rows in {file_path}; nothing loaded")
             return None
         return df
@@ -38,7 +38,7 @@ def extract__bronze(
         return None
 
 
-def extract__bronze_dims(
+def extract__seed_file(
     spark: SparkSession, file_path: str, schema: StructType, options: dict[str, object]
 ) -> DataFrame | None:
     """Read one seed CSV file, every column as a string.
@@ -63,7 +63,7 @@ def extract__bronze_dims(
         read_path = f"file:{file_path}" if file_path.startswith("/Workspace") else file_path
         print(f"Reading {file_path} ...")
         df = spark.read.schema(schema).options(**options).csv(read_path)
-        if df.count() == 0:
+        if df.first() is None:
             print(f"ERROR: no data rows in {file_path}; nothing loaded")
             return None
         return df
@@ -72,7 +72,7 @@ def extract__bronze_dims(
         return None
 
 
-def extract__silver_dims(spark: SparkSession, run_id: str, bronze_table: str) -> DataFrame | None:
+def extract__bronze_dims(spark: SparkSession, run_id: str, bronze_table: str) -> DataFrame | None:
     """Read the rows one run loaded into a bronze seed table.
 
     Args:
@@ -98,7 +98,7 @@ def extract__silver_dims(spark: SparkSession, run_id: str, bronze_table: str) ->
         return None
 
 
-def extract__silver_transactions(
+def extract__bronze_and_dims(
     spark: SparkSession,
     run_id: str,
     bronze_table: str,
@@ -143,7 +143,7 @@ def extract__silver_transactions(
         return None
 
 
-def extract__silver_facts(
+def extract__silver_clean_and_dims(
     spark: SparkSession,
     run_id: str,
     clean_table: str,
@@ -183,7 +183,7 @@ def extract__silver_facts(
         return None
 
 
-def extract__gold_weekly_mart(
+def extract__silver_clean_fact_and_dims(
     spark: SparkSession,
     run_id: str,
     clean_table: str,

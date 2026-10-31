@@ -211,7 +211,7 @@ Planned inputs; names may change when the code is written.
 
 ## Deploy with Databricks Asset Bundles
 
-Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). Only the `dev` target exists for now; it uses the workspace's default catalog (`gujarat_mandi_pipeline_dev_ws`) and runs on serverless compute.
+Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). There is one target per environment, each in its own workspace: `dev` (your own folder, runs as you), `uat` and `prod` (`mode: production`, deployed to the service principal's folder and run as that principal: `sp-mandi-uat`, `sp-mandi-prod`). Every target runs on serverless compute and uses its workspace's default catalog, so the notebooks need no catalog setting. Use `-t uat` or `-t prod` with the matching CLI profile for the other two.
 
 ```
 databricks bundle validate -t dev
@@ -242,12 +242,20 @@ databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
 │   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
 ├── tests/
 │   ├── test_*.ipynb              pytest notebooks run on Databricks, one per source notebook
-│   └── unit/                     pytest on the transforms with a local Spark session (for CI)
+│   └── unit/                     function tests: one file per lib_mandi module, local Spark with Delta (for CI)
 ├── pytest.ini
 └── requirements-dev.txt
 ```
 
-Run the unit tests without Databricks (needs Java 17+ for local Spark):
+Tests have three layers:
+
+| Layer | What it tests | Where it runs |
+|---|---|---|
+| Function tests (`tests/unit`) | `extract`, `transformations`, `dq_checks`, `load`, `utility` and `config` of `lib_mandi`, including the edge cases | Local Spark with Delta; the pull request stage of CI |
+| Notebook tests (`tests/test_*.ipynb`) | Each notebook on Databricks, with dummy data | Dev workspace |
+| End to end | `mandi_setup` then `mandi_daily` with the sample file | UAT, after each deploy |
+
+Run the function tests without Databricks (needs Java 17+ for local Spark; the first run downloads the Delta jar):
 
 ```
 pip install -r requirements-dev.txt
