@@ -17,6 +17,7 @@ pool:
 
 variables:
   PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip   # pip keeps downloaded packages here
+  DATABRICKS_CLI_VERSION: 1.18.0              # pinned, so a new CLI release cannot change a run
 
 stages:
   - stage: CI
@@ -69,3 +70,38 @@ stages:
               testResultsFormat: JUnit
               testResultsFiles: '$(Build.ArtifactStagingDirectory)/unit-test-results.xml'
               testRunTitle: Unit tests
+
+      # Runs in parallel with "test" on its own VM. It signs in to Databricks as the UAT service principal
+      # (service connection sc-mandi-uat) and asks the bundle to validate itself against the UAT workspace.
+      # This catches a wrong id, a bad path or a permission mismatch before anything is deployed.
+      - job: validate
+        displayName: Validate bundle (uat)
+        timeoutInMinutes: 10
+        steps:
+          # Download the pinned CLI and check it against the published checksum before running it.
+          - script: |
+              set -euo pipefail
+              base="https://github.com/databricks/cli/releases/download/v$(DATABRICKS_CLI_VERSION)"
+              zip="databricks_cli_$(DATABRICKS_CLI_VERSION)_linux_amd64.zip"
+              dir="$(Agent.TempDirectory)/databricks-cli"
+              mkdir -p "$dir"
+              curl -fsSL -o "$dir/$zip" "$base/$zip"
+              curl -fsSL -o "$dir/SHA256SUMS" "$base/databricks_cli_$(DATABRICKS_CLI_VERSION)_SHA256SUMS"
+              (cd "$dir" && sha256sum --check --ignore-missing SHA256SUMS)
+              unzip -q -o "$dir/$zip" -d "$dir"
+              echo "##vso[task.prependpath]$dir"          # later steps can call "databricks"
+            displayName: Install Databricks CLI
+
+          # AzureCLI@2 signs in to Azure as the service connection's identity, with no stored secret, and then
+          # runs the script. DATABRICKS_AUTH_TYPE=azure-cli makes the Databricks CLI reuse that sign-in.
+          # The workspace address comes from the "uat" target in databricks.yml.
+          - task: AzureCLI@2
+            displayName: Validate bundle (uat)
+            inputs:
+              azureSubscription: sc-mandi-uat
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                export DATABRICKS_AUTH_TYPE=azure-cli
+                databricks --version
+                databricks bundle validate -t uat
