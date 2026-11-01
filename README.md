@@ -205,12 +205,11 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 | Pull request to `main` | runs | skipped | skipped |
 | Merge to `main` | runs | runs after the checks pass | skipped |
 | Tag `v*` (for example `v1.0.0`) | runs | runs after the checks pass (tests the release commit) | runs after UAT passes **and a manual approval** |
-| Run by hand with **deployTo = uat** | runs | runs after the checks pass | skipped |
 
 The stages form one line: Lint, Unit tests, Validate bundle, Deploy UAT, Deploy prod. Prod never starts unless UAT passed for the same commit in the same run.
 
 - **Checks** (every run, one stage each, cheapest first): **Lint** (`ruff check`), **Unit tests** (`pytest tests/unit`, results shown in the Tests tab) and **Validate bundle** (`databricks bundle validate` for `uat` and `prod`). They change nothing in any workspace.
-- **Deploy UAT:** `databricks bundle deploy -t uat`, then `mandi_daily` on the sample file in the UAT landing volume (`UAT_SOURCE_FILE` in the pipeline). The run fails if the job fails, which makes it the end-to-end check. `mandi_setup` runs first only if you tick **Run mandi_setup in UAT** when you start the run by hand (needed when the schema changes).
+- **Deploy UAT:** `databricks bundle deploy -t uat`, then `mandi_daily` on the sample file in the UAT landing volume (`UAT_SOURCE_FILE` in the pipeline). The run fails if the job fails, which makes it the end-to-end check. The pipeline never runs `mandi_setup`: run it by hand in UAT when the schema changes (`databricks bundle run mandi_setup -t uat`, profile `gujarat-uat`).
 - **Deploy prod:** only for a tag, only after Deploy UAT succeeded. Checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run the job.
 - **No stored secrets:** the pipeline signs in with workload identity federation. There is one Azure DevOps service connection per environment (`sc-mandi-uat`, `sc-mandi-prod`), each backed by a federated credential on the matching Entra app registration. The YAML only names the connection.
 
@@ -228,7 +227,7 @@ Or use **Releases > Draft a new release** on GitHub with a new tag `v1.0.0` on `
 
 **Roll back:** re-run the pipeline for an older tag. Do not move or reuse a tag; create a new one (`v1.0.1`) for a fix.
 
-A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline**, choose the branch, and set **deployTo = uat** to also deploy that branch to UAT (prod cannot be deployed by hand; it only follows a tag).
+A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline** and choose the branch; that runs the checks only. To try a branch in UAT, deploy it yourself: `databricks bundle deploy -t uat` and `databricks bundle run ... -t uat` with the `gujarat-uat` profile.
 
 ## Configuration
 

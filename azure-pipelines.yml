@@ -1,7 +1,7 @@
 # Azure Pipelines definition for the Gujarat mandi bundle.
 # The stages run in a line: Lint -> Unit tests -> Validate bundle -> Deploy UAT -> Deploy prod.
 # The first three check every change.
-# Deploy UAT runs after a merge to main, for a v* tag, or when started by hand with deployTo = uat.
+# Deploy UAT runs after a merge to main and for a v* tag.
 # Deploy prod runs only for a v* tag, only after UAT passed for the same commit, and after approval.
 
 # When does a run start?
@@ -13,18 +13,6 @@ trigger:                      # on a push ...
 pr:                           # on a pull request ...
   branches:
     include: [main]           # ... that targets main
-
-# Choices shown when you start a run by hand ("Run pipeline"). Automatic runs use the default.
-parameters:
-  - name: deployTo
-    displayName: Deploy this branch to UAT by hand (none = checks only)
-    type: string
-    default: none
-    values: [none, uat]
-  - name: runSetup
-    displayName: Run mandi_setup in UAT before mandi_daily (tick it when the schema changes)
-    type: boolean
-    default: false
 
 # Which machine runs the steps? A fresh Microsoft-hosted Linux VM for every run.
 pool:
@@ -142,16 +130,15 @@ stages:
                 export DATABRICKS_AUTH_TYPE=azure-cli
                 databricks bundle validate -t prod
 
-  # Runs only if the checks passed, and only for a push to main (a merged PR), a v* tag (the release is tested in UAT
-  # first, in the same run), or a manual run with deployTo = uat. A pull request run skips it.
+  # Runs only if the checks passed, and only for a push to main (a merged PR) or a v* tag (the release is tested
+  # in UAT first, in the same run). A pull request run skips it.
   - stage: DeployUAT
     displayName: Deploy UAT
     dependsOn: Validate
     condition: >-
       and(succeeded(), or(
       eq(variables['Build.SourceBranch'], 'refs/heads/main'),
-      startsWith(variables['Build.SourceBranch'], 'refs/tags/v'),
-      eq('${{ parameters.deployTo }}', 'uat')))
+      startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
     variables:
       # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
       UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_sample.csv
@@ -180,19 +167,6 @@ stages:
                     inlineScript: |
                       export DATABRICKS_AUTH_TYPE=azure-cli
                       databricks bundle deploy -t uat
-
-                # Only when the runSetup box was ticked. "bundle run" waits for the job and fails the step
-                # (and so the run) when the job fails.
-                - ${{ if eq(parameters.runSetup, true) }}:
-                    - task: AzureCLI@2
-                      displayName: Run mandi_setup (uat)
-                      inputs:
-                        azureSubscription: sc-mandi-uat
-                        scriptType: bash
-                        scriptLocation: inlineScript
-                        inlineScript: |
-                          export DATABRICKS_AUTH_TYPE=azure-cli
-                          databricks bundle run mandi_setup -t uat
 
                 # The end-to-end check of the new code: bronze, silver, facts and gold for the sample file.
                 - task: AzureCLI@2
