@@ -141,7 +141,7 @@ stages:
       startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
     variables:
       # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
-      UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_sample.csv
+      UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_2026-01-01.csv
     jobs:
       # A "deployment" job is tied to an environment (uat), which keeps a history of what was deployed and
       # is where approvals and checks can be added later.
