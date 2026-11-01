@@ -98,8 +98,8 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 
 | Layer | Table | Purpose |
 |---|---|---|
-| Bronze | `raw_mandi_transactions` | Raw rows, all `STRING`, append-only, with lineage columns (`_run_id`, `_source_mode`, `_file_name`, …) |
-| Bronze | `raw_dim_market`, `raw_dim_commodity`, `raw_dim_date` | The seed CSV files as received (all `STRING`), appended per run, so a bad file stays visible before silver is touched |
+| Bronze | `raw_mandi_transactions` | Raw rows, all `STRING`, written per run and file (a reload of the same run and file replaces its rows), with lineage columns (`_run_id`, `_source_mode`, `_file_name`, …) |
+| Bronze | `raw_dim_market`, `raw_dim_commodity`, `raw_dim_date` | The seed CSV files as received (all `STRING`), written per run (a retry of the same run replaces its rows, other runs stay), so a bad file stays visible before silver is touched |
 | Bronze | `pipeline_audit` | One row per pipeline run: mode, business date range, status, row counts |
 | Silver | `mandi_prices_clean` | Typed, standardised, de-duplicated; `MERGE` target. Natural key: market + commodity code + variety + grade + arrival date |
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
@@ -193,10 +193,39 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 
 ## Environments and CI/CD
 
-- **Environments:** `mandi_dev` for development and testing, `mandi_prod` for the scheduled production run.
-- **CI/CD (planned):** Azure DevOps builds, tests and deploys the pipeline to Databricks, promoting from dev to prod.
+- **Environments:** three Databricks workspaces, each with its own default catalog: `dev` (`gujarat_mandi_pipeline_dev_ws`), `uat` and `prod`. UAT and prod run as the service principals `sp-mandi-uat` and `sp-mandi-prod`.
 - **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/*.yml`) deploys the notebooks and two jobs: `mandi_setup` (creates the tables and loads the dimensions, run on demand) and `mandi_daily` (the load workflow). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
+- **CI/CD:** one Azure Pipelines definition, [`azure-pipelines.yml`](azure-pipelines.yml), described below.
 - **Scheduling (planned):** the daily File/API run will be a schedule on `mandi_daily` in the prod target; Backfill and Error runs are started on demand with a mode parameter.
+
+### Azure DevOps pipeline
+
+| Trigger | CI | Deploy UAT | Deploy prod |
+|---|---|---|---|
+| Pull request to `main` | runs | skipped | skipped |
+| Merge to `main` | runs | runs after CI passes | skipped |
+| Tag `v*` (for example `v1.0.0`) | runs | skipped | runs after CI passes **and a manual approval** |
+
+- **CI** (every run): `ruff check`, the unit tests (`pytest tests/unit`, results shown in the Tests tab) and `databricks bundle validate` for `uat` and `prod`. It changes nothing in any workspace.
+- **Deploy UAT:** `databricks bundle deploy -t uat`, then `mandi_daily` on the sample file in the UAT landing volume (`UAT_SOURCE_FILE` in the pipeline). The run fails if the job fails, which makes it the end-to-end check. `mandi_setup` runs first only if you tick **Run mandi_setup in UAT** when you start the run by hand (needed when the schema changes).
+- **Deploy prod:** checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run the job.
+- **No stored secrets:** the pipeline signs in with workload identity federation. There is one Azure DevOps service connection per environment (`sc-mandi-uat`, `sc-mandi-prod`), each backed by a federated credential on the matching Entra app registration. The YAML only names the connection.
+
+One-time setup in Azure DevOps (not in the YAML): the two service connections, and the `uat` and `prod` environments with an approval on `prod` (**Pipelines > Environments > prod > Approvals and checks**).
+
+**Release to prod**
+
+```
+git checkout main && git pull
+git tag -a v1.0.0 -m "First production release"
+git push origin v1.0.0
+```
+
+Or use **Releases > Draft a new release** on GitHub with a new tag `v1.0.0` on `main`. The tag must start with `v`. Approve the run on the `prod` environment to deploy.
+
+**Roll back:** re-run the pipeline for an older tag. Do not move or reuse a tag; create a new one (`v1.0.1`) for a fix.
+
+A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline** and choose the branch.
 
 ## Configuration
 
@@ -228,6 +257,9 @@ databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
 .
 ├── README.md
 ├── databricks.yml                Databricks Asset Bundle (variables and targets)
+├── azure-pipelines.yml           Azure Pipelines: CI, deploy to UAT, release to prod
+├── azure-pipelines/templates/    Reusable pipeline steps (Databricks CLI install)
+├── ruff.toml                     Lint settings
 ├── resources/
 │   ├── mandi_setup.yml           Job: create the tables and load the dimensions (on demand)
 │   └── mandi_daily.yml           Job: bronze -> silver -> gold load workflow

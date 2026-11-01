@@ -1,5 +1,5 @@
 # Azure Pipelines definition for the Gujarat mandi bundle.
-# CI checks every change. Deploy UAT runs after a merge to main. The prod stage is added in a later commit.
+# CI checks every change. Deploy UAT runs after a merge to main. Deploy prod runs for a v* tag, after approval.
 
 # When does a run start?
 trigger:                      # on a push ...
@@ -101,6 +101,23 @@ stages:
                 databricks --version
                 databricks bundle validate -t uat
 
+      # Same check against the prod workspace, as the prod service principal (service connection sc-mandi-prod).
+      - job: validate_prod
+        displayName: Validate bundle (prod)
+        timeoutInMinutes: 10
+        steps:
+          - template: azure-pipelines/templates/install-databricks-cli.yml
+
+          - task: AzureCLI@2
+            displayName: Validate bundle (prod)
+            inputs:
+              azureSubscription: sc-mandi-prod
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                export DATABRICKS_AUTH_TYPE=azure-cli
+                databricks bundle validate -t prod
+
   # Runs only for a push to main (a merged PR) and only if CI passed. A PR or a tag run skips it.
   - stage: DeployUAT
     displayName: Deploy UAT
@@ -158,3 +175,50 @@ stages:
                     inlineScript: |
                       export DATABRICKS_AUTH_TYPE=azure-cli
                       databricks bundle run mandi_daily -t uat --params file_path=$(UAT_SOURCE_FILE)
+
+  # Runs only for a pushed tag that starts with "v" (for example v1.0.0) and only if CI passed.
+  # The "prod" environment holds a manual approval (Pipelines > Environments > prod > Approvals and checks),
+  # so the run pauses here until someone approves it.
+  - stage: DeployProd
+    displayName: Deploy prod
+    dependsOn: CI
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+    jobs:
+      - deployment: deploy_prod
+        displayName: Deploy bundle to prod
+        environment: prod
+        timeoutInMinutes: 30
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # fetchDepth 0 downloads the full history, and persistCredentials lets the next step fetch main.
+                - checkout: self
+                  fetchDepth: 0
+                  persistCredentials: true
+
+                # Guard: only a commit that is on main can be released. This stops a tag on an unmerged
+                # branch, so prod always gets code that already went through review, CI and UAT.
+                - script: |
+                    set -euo pipefail
+                    git fetch --no-tags origin main
+                    if git merge-base --is-ancestor "$(Build.SourceVersion)" origin/main; then
+                      echo "Tagged commit $(Build.SourceVersion) is on main."
+                    else
+                      echo "##[error]Tagged commit $(Build.SourceVersion) is not on main; refusing to release it."
+                      exit 1
+                    fi
+                  displayName: Check the tagged commit is on main
+
+                - template: azure-pipelines/templates/install-databricks-cli.yml
+
+                # Only deploys. The daily schedule (to be added) runs the job; a release does not load data.
+                - task: AzureCLI@2
+                  displayName: Deploy bundle (prod)
+                  inputs:
+                    azureSubscription: sc-mandi-prod
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle deploy -t prod
