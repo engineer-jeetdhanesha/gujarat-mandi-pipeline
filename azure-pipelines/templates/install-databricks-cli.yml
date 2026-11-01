@@ -1,0 +1,16 @@
+# Reusable steps: install the pinned Databricks CLI and put it on the PATH for the steps that follow.
+# The version comes from the DATABRICKS_CLI_VERSION variable in azure-pipelines.yml.
+steps:
+  # Download the pinned CLI and check it against the published checksum before running it.
+  - script: |
+      set -euo pipefail
+      base="https://github.com/databricks/cli/releases/download/v$(DATABRICKS_CLI_VERSION)"
+      zip="databricks_cli_$(DATABRICKS_CLI_VERSION)_linux_amd64.zip"
+      dir="$(Agent.TempDirectory)/databricks-cli"
+      mkdir -p "$dir"
+      curl -fsSL -o "$dir/$zip" "$base/$zip"
+      curl -fsSL -o "$dir/SHA256SUMS" "$base/databricks_cli_$(DATABRICKS_CLI_VERSION)_SHA256SUMS"
+      (cd "$dir" && sha256sum --check --ignore-missing SHA256SUMS)
+      unzip -q -o "$dir/$zip" -d "$dir"
+      echo "##vso[task.prependpath]$dir"          # later steps can call "databricks"
+    displayName: Install Databricks CLI

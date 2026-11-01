@@ -1,4 +1,4 @@
-"""Tests for lib_mandi.load: appending, replacing and MERGE into local Delta tables."""
+"""Tests for lib_mandi.load: bronze per-run loads, replacing and MERGE into local Delta tables."""
 
 from datetime import date
 from pathlib import Path
@@ -45,8 +45,8 @@ WEEK_1, WEEK_2 = date(2026, 12, 7), date(2026, 12, 14)
 
 # --- bronze ---
 
-def test__load_bronze_appends_the_rows_with_their_metadata(spark: SparkSession, tmp_path: Path) -> None:
-    """Bronze appends the rows with metadata on every load.
+def test__load_bronze_adds_the_rows_with_their_metadata(spark: SparkSession, tmp_path: Path) -> None:
+    """The rows of a file are written with their run id, file name and source mode.
 
     Args:
         spark: Local Spark session with Delta (fixture).
@@ -62,18 +62,90 @@ def test__load_bronze_appends_the_rows_with_their_metadata(spark: SparkSession, 
     # An empty table with the same columns as the file plus the metadata columns.
     df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_a")
 
-    # Loading the same rows twice appends twice: bronze never replaces or removes rows.
-    assert load__bronze(df, "test_load_bronze_a") is True
-    assert load__bronze(df, "test_load_bronze_a") is True
+    assert load__bronze(df, "test_load_bronze_a", "run1", path.name) is True
 
     rows = spark.table("test_load_bronze_a").orderBy("_row_no").collect()
-    assert [row["_row_no"] for row in rows] == [1, 1, 2, 2]
-    assert [row["min_price"] for row in rows] == ["10", "10", "11", "11"]
+    assert [row["_row_no"] for row in rows] == [1, 2]
+    assert [row["min_price"] for row in rows] == ["10", "11"]
     assert {(row["_run_id"], row["_file_name"], row["_source_mode"]) for row in rows} == {("run1", path.name, "FILE")}
 
 
+def test__load_bronze_replaces_the_rows_when_the_same_run_and_file_load_again(spark: SparkSession, tmp_path: Path) -> None:
+    """A retry of the same run and file leaves the rows once, not twice.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    path = tmp_path / "mandi_2026-01-05.csv"
+    path.write_text(SOURCE_HEADER + SOURCE_ROW + SOURCE_ROW.replace(",10,", ",11,"))
+    df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    df = transform__bronze(df, "run1", path.name)
+    df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_b")
+
+    assert load__bronze(df, "test_load_bronze_b", "run1", path.name) is True
+    assert load__bronze(df, "test_load_bronze_b", "run1", path.name) is True
+
+    rows = spark.table("test_load_bronze_b").orderBy("_row_no").collect()
+    assert [row["_row_no"] for row in rows] == [1, 2]
+
+
+def test__load_bronze_keeps_the_rows_of_other_runs(spark: SparkSession, tmp_path: Path) -> None:
+    """A new run adds its rows and leaves the rows of the earlier run untouched.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    path = tmp_path / "mandi_2026-01-05.csv"
+    path.write_text(SOURCE_HEADER + SOURCE_ROW)
+    df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    first_run = transform__bronze(df, "run1", path.name)
+    second_run = transform__bronze(df, "run2", path.name)
+    first_run.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_c")
+
+    assert load__bronze(first_run, "test_load_bronze_c", "run1", path.name) is True
+    assert load__bronze(second_run, "test_load_bronze_c", "run2", path.name) is True
+
+    rows = spark.table("test_load_bronze_c").collect()
+    assert sorted(row["_run_id"] for row in rows) == ["run1", "run2"]
+
+
+def test__load_bronze_keeps_the_rows_of_other_files_of_the_same_run(spark: SparkSession, tmp_path: Path) -> None:
+    """Two files loaded under one run id are both kept: the file name is part of the key.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    first_path = tmp_path / "mandi_2026-01-05.csv"
+    first_path.write_text(SOURCE_HEADER + SOURCE_ROW)
+    second_path = tmp_path / "mandi_2026-01-06.csv"
+    second_path.write_text(SOURCE_HEADER + SOURCE_ROW.replace(",10,", ",11,"))
+    first_file = extract__source_file(spark, str(first_path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    first_file = transform__bronze(first_file, "run1", first_path.name)
+    second_file = extract__source_file(spark, str(second_path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+    second_file = transform__bronze(second_file, "run1", second_path.name)
+    first_file.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_d")
+
+    assert load__bronze(first_file, "test_load_bronze_d", "run1", first_path.name) is True
+    assert load__bronze(second_file, "test_load_bronze_d", "run1", second_path.name) is True
+
+    rows = spark.table("test_load_bronze_d").collect()
+    assert sorted(row["_file_name"] for row in rows) == [first_path.name, second_path.name]
+
+
 def test__load_bronze_returns_false_and_adds_nothing_when_the_columns_do_not_fit(spark: SparkSession, tmp_path: Path) -> None:
-    """Returns False and adds nothing when the columns do not fit.
+    """Returns False and leaves the table unchanged when the table lacks the columns of the rows.
 
     Args:
         spark: Local Spark session with Delta (fixture).
@@ -87,15 +159,15 @@ def test__load_bronze_returns_false_and_adds_nothing_when_the_columns_do_not_fit
     df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
     df = transform__bronze(df, "run1", path.name)
     # A table with only two of the columns.
-    spark.createDataFrame([("9", "run0")], "min_price string, _run_id string").write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_b")
+    spark.createDataFrame([("9", "run0")], "min_price string, _run_id string").write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_e")
 
-    assert load__bronze(df, "test_load_bronze_b") is False
+    assert load__bronze(df, "test_load_bronze_e", "run1", path.name) is False
 
-    assert spark.table("test_load_bronze_b").count() == 1
+    assert spark.table("test_load_bronze_e").count() == 1
 
 
 def test__load_bronze_keeps_duplicate_rows_of_a_seed_file(spark: SparkSession, tmp_path: Path) -> None:
-    """Duplicate seed rows are kept in bronze.
+    """A seed file that contains the same row twice is written with both rows.
 
     Args:
         spark: Local Spark session with Delta (fixture).
@@ -108,11 +180,11 @@ def test__load_bronze_keeps_duplicate_rows_of_a_seed_file(spark: SparkSession, t
     path.write_text(DIM_HEADER + "1,Gujarat,Ahmedabad,M1\n1,Gujarat,Ahmedabad,M1\n")
     df = extract__seed_file(spark, str(path), SCHEMA_RAW_DIM_MARKET, OPTIONS_READ_SEED)
     df = transform__bronze(df, "run1", path.name)
-    df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_c")
+    df.limit(0).write.format("delta").mode("overwrite").saveAsTable("test_load_bronze_f")
 
-    assert load__bronze(df, "test_load_bronze_c") is True
+    assert load__bronze(df, "test_load_bronze_f", "run1", path.name) is True
 
-    rows = spark.table("test_load_bronze_c").collect()
+    rows = spark.table("test_load_bronze_f").collect()
     # Both copies of the duplicate are in bronze; the silver checks refuse them later.
     assert len(rows) == 2
     assert {(row["market_key"], row["_run_id"], row["_file_name"]) for row in rows} == {("1", "run1", "dim_market.csv")}

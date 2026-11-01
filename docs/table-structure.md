@@ -5,7 +5,7 @@ Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mand
 ---
 ## 1. Bronze
 
-### bronze.raw_mandi_transactions — raw, append-only, all STRING
+### bronze.raw_mandi_transactions — raw, idempotent per run and file, all STRING
 | Column | Type | Description |
 |---|---|---|
 | state | STRING | As received (always Gujarat) |
@@ -25,8 +25,8 @@ Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mand
 | _run_id | STRING | Run that loaded the row (joins audit) |
 | _row_no | BIGINT | Row number within the file/API page |
 
-### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, append-only
-Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run appends the rows of its seed file, so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
+### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, idempotent per run
+Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run writes the rows of its seed file (loading the same run again replaces them, other runs stay), so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
 
 ### bronze.pipeline_audit — one row per pipeline run
 | Column | Type | Description |

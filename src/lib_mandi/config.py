@@ -10,7 +10,6 @@ from pyspark.sql.types import (
     StructType,
 )
 
-
 # Source file: every value is kept as a string, exactly as received.
 SCHEMA_SOURCE = StructType([
     StructField("state", StringType(), True),

@@ -1,0 +1,227 @@
+# Azure Pipelines definition for the Gujarat mandi bundle.
+# The stages run in a line: Lint -> Unit tests -> Validate bundle -> Deploy UAT -> Deploy prod.
+# The first three check every change.
+# Deploy UAT runs after a merge to main and for a v* tag.
+# Deploy prod runs only for a v* tag, only after UAT passed for the same commit, and after approval.
+
+# When does a run start?
+trigger:                      # on a push ...
+  branches:
+    include: [main]           # ... to main (after a merge)
+  tags:
+    include: ['v*']           # ... of a release tag such as v1.0.0
+pr:                           # on a pull request ...
+  branches:
+    include: [main]           # ... that targets main
+
+# Which machine runs the steps? A fresh Microsoft-hosted Linux VM for every run.
+pool:
+  vmImage: ubuntu-24.04
+
+variables:
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip   # pip keeps downloaded packages here
+  DATABRICKS_CLI_VERSION: 1.18.0              # pinned, so a new CLI release cannot change a run
+
+stages:
+  # The stages run one after the other, cheapest check first, so a failure stops the run early.
+
+  # Finds unused or undefined names and unsorted imports in about a second; installs only ruff.
+  - stage: Lint
+    displayName: Lint
+    jobs:
+      - job: lint
+        displayName: Lint (ruff)
+        timeoutInMinutes: 10
+        steps:
+          - task: UsePythonVersion@0
+            displayName: Use Python 3.12
+            inputs:
+              versionSpec: '3.12'
+
+          # Take the pinned ruff version from requirements-dev.txt, so lint and local runs agree.
+          - script: |
+              python -m pip install --upgrade pip
+              RUFF_SPEC=$(grep -i '^ruff' requirements-dev.txt)
+              pip install "$RUFF_SPEC"
+              ruff check src/lib_mandi tests/unit
+            displayName: ruff check
+
+  - stage: UnitTests
+    displayName: Unit tests
+    jobs:
+      - job: test
+        displayName: Unit tests (pytest)
+        timeoutInMinutes: 30                  # a stuck Spark session must not hang the run
+        steps:
+          - task: UsePythonVersion@0
+            displayName: Use Python 3.12
+            inputs:
+              versionSpec: '3.12'
+
+          # Restore the pip cache from an earlier run; it is saved again when this run succeeds.
+          # The key changes when requirements-dev.txt changes, which starts a fresh cache.
+          - task: Cache@2
+            displayName: Cache pip packages
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements-dev.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements-dev.txt
+            displayName: Install dependencies
+
+          # Spark needs Java; Microsoft-hosted images already contain Java 17.
+          # --junitxml writes a result file that the next step shows in the Tests tab.
+          - script: |
+              if [ -n "${JAVA_HOME_17_X64:-}" ]; then
+                export JAVA_HOME="$JAVA_HOME_17_X64"
+                export PATH="$JAVA_HOME/bin:$PATH"
+              fi
+              java -version
+              pytest tests/unit --junitxml="$(Build.ArtifactStagingDirectory)/unit-test-results.xml"
+            displayName: Unit tests (pytest, local Spark and Delta)
+
+          # condition: succeededOrFailed() publishes the results even when a test failed, which is when they matter.
+          - task: PublishTestResults@2
+            displayName: Publish test results
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/unit-test-results.xml'
+              testRunTitle: Unit tests
+
+  # Checks the bundle against the real workspaces without deploying anything. One job, two steps: the CLI is
+  # installed once, then the bundle is validated as each environment's service principal in turn.
+  - stage: Validate
+    displayName: Validate bundle
+    jobs:
+      - job: validate
+        displayName: Validate bundle (uat and prod)
+        timeoutInMinutes: 15
+        steps:
+          - template: azure-pipelines/templates/install-databricks-cli.yml
+
+          # AzureCLI@2 signs in to Azure as the service connection's identity, with no stored secret, and then
+          # runs the script. DATABRICKS_AUTH_TYPE=azure-cli makes the Databricks CLI reuse that sign-in.
+          # The workspace address comes from the "uat" target in databricks.yml. This catches a wrong id, a bad
+          # path or a permission mismatch before anything is deployed.
+          - task: AzureCLI@2
+            displayName: Validate bundle (uat)
+            inputs:
+              azureSubscription: sc-mandi-uat
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                export DATABRICKS_AUTH_TYPE=azure-cli
+                databricks --version
+                databricks bundle validate -t uat
+
+          # Same check against the prod workspace, as the prod service principal (service connection sc-mandi-prod).
+          - task: AzureCLI@2
+            displayName: Validate bundle (prod)
+            inputs:
+              azureSubscription: sc-mandi-prod
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                export DATABRICKS_AUTH_TYPE=azure-cli
+                databricks bundle validate -t prod
+
+  # Runs only if the checks passed, and only for a push to main (a merged PR) or a v* tag (the release is tested
+  # in UAT first, in the same run). A pull request run skips it.
+  - stage: DeployUAT
+    displayName: Deploy UAT
+    dependsOn: Validate
+    condition: >-
+      and(succeeded(), or(
+      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+      startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
+    variables:
+      # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
+      UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_2026-01-01.csv
+    jobs:
+      # A "deployment" job is tied to an environment (uat), which keeps a history of what was deployed and
+      # is where approvals and checks can be added later.
+      - deployment: deploy_uat
+        displayName: Deploy bundle to UAT and run it
+        environment: uat
+        timeoutInMinutes: 90
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self        # a deployment job does not fetch the code by itself
+
+                - template: azure-pipelines/templates/install-databricks-cli.yml
+
+                # Upload the bundle (notebooks, library, job definitions) to UAT and create or update the jobs.
+                - task: AzureCLI@2
+                  displayName: Deploy bundle (uat)
+                  inputs:
+                    azureSubscription: sc-mandi-uat
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle deploy -t uat
+
+                # The end-to-end check of the new code: bronze, silver, facts and gold for the sample file.
+                - task: AzureCLI@2
+                  displayName: Run mandi_daily (uat)
+                  inputs:
+                    azureSubscription: sc-mandi-uat
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle run mandi_daily -t uat --params file_path=$(UAT_SOURCE_FILE)
+
+  # Runs only for a pushed tag that starts with "v" (for example v1.0.0) and only if Deploy UAT passed for this
+  # same commit. The "prod" environment holds a manual approval (Pipelines > Environments > prod >
+  # Approvals and checks), so the run pauses here until someone approves it.
+  - stage: DeployProd
+    displayName: Deploy prod
+    dependsOn: DeployUAT
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+    jobs:
+      - deployment: deploy_prod
+        displayName: Deploy bundle to prod
+        environment: prod
+        timeoutInMinutes: 30
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # fetchDepth 0 downloads the full history, and persistCredentials lets the next step fetch main.
+                - checkout: self
+                  fetchDepth: 0
+                  persistCredentials: true
+
+                # Guard: only a commit that is on main can be released. This stops a tag on an unmerged
+                # branch, so prod always gets code that already went through review, CI and UAT.
+                - script: |
+                    set -euo pipefail
+                    git fetch --no-tags origin main
+                    if git merge-base --is-ancestor "$(Build.SourceVersion)" origin/main; then
+                      echo "Tagged commit $(Build.SourceVersion) is on main."
+                    else
+                      echo "##[error]Tagged commit $(Build.SourceVersion) is not on main; refusing to release it."
+                      exit 1
+                    fi
+                  displayName: Check the tagged commit is on main
+
+                - template: azure-pipelines/templates/install-databricks-cli.yml
+
+                # Only deploys. The daily schedule (to be added) runs the job; a release does not load data.
+                - task: AzureCLI@2
+                  displayName: Deploy bundle (prod)
+                  inputs:
+                    azureSubscription: sc-mandi-prod
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      export DATABRICKS_AUTH_TYPE=azure-cli
+                      databricks bundle deploy -t prod
