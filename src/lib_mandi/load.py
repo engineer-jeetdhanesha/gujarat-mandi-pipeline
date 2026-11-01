@@ -8,18 +8,27 @@ if TYPE_CHECKING:
     from pyspark.sql import DataFrame, SparkSession
 
 
-def load__bronze(df: DataFrame, table_name: str) -> bool:
-    """Append the rows to the bronze table.
+def load__bronze(df: DataFrame, table_name: str, run_id: str, file_name: str) -> bool:
+    """Write the rows of one file of one run to a bronze table; loading it again replaces them.
+
+    First deletes the rows of this run and file, then appends the new rows, so a retry of the same run adds no
+    duplicates while earlier runs and other files of the run stay visible. The two steps are not one transaction:
+    if the append fails, the run's rows are gone until the load is retried.
 
     Args:
         df: Rows with the source and metadata columns (lib_mandi.transformations.transform__bronze).
         table_name: Three-level table name, e.g. "mandi_dev.bronze.raw_mandi_transactions".
+        run_id: Id of the run; the _run_id of every row in df.
+        file_name: Name of the file without folders; the _file_name of every row in df.
 
     Returns:
-        True if the rows were appended; False if the write failed (the reason is printed).
+        True if the rows were written; False if the write failed (the reason is printed).
     """
     try:
-        print(f"Appending rows to {table_name} ...")
+        print(f"Loading the rows of run {run_id}, file {file_name} into {table_name} ...")
+        run_id_sql = run_id.replace("'", "''")
+        file_name_sql = file_name.replace("'", "''")
+        df.sparkSession.sql(f"DELETE FROM {table_name} WHERE _run_id = '{run_id_sql}' AND _file_name = '{file_name_sql}'")
         df.write.mode("append").saveAsTable(table_name)
         print(f"Bronze load done for {table_name}")
         return True
