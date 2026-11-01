@@ -1,5 +1,8 @@
 # Azure Pipelines definition for the Gujarat mandi bundle.
-# CI checks every change. Deploy UAT runs after a merge to main. Deploy prod runs for a v* tag, after approval.
+# The stages run in a line: Lint -> Unit tests -> Validate bundle -> Deploy UAT -> Deploy prod.
+# The first three check every change.
+# Deploy UAT runs after a merge to main, for a v* tag, or when started by hand with deployTo = uat.
+# Deploy prod runs only for a v* tag, only after UAT passed for the same commit, and after approval.
 
 # When does a run start?
 trigger:                      # on a push ...
@@ -13,6 +16,11 @@ pr:                           # on a pull request ...
 
 # Choices shown when you start a run by hand ("Run pipeline"). Automatic runs use the default.
 parameters:
+  - name: deployTo
+    displayName: Deploy this branch to UAT by hand (none = checks only)
+    type: string
+    default: none
+    values: [none, uat]
   - name: runSetup
     displayName: Run mandi_setup in UAT before mandi_daily (tick it when the schema changes)
     type: boolean
@@ -27,11 +35,34 @@ variables:
   DATABRICKS_CLI_VERSION: 1.18.0              # pinned, so a new CLI release cannot change a run
 
 stages:
-  - stage: CI
-    displayName: CI
+  # The stages run one after the other, cheapest check first, so a failure stops the run early.
+
+  # Finds unused or undefined names and unsorted imports in about a second; installs only ruff.
+  - stage: Lint
+    displayName: Lint
+    jobs:
+      - job: lint
+        displayName: Lint (ruff)
+        timeoutInMinutes: 10
+        steps:
+          - task: UsePythonVersion@0
+            displayName: Use Python 3.12
+            inputs:
+              versionSpec: '3.12'
+
+          # Take the pinned ruff version from requirements-dev.txt, so lint and local runs agree.
+          - script: |
+              python -m pip install --upgrade pip
+              RUFF_SPEC=$(grep -i '^ruff' requirements-dev.txt)
+              pip install "$RUFF_SPEC"
+              ruff check src/lib_mandi tests/unit
+            displayName: ruff check
+
+  - stage: UnitTests
+    displayName: Unit tests
     jobs:
       - job: test
-        displayName: Lint and unit tests
+        displayName: Unit tests (pytest)
         timeoutInMinutes: 30                  # a stuck Spark session must not hang the run
         steps:
           - task: UsePythonVersion@0
@@ -54,10 +85,6 @@ stages:
               pip install -r requirements-dev.txt
             displayName: Install dependencies
 
-          # Cheapest check first: finds unused or undefined names and unsorted imports in about a second.
-          - script: ruff check src/lib_mandi tests/unit
-            displayName: Lint (ruff)
-
           # Spark needs Java; Microsoft-hosted images already contain Java 17.
           # --junitxml writes a result file that the next step shows in the Tests tab.
           - script: |
@@ -78,18 +105,21 @@ stages:
               testResultsFiles: '$(Build.ArtifactStagingDirectory)/unit-test-results.xml'
               testRunTitle: Unit tests
 
-      # Runs in parallel with "test" on its own VM. It signs in to Databricks as the UAT service principal
-      # (service connection sc-mandi-uat) and asks the bundle to validate itself against the UAT workspace.
-      # This catches a wrong id, a bad path or a permission mismatch before anything is deployed.
+  # Checks the bundle against the real workspaces without deploying anything. One job, two steps: the CLI is
+  # installed once, then the bundle is validated as each environment's service principal in turn.
+  - stage: Validate
+    displayName: Validate bundle
+    jobs:
       - job: validate
-        displayName: Validate bundle (uat)
-        timeoutInMinutes: 10
+        displayName: Validate bundle (uat and prod)
+        timeoutInMinutes: 15
         steps:
           - template: azure-pipelines/templates/install-databricks-cli.yml
 
           # AzureCLI@2 signs in to Azure as the service connection's identity, with no stored secret, and then
           # runs the script. DATABRICKS_AUTH_TYPE=azure-cli makes the Databricks CLI reuse that sign-in.
-          # The workspace address comes from the "uat" target in databricks.yml.
+          # The workspace address comes from the "uat" target in databricks.yml. This catches a wrong id, a bad
+          # path or a permission mismatch before anything is deployed.
           - task: AzureCLI@2
             displayName: Validate bundle (uat)
             inputs:
@@ -101,13 +131,7 @@ stages:
                 databricks --version
                 databricks bundle validate -t uat
 
-      # Same check against the prod workspace, as the prod service principal (service connection sc-mandi-prod).
-      - job: validate_prod
-        displayName: Validate bundle (prod)
-        timeoutInMinutes: 10
-        steps:
-          - template: azure-pipelines/templates/install-databricks-cli.yml
-
+          # Same check against the prod workspace, as the prod service principal (service connection sc-mandi-prod).
           - task: AzureCLI@2
             displayName: Validate bundle (prod)
             inputs:
@@ -118,11 +142,16 @@ stages:
                 export DATABRICKS_AUTH_TYPE=azure-cli
                 databricks bundle validate -t prod
 
-  # Runs only for a push to main (a merged PR) and only if CI passed. A PR or a tag run skips it.
+  # Runs only if the checks passed, and only for a push to main (a merged PR), a v* tag (the release is tested in UAT
+  # first, in the same run), or a manual run with deployTo = uat. A pull request run skips it.
   - stage: DeployUAT
     displayName: Deploy UAT
-    dependsOn: CI
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    dependsOn: Validate
+    condition: >-
+      and(succeeded(), or(
+      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+      startsWith(variables['Build.SourceBranch'], 'refs/tags/v'),
+      eq('${{ parameters.deployTo }}', 'uat')))
     variables:
       # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
       UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_sample.csv
@@ -176,12 +205,12 @@ stages:
                       export DATABRICKS_AUTH_TYPE=azure-cli
                       databricks bundle run mandi_daily -t uat --params file_path=$(UAT_SOURCE_FILE)
 
-  # Runs only for a pushed tag that starts with "v" (for example v1.0.0) and only if CI passed.
-  # The "prod" environment holds a manual approval (Pipelines > Environments > prod > Approvals and checks),
-  # so the run pauses here until someone approves it.
+  # Runs only for a pushed tag that starts with "v" (for example v1.0.0) and only if Deploy UAT passed for this
+  # same commit. The "prod" environment holds a manual approval (Pipelines > Environments > prod >
+  # Approvals and checks), so the run pauses here until someone approves it.
   - stage: DeployProd
     displayName: Deploy prod
-    dependsOn: CI
+    dependsOn: DeployUAT
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
     jobs:
       - deployment: deploy_prod

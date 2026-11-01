@@ -200,15 +200,18 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 
 ### Azure DevOps pipeline
 
-| Trigger | CI | Deploy UAT | Deploy prod |
+| Trigger | Lint, unit tests, validate | Deploy UAT | Deploy prod |
 |---|---|---|---|
 | Pull request to `main` | runs | skipped | skipped |
-| Merge to `main` | runs | runs after CI passes | skipped |
-| Tag `v*` (for example `v1.0.0`) | runs | skipped | runs after CI passes **and a manual approval** |
+| Merge to `main` | runs | runs after the checks pass | skipped |
+| Tag `v*` (for example `v1.0.0`) | runs | runs after the checks pass (tests the release commit) | runs after UAT passes **and a manual approval** |
+| Run by hand with **deployTo = uat** | runs | runs after the checks pass | skipped |
 
-- **CI** (every run): `ruff check`, the unit tests (`pytest tests/unit`, results shown in the Tests tab) and `databricks bundle validate` for `uat` and `prod`. It changes nothing in any workspace.
+The stages form one line: Lint, Unit tests, Validate bundle, Deploy UAT, Deploy prod. Prod never starts unless UAT passed for the same commit in the same run.
+
+- **Checks** (every run, one stage each, cheapest first): **Lint** (`ruff check`), **Unit tests** (`pytest tests/unit`, results shown in the Tests tab) and **Validate bundle** (`databricks bundle validate` for `uat` and `prod`). They change nothing in any workspace.
 - **Deploy UAT:** `databricks bundle deploy -t uat`, then `mandi_daily` on the sample file in the UAT landing volume (`UAT_SOURCE_FILE` in the pipeline). The run fails if the job fails, which makes it the end-to-end check. `mandi_setup` runs first only if you tick **Run mandi_setup in UAT** when you start the run by hand (needed when the schema changes).
-- **Deploy prod:** checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run the job.
+- **Deploy prod:** only for a tag, only after Deploy UAT succeeded. Checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run the job.
 - **No stored secrets:** the pipeline signs in with workload identity federation. There is one Azure DevOps service connection per environment (`sc-mandi-uat`, `sc-mandi-prod`), each backed by a federated credential on the matching Entra app registration. The YAML only names the connection.
 
 One-time setup in Azure DevOps (not in the YAML): the two service connections, and the `uat` and `prod` environments with an approval on `prod` (**Pipelines > Environments > prod > Approvals and checks**).
@@ -225,7 +228,7 @@ Or use **Releases > Draft a new release** on GitHub with a new tag `v1.0.0` on `
 
 **Roll back:** re-run the pipeline for an older tag. Do not move or reuse a tag; create a new one (`v1.0.1`) for a fix.
 
-A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline** and choose the branch.
+A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline**, choose the branch, and set **deployTo = uat** to also deploy that branch to UAT (prod cannot be deployed by hand; it only follows a tag).
 
 ## Configuration
 
@@ -257,7 +260,7 @@ databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
 .
 ├── README.md
 ├── databricks.yml                Databricks Asset Bundle (variables and targets)
-├── azure-pipelines.yml           Azure Pipelines: CI, deploy to UAT, release to prod
+├── azure-pipelines.yml           Azure Pipelines: checks, deploy to UAT, release to prod
 ├── azure-pipelines/templates/    Reusable pipeline steps (Databricks CLI install)
 ├── ruff.toml                     Lint settings
 ├── resources/
