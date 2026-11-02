@@ -204,16 +204,27 @@ After someone corrects the price and sets `status = RESOLVED`, an error-mode run
 |---|---|---|---|
 | Pull request to `main` | runs | skipped | skipped |
 | Merge to `main` | runs | runs after the checks pass | skipped |
-| Tag `v*` (for example `v1.0.0`) | runs | runs after the checks pass (tests the release commit) | runs after UAT passes **and a manual approval** |
+| Tag `v*` (for example `v1.0.0`) | runs | deploys the release commit after the checks pass | deploys after the UAT deploy and **a manual approval** |
 
-The stages form one line: Lint, Unit tests, Validate bundle, Deploy UAT, Deploy prod. Prod never starts unless UAT passed for the same commit in the same run.
+The stages form one line: Lint, Unit tests, Validate bundle, Deploy UAT, Deploy prod. Prod never starts unless the UAT deploy succeeded for the same commit in the same run. **The pipeline only deploys; it never runs a job.**
 
 - **Checks** (every run, one stage each, cheapest first): **Lint** (`ruff check`), **Unit tests** (`pytest tests/unit`, results shown in the Tests tab) and **Validate bundle** (`databricks bundle validate` for `uat` and `prod`). They change nothing in any workspace.
-- **Deploy UAT:** `databricks bundle deploy -t uat`, then `mandi_daily` on the sample file in the UAT landing volume (`UAT_SOURCE_FILE` in the pipeline). The run fails if the job fails, which makes it the end-to-end check. The pipeline never runs `mandi_setup`: run it by hand in UAT when the schema changes (`databricks bundle run mandi_setup -t uat`, profile `gujarat-uat`).
-- **Deploy prod:** only for a tag, only after Deploy UAT succeeded. Checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run the job.
+- **Deploy UAT:** `databricks bundle deploy -t uat`. It creates or updates the jobs, owned by the UAT service principal, and runs nothing.
+- **Deploy prod:** only for a tag, only after Deploy UAT succeeded. Checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run a job.
 - **No stored secrets:** the pipeline signs in with workload identity federation. There is one Azure DevOps service connection per environment (`sc-mandi-uat`, `sc-mandi-prod`), each backed by a federated credential on the matching Entra app registration. The YAML only names the connection.
 
 One-time setup in Azure DevOps (not in the YAML): the two service connections, and the `uat` and `prod` environments with an approval on `prod` (**Pipelines > Environments > prod > Approvals and checks**).
+
+**Run the jobs by hand (the pipeline never does)**
+
+The order for a new environment is: deploy, `mandi_setup` (creates the schemas, tables and landing volume, and loads the seed tables), put a file in the landing volume (it only exists after setup), then `mandi_daily`. For UAT use the `gujarat-uat` profile:
+
+```
+databricks bundle run mandi_setup -t uat -p gujarat-uat
+databricks bundle run mandi_daily -t uat -p gujarat-uat --params file_path=/Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_2026-01-01.csv
+```
+
+**Before you tag a release:** run `mandi_daily` in UAT and check that it is green, because a green pipeline only proves that the checks passed and the bundle deployed. In prod, run `mandi_setup` once after the first deploy.
 
 **Release to prod**
 
@@ -287,7 +298,7 @@ Tests have three layers:
 |---|---|---|
 | Function tests (`tests/unit`) | `extract`, `transformations`, `dq_checks`, `load`, `utility` and `config` of `lib_mandi`, including the edge cases | Local Spark with Delta; the pull request stage of CI |
 | Notebook tests (`tests/test_*.ipynb`) | Each notebook on Databricks, with dummy data | Dev workspace |
-| End to end | `mandi_setup` then `mandi_daily` with the sample file | UAT, after each deploy |
+| End to end | `mandi_setup` then `mandi_daily` with the sample file, started by hand | UAT, after each deploy and before tagging a release |
 
 Run the function tests without Databricks (needs Java 17+ for local Spark; the first run downloads the Delta jar):
 

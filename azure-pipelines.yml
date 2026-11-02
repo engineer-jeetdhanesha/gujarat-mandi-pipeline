@@ -1,8 +1,9 @@
 # Azure Pipelines definition for the Gujarat mandi bundle.
 # The stages run in a line: Lint -> Unit tests -> Validate bundle -> Deploy UAT -> Deploy prod.
 # The first three check every change.
-# Deploy UAT runs after a merge to main and for a v* tag.
-# Deploy prod runs only for a v* tag, only after UAT passed for the same commit, and after approval.
+# Deploy UAT runs after a merge to main and for a v* tag. Deploy prod runs only for a v* tag, only after the UAT
+# deploy succeeded for the same commit, and after approval.
+# The pipeline only deploys. Jobs (mandi_setup, mandi_daily) are run by hand in each workspace.
 
 # When does a run start?
 trigger:                      # on a push ...
@@ -139,14 +140,11 @@ stages:
       and(succeeded(), or(
       eq(variables['Build.SourceBranch'], 'refs/heads/main'),
       startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
-    variables:
-      # The sample file that mandi_daily reads; upload it to the UAT landing volume once and adjust the name here.
-      UAT_SOURCE_FILE: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_2026-01-01.csv
     jobs:
       # A "deployment" job is tied to an environment (uat), which keeps a history of what was deployed and
       # is where approvals and checks can be added later.
       - deployment: deploy_uat
-        displayName: Deploy bundle to UAT and run it
+        displayName: Deploy bundle to UAT
         environment: uat
         timeoutInMinutes: 90
         strategy:
@@ -158,6 +156,7 @@ stages:
                 - template: azure-pipelines/templates/install-databricks-cli.yml
 
                 # Upload the bundle (notebooks, library, job definitions) to UAT and create or update the jobs.
+                # It does not run any job.
                 - task: AzureCLI@2
                   displayName: Deploy bundle (uat)
                   inputs:
@@ -167,17 +166,6 @@ stages:
                     inlineScript: |
                       export DATABRICKS_AUTH_TYPE=azure-cli
                       databricks bundle deploy -t uat
-
-                # The end-to-end check of the new code: bronze, silver, facts and gold for the sample file.
-                - task: AzureCLI@2
-                  displayName: Run mandi_daily (uat)
-                  inputs:
-                    azureSubscription: sc-mandi-uat
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      export DATABRICKS_AUTH_TYPE=azure-cli
-                      databricks bundle run mandi_daily -t uat --params file_path=$(UAT_SOURCE_FILE)
 
   # Runs only for a pushed tag that starts with "v" (for example v1.0.0) and only if Deploy UAT passed for this
   # same commit. The "prod" environment holds a manual approval (Pipelines > Environments > prod >
