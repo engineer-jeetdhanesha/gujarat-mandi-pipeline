@@ -217,12 +217,14 @@ One-time setup in Azure DevOps (not in the YAML): the two service connections, a
 
 **Run the jobs by hand (the pipeline never does)**
 
-The order for a new environment is: deploy, `mandi_setup` (creates the schemas, tables and landing volume, and loads the seed tables), put a file in the landing volume (it only exists after setup), then `mandi_daily`. For UAT use the `gujarat-uat` profile:
+The order for a new environment is: deploy, `mandi_setup` (creates the schemas, tables and the `landing_zone` and `archive` volumes, and loads the seed tables), put a file in the `landing_zone` volume (it only exists after setup), then `mandi_daily`. For UAT use the `gujarat-uat` profile:
 
 ```
 databricks bundle run mandi_setup -t uat -p gujarat-uat
-databricks bundle run mandi_daily -t uat -p gujarat-uat --params file_path=/Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_2026-01-01.csv
+databricks bundle run mandi_daily -t uat -p gujarat-uat
 ```
+
+`mandi_daily` needs no parameter: `file_path` defaults per target to `/Volumes/gujarat_mandi_pipeline_<env>_ws/bronze/landing_zone/mandi_*.csv` and `run_id` to the Databricks job run id. Pass `--params file_path=<path or pattern>` to load something else.
 
 **Before you tag a release:** run `mandi_daily` in UAT and check that it is green, because a green pipeline only proves that the checks passed and the bundle deployed. In prod, run `mandi_setup` once after the first deploy.
 
@@ -259,10 +261,12 @@ Needs the Databricks CLI and a logged-in profile (`databricks auth login --profi
 databricks bundle validate -t dev
 databricks bundle deploy -t dev
 databricks bundle run mandi_setup -t dev
-databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
+databricks bundle run mandi_daily -t dev
 ```
 
-`mandi_setup` runs `setup`, `load_bronze_dims` and `load_silver_dims`; run it once after a deploy and again when a seed CSV changes. `mandi_daily` runs `load_bronze`, `load_silver_transactions`, `load_silver_facts` and `load_gold`, one after the other, and needs the tables and dimensions to exist. In both, `run_id` defaults to the job run id. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the jobs set it to `true`, so a failed load fails the task.
+`mandi_setup` runs `setup`, `load_bronze_dims` and `load_silver_dims`; run it once after a deploy and again when a seed CSV changes. `mandi_daily` runs `load_bronze`, `load_silver_transactions`, `load_silver_facts`, `load_gold` and `archive_files`, one after the other, and needs the tables and dimensions to exist. In both, `run_id` defaults to the job run id.
+
+**Source files:** a file waits in the `bronze.landing_zone` volume. `load_bronze` loads every file that matches `file_path` (each one separately, with its own `_file_name` and `_row_no`) and fails when none matches. `archive_files` runs last and moves the files that this run loaded to `bronze.archive/<run_id>/<file name>`, so the next run only sees new files; if a task fails, the files stay in the landing zone. A file delivered again later is archived in the folder of its own run, so nothing is overwritten. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the jobs set it to `true`, so a failed load fails the task.
 
 ## Repository layout
 
@@ -275,14 +279,14 @@ databricks bundle run mandi_daily -t dev --params file_path=<source csv path>
 ├── ruff.toml                     Lint settings
 ├── resources/
 │   ├── mandi_setup.yml           Job: create the tables and load the dimensions (on demand)
-│   └── mandi_daily.yml           Job: bronze -> silver -> gold load workflow
+│   └── mandi_daily.yml           Job: bronze -> silver -> gold load workflow, then archive the files
 ├── docs/
 │   ├── table-structure.md        Table design (source of truth)
 │   ├── table-structure.html      Same, rendered for reading
 │   └── high-level-design.html    Architecture diagram with tech stack
 ├── seed/                         CSV files for the silver dimensions
 ├── src/
-│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_bronze_dims, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold
+│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_bronze_dims, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold, archive_files
 │   │                             (widgets, catalog lookup and the extract -> transform -> load calls)
 │   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
 ├── tests/

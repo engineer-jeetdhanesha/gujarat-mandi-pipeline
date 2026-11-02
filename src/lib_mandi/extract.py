@@ -9,6 +9,33 @@ if TYPE_CHECKING:
     from pyspark.sql.types import StructType
 
 
+def extract__source_paths(file_path: str) -> list[str] | None:
+    """List the files that match a source path or pattern, in name order.
+
+    Works on any path the driver can see, including Unity Catalog volumes (/Volumes/...). A path without a
+    wildcard matches itself if the file exists.
+
+    Args:
+        file_path: Path of one CSV file or a pattern, e.g. "/Volumes/mandi/bronze/landing_zone/mandi_*.csv".
+
+    Returns:
+        The paths of the matching files; None if no file matches or the listing failed (the reason is printed).
+    """
+    import glob
+    import os
+
+    try:
+        paths = sorted(path for path in glob.glob(file_path) if os.path.isfile(path))
+        if not paths:
+            print(f"ERROR: no file matches {file_path}")
+            return None
+        print(f"{len(paths)} file(s) match {file_path}")
+        return paths
+    except Exception as e:
+        print(f"ERROR: could not list {file_path}: {e}")
+        return None
+
+
 def extract__source_file(
     spark: SparkSession, file_path: str, schema: StructType, options: dict[str, object]
 ) -> DataFrame | None:
@@ -93,6 +120,32 @@ def extract__bronze_dims(spark: SparkSession, run_id: str, bronze_table: str) ->
             print(f"ERROR: no rows for run {run_id} in {bronze_table}; silver table left unchanged")
             return None
         return df
+    except Exception as e:
+        print(f"ERROR: could not read {bronze_table}: {e}")
+        return None
+
+
+def extract__bronze_file_names(spark: SparkSession, run_id: str, bronze_table: str) -> list[str] | None:
+    """List the source files one run loaded into bronze, by _file_name.
+
+    Args:
+        spark: Spark session.
+        run_id: Id of the run that loaded the files (bronze _run_id).
+        bronze_table: Three-level table name, e.g. "mandi_dev.bronze.raw_mandi_transactions".
+
+    Returns:
+        The distinct file names of the run, in name order; None if the run has no rows in the table or the read
+        failed (the reason is printed).
+    """
+    from pyspark.sql import functions as F
+
+    try:
+        print(f"Listing the files of run {run_id} in {bronze_table} ...")
+        rows = spark.table(bronze_table).where(F.col("_run_id") == run_id).select("_file_name").distinct().collect()
+        if not rows:
+            print(f"ERROR: no rows for run {run_id} in {bronze_table}; no file to archive")
+            return None
+        return sorted(row["_file_name"] for row in rows)
     except Exception as e:
         print(f"ERROR: could not read {bronze_table}: {e}")
         return None
