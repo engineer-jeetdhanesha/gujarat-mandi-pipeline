@@ -15,6 +15,7 @@ from lib_mandi.config import (
 )
 from lib_mandi.extract import extract__bronze_dims, extract__seed_file, extract__source_file
 from lib_mandi.load import (
+    load__archive_file,
     load__bronze,
     load__gold_weekly_mart,
     load__silver_dims,
@@ -188,6 +189,64 @@ def test__load_bronze_keeps_duplicate_rows_of_a_seed_file(spark: SparkSession, t
     # Both copies of the duplicate are in bronze; the silver checks refuse them later.
     assert len(rows) == 2
     assert {(row["market_key"], row["_run_id"], row["_file_name"]) for row in rows} == {("1", "run1", "dim_market.csv")}
+
+
+# --- archive: move the loaded files ---
+
+def test__load_archive_file_moves_the_file_to_a_folder_named_after_the_run(tmp_path: Path) -> None:
+    """The file leaves the landing folder and appears in <archive>/<run_id>/ with the same name and content.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    landing = tmp_path / "landing_zone"
+    landing.mkdir()
+    (landing / "mandi_2026-01-01.csv").write_text(SOURCE_HEADER + SOURCE_ROW)
+
+    moved = load__archive_file(str(landing / "mandi_2026-01-01.csv"), str(tmp_path / "archive"), "run1")
+
+    assert moved is True
+    assert not (landing / "mandi_2026-01-01.csv").exists()
+    assert (tmp_path / "archive" / "run1" / "mandi_2026-01-01.csv").read_text() == SOURCE_HEADER + SOURCE_ROW
+
+
+def test__load_archive_file_keeps_a_file_that_was_delivered_again_in_a_later_run(tmp_path: Path) -> None:
+    """The same file name archived by two runs ends up in two folders, so nothing is overwritten.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    landing = tmp_path / "landing_zone"
+    landing.mkdir()
+    (landing / "mandi_2026-01-01.csv").write_text("first")
+    load__archive_file(str(landing / "mandi_2026-01-01.csv"), str(tmp_path / "archive"), "run1")
+    (landing / "mandi_2026-01-01.csv").write_text("second")
+
+    load__archive_file(str(landing / "mandi_2026-01-01.csv"), str(tmp_path / "archive"), "run2")
+
+    assert (tmp_path / "archive" / "run1" / "mandi_2026-01-01.csv").read_text() == "first"
+    assert (tmp_path / "archive" / "run2" / "mandi_2026-01-01.csv").read_text() == "second"
+
+
+def test__load_archive_file_returns_false_for_a_missing_file(tmp_path: Path) -> None:
+    """A file that does not exist gives False and creates no archive file.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    moved = load__archive_file(str(tmp_path / "landing_zone" / "mandi_2026-01-01.csv"), str(tmp_path / "archive"), "run1")
+
+    assert moved is False
+    assert list((tmp_path / "archive").rglob("*.csv")) == []
 
 
 # --- silver dimensions ---

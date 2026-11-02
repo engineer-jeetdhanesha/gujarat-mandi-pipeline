@@ -9,10 +9,12 @@ from lib_mandi.config import OPTIONS_READ_SEED, OPTIONS_READ_SOURCE, SCHEMA_RAW_
 from lib_mandi.extract import (
     extract__bronze_and_dims,
     extract__bronze_dims,
+    extract__bronze_file_names,
     extract__seed_file,
     extract__silver_clean_and_dims,
     extract__silver_clean_fact_and_dims,
     extract__source_file,
+    extract__source_paths,
 )
 
 SOURCE_HEADER = "State,District,Market,Commodity,Commodity_Code,Variety,Grade,Arrival_Date,Min_Price,Max_Price,Modal_Price\n"
@@ -158,6 +160,102 @@ def test__extract_seed_file_returns_none_for_a_file_that_is_not_a_csv(spark: Spa
     path.write_text("")
 
     assert extract__seed_file(spark, str(path), SCHEMA_RAW_DIM_MARKET, OPTIONS_READ_SEED) is None
+
+
+# --- bronze: find the source files ---
+
+def test__extract_source_paths_returns_the_files_that_match_the_pattern_in_name_order(tmp_path: Path) -> None:
+    """A pattern returns the matching files, sorted by name, and skips the others.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    (tmp_path / "mandi_2026-01-02.csv").write_text("")
+    (tmp_path / "mandi_2026-01-01.csv").write_text("")
+    (tmp_path / "other_2026-01-01.csv").write_text("")
+    (tmp_path / "mandi_folder.csv").mkdir()  # a folder that matches the pattern is not a file
+
+    paths = extract__source_paths(str(tmp_path / "mandi_*.csv"))
+
+    assert paths == [str(tmp_path / "mandi_2026-01-01.csv"), str(tmp_path / "mandi_2026-01-02.csv")]
+
+
+def test__extract_source_paths_returns_a_path_without_a_wildcard_if_the_file_exists(tmp_path: Path) -> None:
+    """A path without a wildcard gives that file.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    path = tmp_path / "mandi_2026-01-01.csv"
+    path.write_text("")
+
+    assert extract__source_paths(str(path)) == [str(path)]
+
+
+def test__extract_source_paths_returns_none_when_no_file_matches(tmp_path: Path) -> None:
+    """A pattern or a path with no matching file gives None.
+
+    Args:
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    assert extract__source_paths(str(tmp_path / "mandi_*.csv")) is None
+    assert extract__source_paths(str(tmp_path / "mandi_2026-01-01.csv")) is None
+
+
+# --- archive: which files did the run load ---
+
+def test__extract_bronze_file_names_returns_the_distinct_files_of_the_run(spark: SparkSession) -> None:
+    """Lists each file of the run once, in name order, and ignores other runs.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
+    spark.createDataFrame(
+        [("b.csv", "run1"), ("b.csv", "run1"), ("a.csv", "run1"), ("c.csv", "run0")],
+        "_file_name string, _run_id string",
+    ).write.mode("overwrite").saveAsTable("test_extract_file_names_a")
+
+    assert extract__bronze_file_names(spark, "run1", "test_extract_file_names_a") == ["a.csv", "b.csv"]
+
+
+def test__extract_bronze_file_names_returns_none_when_the_run_has_no_rows(spark: SparkSession) -> None:
+    """A run without rows in the table gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
+    spark.createDataFrame(
+        [("a.csv", "run1")], "_file_name string, _run_id string"
+    ).write.mode("overwrite").saveAsTable("test_extract_file_names_b")
+
+    assert extract__bronze_file_names(spark, "run2", "test_extract_file_names_b") is None
+
+
+def test__extract_bronze_file_names_returns_none_for_a_missing_table(spark: SparkSession) -> None:
+    """A table that does not exist gives None.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+
+    Returns:
+        None.
+    """
+    assert extract__bronze_file_names(spark, "run1", "test_no_such_table") is None
 
 
 # --- silver dimensions: read the bronze seed table ---

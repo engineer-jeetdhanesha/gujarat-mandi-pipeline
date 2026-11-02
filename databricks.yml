@@ -15,7 +15,9 @@ sync:
 
 variables:
   file_path:
-    description: Source CSV path for the bronze load (set per run)
+    description: >-
+      Source CSV file or pattern for the bronze load. Each target sets its own landing volume; a file leaves the
+      landing volume when mandi_daily has loaded it, so the pattern only ever matches files that wait to be loaded.
     default: ""
 
 targets:
@@ -24,6 +26,8 @@ targets:
     default: true
     workspace:
       host: https://adb-7405617239301071.11.azuredatabricks.net
+    variables:
+      file_path: /Volumes/gujarat_mandi_pipeline_dev_ws/bronze/landing_zone/mandi_*.csv
 
   uat:
     mode: production
@@ -32,6 +36,8 @@ targets:
       root_path: /Workspace/Users/7b6c1128-258e-47a7-ab23-195029fb260c/.bundle/${bundle.name}/${bundle.target}
     run_as:
       service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
+    variables:
+      file_path: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_*.csv
     permissions:
       - service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
         level: CAN_MANAGE
@@ -43,6 +49,8 @@ targets:
       root_path: /Workspace/Users/47b5ebd0-4696-40d1-bd0a-02b71ce98a10/.bundle/${bundle.name}/${bundle.target}
     run_as:
       service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
+    variables:
+      file_path: /Volumes/gujarat_mandi_pipeline_prod_ws/bronze/landing_zone/mandi_*.csv
     permissions:
       - service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
         level: CAN_MANAGE

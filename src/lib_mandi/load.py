@@ -37,6 +37,35 @@ def load__bronze(df: DataFrame, table_name: str, run_id: str, file_name: str) ->
         return False
 
 
+def load__archive_file(file_path: str, archive_dir: str, run_id: str) -> bool:
+    """Move a loaded source file to <archive_dir>/<run_id>/, keeping its name.
+
+    One folder per run means a file delivered again later never overwrites an earlier one, and the folder name
+    matches the _run_id in bronze.
+
+    Args:
+        file_path: Path of the file to move, e.g. "/Volumes/mandi_dev/bronze/landing_zone/mandi_2026-01-01.csv".
+        archive_dir: Folder of the archive, e.g. "/Volumes/mandi_dev/bronze/archive"; created if missing.
+        run_id: Id of the run that loaded the file.
+
+    Returns:
+        True if the file was moved; False if it could not be (the reason is printed). The file stays in place on False.
+    """
+    import os
+    import shutil
+
+    try:
+        target_dir = os.path.join(archive_dir, run_id)
+        target = os.path.join(target_dir, os.path.basename(file_path))
+        print(f"Moving {file_path} to {target} ...")
+        os.makedirs(target_dir, exist_ok=True)
+        shutil.move(file_path, target)
+        return True
+    except Exception as e:
+        print(f"ERROR: could not archive {file_path}: {e}")
+        return False
+
+
 def load__silver_dims(df: DataFrame, table_name: str) -> bool:
     """Replace a dimension table with the rows (INSERT OVERWRITE).
 

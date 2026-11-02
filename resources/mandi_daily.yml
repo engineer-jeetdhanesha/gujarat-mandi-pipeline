@@ -46,3 +46,15 @@ resources:
             base_parameters:
               run_id: "{{job.parameters.run_id}}"
               fail_on_error: "true"
+
+        # Moves the files this run loaded from the landing volume to the archive volume. Last, so a failure
+        # above leaves the files where they are.
+        - task_key: archive_files
+          depends_on:
+            - task_key: load_gold
+          notebook_task:
+            notebook_path: ../src/archive_files.ipynb
+            base_parameters:
+              run_id: "{{job.parameters.run_id}}"
+              file_path: "{{job.parameters.file_path}}"
+              fail_on_error: "true"
