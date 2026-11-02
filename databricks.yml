@@ -19,6 +19,13 @@ variables:
       Source CSV file or pattern for the bronze load. Each target sets its own landing volume; a file leaves the
       landing volume when mandi_daily has loaded it, so the pattern only ever matches files that wait to be loaded.
     default: ""
+  volume_users:
+    description: >-
+      Comma-separated users, groups or service principal IDs that mandi_setup grants read and write access to on
+      every bronze volume (landing_zone, archive), e.g. to upload source files. Each target sets its workspace's
+      all-users group (_workspace_users_<catalog>_<workspace id>), so everyone in that workspace gets access.
+      Empty grants nothing.
+    default: ""
 
 targets:
   dev:
@@ -28,6 +35,7 @@ targets:
       host: https://adb-7405617239301071.11.azuredatabricks.net
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_dev_ws/bronze/landing_zone/mandi_*.csv
+      volume_users: _workspace_users_gujarat_mandi_pipeline_dev_ws_7405617239301071
 
   uat:
     mode: production
@@ -38,6 +46,7 @@ targets:
       service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_*.csv
+      volume_users: _workspace_users_gujarat_mandi_pipeline_uat_ws_7405618434508183
     permissions:
       - service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
         level: CAN_MANAGE
@@ -51,6 +60,7 @@ targets:
       service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_prod_ws/bronze/landing_zone/mandi_*.csv
+      volume_users: _workspace_users_gujarat_mandi_pipeline_prod_ws_7405605581298117
     permissions:
       - service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
         level: CAN_MANAGE
