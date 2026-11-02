@@ -8,11 +8,15 @@ resources:
       parameters:
         - name: run_id
           default: "{{job.run_id}}"
+        - name: volume_users
+          default: ${var.volume_users}
 
       tasks:
         - task_key: setup
           notebook_task:
             notebook_path: ../src/setup.ipynb
+            base_parameters:
+              volume_users: "{{job.parameters.volume_users}}"
 
         - task_key: load_bronze_dims
           depends_on:
