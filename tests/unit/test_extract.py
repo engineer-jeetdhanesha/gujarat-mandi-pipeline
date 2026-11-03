@@ -46,6 +46,35 @@ def test__extract_source_file_reads_every_row_as_strings(spark: SparkSession, tm
     assert sorted(row["min_price"] for row in df.collect()) == ["10", "11"]
 
 
+def test__extract_source_file_keeps_a_line_break_inside_a_quoted_value_in_one_row(spark: SparkSession, tmp_path: Path) -> None:
+    """A quoted value with a line break (as in some commodity names) stays one record; the line break stays in the value.
+
+    Args:
+        spark: Local Spark session with Delta (fixture).
+        tmp_path: Empty temporary folder for this test (fixture).
+
+    Returns:
+        None.
+    """
+    path = tmp_path / "mandi_2026-05-22.csv"
+    # Like the real backfill file: every line ends with \r\n, and one commodity name ends with a line break too.
+    path.write_text(
+        SOURCE_HEADER.replace("\n", "\r\n")
+        + 'Gujarat,Surat,Surat APMC,"Spiny Gourd / Kartali(Kantola)\r\n",305,Other,FAQ,22/05/2026,18000,20000,19000\r\n'
+        + SOURCE_ROW.replace("\n", "\r\n")
+    )
+
+    df = extract__source_file(spark, str(path), SCHEMA_SOURCE, OPTIONS_READ_SOURCE)
+
+    # Without multiLine the first record is split in two and FAILFAST rejects the whole file.
+    assert df is not None
+    rows = {row["commodity"]: row for row in df.collect()}
+    assert len(rows) == 2
+    assert rows["Spiny Gourd / Kartali(Kantola)\n"]["commodity_code"] == "305"
+    assert rows["Spiny Gourd / Kartali(Kantola)\n"]["modal_price"] == "19000"
+    assert rows["Wheat"]["modal_price"] == "20"  # the line ending is not part of the last value
+
+
 def test__extract_source_file_returns_none_for_a_file_without_data_rows(spark: SparkSession, tmp_path: Path) -> None:
     """A source file with only a header gives None.
 
