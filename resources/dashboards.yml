@@ -1,0 +1,8 @@
+resources:
+  dashboards:
+    mandi_prices:
+      display_name: Mandi prices
+      file_path: ./dashboards/mandi_prices.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      dataset_catalog: ${var.catalog}
+      dataset_schema: gold

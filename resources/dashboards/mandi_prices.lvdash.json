@@ -1,0 +1,605 @@
+{
+  "datasets": [
+    {
+      "name": "weekly",
+      "displayName": "Weekly prices",
+      "queryLines": [
+        "SELECT week_start, district_name, commodity_name, category, avg_modal_price, min_price, max_price, wow_change_pct, markets_count, price_records\n",
+        "FROM mart_price_weekly"
+      ]
+    },
+    {
+      "name": "latest",
+      "displayName": "Latest week",
+      "queryLines": [
+        "SELECT week_start, district_name, commodity_name, category, avg_modal_price, min_price, max_price, wow_change_pct, markets_count, price_records\n",
+        "FROM mart_price_weekly\n",
+        "WHERE week_start = (SELECT MAX(week_start) FROM mart_price_weekly)"
+      ]
+    },
+    {
+      "name": "movers",
+      "displayName": "Biggest weekly movers",
+      "queryLines": [
+        "SELECT * FROM (\n",
+        "  (SELECT commodity_name, ROUND(AVG(wow_change_pct), 1) AS change_pct, 'Rise' AS direction\n",
+        "   FROM mart_price_weekly\n",
+        "   WHERE week_start = (SELECT MAX(week_start) FROM mart_price_weekly) AND wow_change_pct IS NOT NULL\n",
+        "   GROUP BY commodity_name HAVING AVG(wow_change_pct) > 0 ORDER BY change_pct DESC LIMIT 5)\n",
+        "  UNION ALL\n",
+        "  (SELECT commodity_name, ROUND(AVG(wow_change_pct), 1) AS change_pct, 'Fall' AS direction\n",
+        "   FROM mart_price_weekly\n",
+        "   WHERE week_start = (SELECT MAX(week_start) FROM mart_price_weekly) AND wow_change_pct IS NOT NULL\n",
+        "   GROUP BY commodity_name HAVING AVG(wow_change_pct) < 0 ORDER BY change_pct ASC LIMIT 5)\n",
+        ")"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "overview",
+      "displayName": "Mandi prices",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Gujarat mandi prices\n",
+                "Weekly modal prices in rupees per quintal, from the gold layer. Pick a commodity, then narrow it by district. Each price is the average of the district weekly averages."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "f_commodity",
+            "queries": [
+              {
+                "name": "q_weekly",
+                "query": {
+                  "datasetName": "weekly",
+                  "fields": [
+                    {
+                      "name": "commodity_name",
+                      "expression": "`commodity_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_latest",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "commodity_name",
+                      "expression": "`commodity_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "commodity_name",
+                    "displayName": "Commodity",
+                    "queryName": "q_weekly"
+                  },
+                  {
+                    "fieldName": "commodity_name",
+                    "displayName": "Commodity",
+                    "queryName": "q_latest"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Commodity"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "f_district",
+            "queries": [
+              {
+                "name": "q_weekly",
+                "query": {
+                  "datasetName": "weekly",
+                  "fields": [
+                    {
+                      "name": "district_name",
+                      "expression": "`district_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_latest",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "district_name",
+                      "expression": "`district_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "district_name",
+                    "displayName": "District",
+                    "queryName": "q_weekly"
+                  },
+                  {
+                    "fieldName": "district_name",
+                    "displayName": "District",
+                    "queryName": "q_latest"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "District"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "t_price",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "AVG(`avg_modal_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Average price",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average price, latest week",
+                "showDescription": true,
+                "description": "Where the price stands now, in rupees per quintal."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "t_change",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "AVG(`wow_change_pct`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Change vs last week",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Change vs last week (%)",
+                "showDescription": true,
+                "description": "Whether the price is rising or falling compared with the week before."
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 4,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "t_markets",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(`markets_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Markets",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Markets reporting",
+                "showDescription": true,
+                "description": "How many markets the price is based on, so you know how much to trust it."
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "c_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "weekly",
+                  "fields": [
+                    {
+                      "name": "week_start",
+                      "expression": "`week_start`"
+                    },
+                    {
+                      "name": "avg_price",
+                      "expression": "AVG(`avg_modal_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week_start",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Week starting"
+                },
+                "y": {
+                  "fieldName": "avg_price",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Average price (Rs per quintal)"
+                }
+              },
+              "mark": {
+                "colors": [
+                  "#2a78d6"
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Average price by week",
+                "showDescription": true,
+                "description": "Shows whether the price of the chosen commodity is trending up, down or flat."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c_district",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "district_name",
+                      "expression": "`district_name`"
+                    },
+                    {
+                      "name": "avg_price",
+                      "expression": "AVG(`avg_modal_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_price",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Average price (Rs per quintal)"
+                },
+                "y": {
+                  "fieldName": "district_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "District"
+                }
+              },
+              "mark": {
+                "colors": [
+                  "#2a78d6"
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Latest price by district",
+                "showDescription": true,
+                "description": "Shows which districts pay the most and which the least for the chosen commodity."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 3,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "c_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "latest",
+                  "fields": [
+                    {
+                      "name": "category",
+                      "expression": "`category`"
+                    },
+                    {
+                      "name": "avg_price",
+                      "expression": "AVG(`avg_modal_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg_price",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Average price (Rs per quintal)"
+                },
+                "y": {
+                  "fieldName": "category",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "Category"
+                }
+              },
+              "mark": {
+                "colors": [
+                  "#2a78d6"
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Price by category",
+                "showDescription": true,
+                "description": "Shows which kinds of produce are expensive and which are cheap."
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 13,
+            "width": 3,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "c_movers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movers",
+                  "fields": [
+                    {
+                      "name": "commodity_name",
+                      "expression": "`commodity_name`"
+                    },
+                    {
+                      "name": "change_pct",
+                      "expression": "`change_pct`"
+                    },
+                    {
+                      "name": "direction",
+                      "expression": "`direction`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "change_pct",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Change vs last week (%)"
+                },
+                "y": {
+                  "fieldName": "commodity_name",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  },
+                  "displayName": "Commodity"
+                },
+                "color": {
+                  "fieldName": "direction",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Rise",
+                        "color": "#eb6834"
+                      },
+                      {
+                        "value": "Fall",
+                        "color": "#2a78d6"
+                      }
+                    ]
+                  },
+                  "displayName": "Direction"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Biggest price moves this week",
+                "showDescription": true,
+                "description": "Shows the five commodities whose price rose most (orange) and fell most (blue) since last week."
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 6,
+            "height": 8
+          }
+        }
+      ]
+    }
+  ]
+}
