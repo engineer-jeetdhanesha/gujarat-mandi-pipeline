@@ -38,7 +38,7 @@ RAW_DIM_MARKET_COLUMNS = "market_key string, state string, district_name string,
 CLEAN_COLUMNS = "market string, commodity_code int, variety string, grade string, arrival_date date, modal_price int, run_id string"
 REJECTED_COLUMNS = "run_id string, file_name string, row_no bigint, reject_rule string"
 FACT_COLUMNS = "market_key bigint, commodity_key bigint, date_key int, variety string, grade string, modal_price int"
-MART_COLUMNS = "district_name string, commodity_code int, week_start date, avg_modal_price int"
+MART_COLUMNS = "district_name string, commodity_name string, week_start date, avg_modal_price int"
 
 DAY = date(2026, 1, 5)
 WEEK_1, WEEK_2 = date(2026, 12, 7), date(2026, 12, 14)
@@ -492,10 +492,10 @@ def test__load_gold_updates_an_existing_week_and_inserts_new_ones(spark: SparkSe
         None.
     """
     spark.sql(f"CREATE TABLE test_load_gold_a ({MART_COLUMNS}) USING delta")
-    spark.sql("INSERT INTO test_load_gold_a VALUES ('D1', 100, DATE'2026-12-07', 30)")
+    spark.sql("INSERT INTO test_load_gold_a VALUES ('D1', 'Wheat', DATE'2026-12-07', 30)")
     # D1 week 1 already exists (new average 31); D1 week 2 and D2 week 1 are new.
     df = spark.createDataFrame(
-        [("D1", 100, WEEK_1, 31), ("D1", 100, WEEK_2, 45), ("D2", 100, WEEK_1, 50)], MART_COLUMNS
+        [("D1", "Wheat", WEEK_1, 31), ("D1", "Wheat", WEEK_2, 45), ("D2", "Wheat", WEEK_1, 50)], MART_COLUMNS
     )
 
     assert load__gold_weekly_mart(spark, df, "test_load_gold_a") is True
@@ -513,6 +513,6 @@ def test__load_gold_returns_false_for_a_missing_table(spark: SparkSession) -> No
     Returns:
         None.
     """
-    df = spark.createDataFrame([("D1", 100, WEEK_1, 31)], MART_COLUMNS)
+    df = spark.createDataFrame([("D1", "Wheat", WEEK_1, 31)], MART_COLUMNS)
 
     assert load__gold_weekly_mart(spark, df, "test_no_such_table") is False

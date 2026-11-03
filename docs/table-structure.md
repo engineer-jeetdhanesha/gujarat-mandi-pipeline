@@ -134,23 +134,17 @@ Checks before a dimension is written (if any fails, the table is left unchanged 
 Aggregated tables for the dashboard, built from the Silver star schema.
 
 ### gold.mart_price_weekly — grain: district × commodity × week
-Natural key: `district_name + commodity_code + week_start`. Updated incrementally: a run recomputes the weeks its clean rows fall in, plus the week before and the week after, and MERGEs them.
+Natural key: `district_name + commodity_name + week_start`. Updated incrementally: a run recomputes the weeks its clean rows fall in, plus the week before (its `is_complete_week` can change), and MERGEs them.
 | Column | Type | Description |
 |---|---|---|
 | year | INT | ISO year of the week |
 | week_number | INT | ISO week number |
 | week_start | DATE | Monday of the week |
 | district_name | STRING | Standard district name |
-| commodity_code | INT | Commodity code |
 | commodity_name | STRING | Standard commodity name |
 | category | STRING | Commodity category |
 | min_price | DECIMAL(10,2) | Lowest min price of the week, ₹/quintal |
 | max_price | DECIMAL(10,2) | Highest max price of the week, ₹/quintal |
-| avg_modal_price | DECIMAL(10,2) | sum_modal_price / price_records |
-| prev_week_avg_price | DECIMAL(10,2) | avg_modal_price of the week 7 days earlier; NULL if that week has no data |
-| wow_change_pct | DECIMAL(10,2) | Week-on-week change in percent (12.5 = +12.5%); NULL if no previous week |
-| price_records | BIGINT | Number of price rows in the group |
-| sum_modal_price | DECIMAL(18,2) | Sum of modal prices, so averages can be rolled up exactly |
-| markets_count | BIGINT | Distinct markets reporting |
+| avg_modal_price | DECIMAL(10,2) | Average modal price of the week |
 | is_complete_week | BOOLEAN | False if the week starts before the first or ends after the last loaded date |
 | updated_at | TIMESTAMP | Last MERGE time |

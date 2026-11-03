@@ -521,22 +521,16 @@ def create__table__mart_price_weekly(spark: SparkSession, catalog: str, schema: 
                 week_number          INT           COMMENT 'ISO week number',
                 week_start           DATE          COMMENT 'Monday of the week',
                 district_name        STRING        COMMENT 'Standard district name',
-                commodity_code       INT           COMMENT 'Commodity code',
                 commodity_name       STRING        COMMENT 'Standard commodity name',
                 category             STRING        COMMENT 'Commodity category',
                 min_price            DECIMAL(10,2) COMMENT 'Lowest min price of the week, Rs/quintal',
                 max_price            DECIMAL(10,2) COMMENT 'Highest max price of the week, Rs/quintal',
-                avg_modal_price      DECIMAL(10,2) COMMENT 'sum_modal_price / price_records, Rs/quintal',
-                prev_week_avg_price  DECIMAL(10,2) COMMENT 'avg_modal_price of the week 7 days earlier; NULL if none',
-                wow_change_pct       DECIMAL(10,2) COMMENT 'Week-on-week change in percent (12.5 = +12.5%); NULL if no previous week',
-                price_records        BIGINT        COMMENT 'Number of price rows in the group',
-                sum_modal_price      DECIMAL(18,2) COMMENT 'Sum of modal prices, for exact rollups',
-                markets_count        BIGINT        COMMENT 'Distinct markets reporting',
+                avg_modal_price      DECIMAL(10,2) COMMENT 'Average modal price of the week, Rs/quintal',
                 is_complete_week     BOOLEAN       COMMENT 'False if the week starts before the first or ends after the last loaded date',
                 updated_at           TIMESTAMP     COMMENT 'Last MERGE time'
             )
             USING DELTA
-            COMMENT 'Weekly prices per district and commodity, with week-on-week change'
+            COMMENT 'Weekly prices per district and commodity'
         """)
         return True
     except Exception as e:
