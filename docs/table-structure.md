@@ -75,7 +75,7 @@ Natural key: `market + commodity_code + variety + grade + arrival_date`
 | reject_reason | STRING | Human-readable reasons, separated by `;` |
 | reject_rule | STRING | Every failing rule id, separated by commas: `missing_market`, `missing_commodity_code`, `invalid_date`, `invalid_price`, `price_le_zero`, `min_gt_max`, `modal_out_of_range`, `unknown_market`, `unknown_commodity`, `future_date`, `unknown_date`, `duplicate` |
 | rejected_at | TIMESTAMP | When rejected |
-| status | STRING | ERROR (pending decision) / RESOLVED (fixed, ready to reload) / REJECTED (stays out) / LOADED (repaired and merged into clean) |
+| status | STRING | ERROR (a failed row) / REJECTED (a duplicate). For review only: rejected rows are not reprocessed; fix the source file and load it again |
 | updated_at | TIMESTAMP | Last status change |
 
 ### silver.dim_market — one row per APMC market (seed: `seed/dim_market.csv`)
