@@ -113,6 +113,8 @@ OPTIONS_READ_SOURCE = {
     "mode": "FAILFAST",
     "quote": '"',
     "escape": '"',
+    # A quoted value may contain a line break (e.g. a commodity name); without this the record is split in two.
+    "multiLine": True,
 }
 
 # Seed files: the header names must match the schema, and a bad row fails the read.
