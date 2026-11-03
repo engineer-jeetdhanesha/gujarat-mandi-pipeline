@@ -77,7 +77,6 @@ flowchart LR
   end
   RAW --> CLEAN
   RAW --> REJ
-  REJ -. "error mode (skips Bronze)" .-> CLEAN
   DIMS -. "validates" .-> CLEAN
   CLEAN --> FACT
   DIMS --> FACT
@@ -107,7 +106,7 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
 | Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity; updated incrementally per run. More marts are planned |
 
-The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then repair the rejected rows.
+The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then load the source file again.
 
 ## Pipeline run modes
 
@@ -118,7 +117,6 @@ Every run records its mode in `_source_mode` (`API`, `FILE` or `BACKFILL`) and w
 | **File** | A file with one day of data | Bronze → Silver → Gold marts | Daily |
 | **API** | One day of data from the API | Bronze → Silver → Gold marts | Daily |
 | **Backfill** | A file only; may hold many days | Bronze → Silver → Gold marts, for every date in the file | On demand, to load history |
-| **Error** | Rows in `silver.mandi_prices_rejected` with status `RESOLVED` | **Skips Bronze.** Reads the resolved rows directly from Silver and loads them into the target (`mandi_prices_clean`, then the fact table) | After someone has fixed rejected rows |
 
 How the audit row describes each run:
 
@@ -143,14 +141,7 @@ Rows are rejected (not dropped) when any of these rules fail, so nothing is sile
 
 Every failing rule is recorded, as comma separated ids in `reject_rule`.
 
-Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a `status`:
-
-```
-ERROR ──(fixed and marked)──▶ RESOLVED ──(error mode)──▶ mandi_prices_clean
-  └────(not fixable)───────▶ REJECTED
-```
-
-`ERROR` means pending a decision, `RESOLVED` means fixed and ready to be loaded by error mode, `REJECTED` means it stays out for good, and `LOADED` means it was repaired and merged into clean.
+Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a `status`. The table is for review: it shows what was rejected and why. `status` is `ERROR` for a failed row and `REJECTED` for a duplicate. Rejected rows are not reprocessed; to correct data, fix the source file and load it again.
 
 ## Sample data
 
@@ -177,7 +168,7 @@ The values below are **illustrative**, shaped like the real data. They are not p
 |---|---|---|---|---|---|---|---|---|
 | Unjha | 12 | 11/10/2026 | 0 | 24500 | 24000 | price_le_zero | Min price is zero or negative | ERROR |
 
-After someone corrects the price and sets `status = RESOLVED`, an error-mode run loads it into `mandi_prices_clean`.
+To correct it, fix the price in the source file and load the file again.
 
 **4. Silver: `fact_mandi_prices`** (keys point to the dimensions)
 
@@ -318,17 +309,15 @@ pytest
 - [x] README
 - [x] Bronze load, single-day file (#25)
 - [x] Silver dimension tables and seed files (#27)
-- [ ] Bronze seed layer with dimension checks (#38)
-- [ ] Bronze load (API, Backfill)
+- [x] Bronze seed layer with dimension checks (#38)
 - [x] Silver clean and rejected tables (#30)
-- [ ] Error-mode reprocessing
 - [x] Silver fact table (#34)
 - [ ] Silver post-load checks
 - [ ] Pipeline audit table
-- [ ] Gold weekly price mart (#32)
+- [x] Gold weekly price mart (#32)
 - [ ] More gold marts
 - [ ] Dashboard
-- [ ] Azure DevOps CI/CD
+- [x] Azure DevOps CI/CD
 
 ## Contributing
 
