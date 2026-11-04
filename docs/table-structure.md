@@ -1,140 +1,141 @@
-# Gujarat Mandi Pipeline — Table Structure
+# Table structure
 
-Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mandi_prod`; schemas `bronze`, `silver`, `gold`. Source mode values everywhere: `API | FILE | BACKFILL`. The star schema (dimensions and fact) lives in Silver; Gold is for data marts. Variety and Grade are degenerate dimensions on the fact table. The audit table lives in Bronze.
+Catalog `gujarat_mandi_pipeline_<env>_ws`, schemas `bronze`, `silver` and `gold`.
 
----
-## 1. Bronze
+## Bronze
 
-### bronze.raw_mandi_transactions — raw, idempotent per run and file, all STRING
+### bronze.raw_mandi_transactions
+- Price rows exactly as received from the CSV file, all text.
+
 | Column | Type | Description |
 |---|---|---|
-| state | STRING | As received (always Gujarat) |
-| district | STRING | Raw district spelling (e.g. Banaskanth) |
-| market | STRING | APMC yard name, raw |
-| commodity | STRING | Commodity name, raw |
-| commodity_code | STRING | Agmarknet commodity code |
-| variety | STRING | Variety, raw ("Other" is common) |
-| grade | STRING | Grade, raw (FAQ, Local, Medium…) |
-| arrival_date | STRING | `dd/MM/yyyy` as received |
-| min_price | STRING | ₹/quintal, raw (may be decimal) |
-| max_price | STRING | ₹/quintal, raw |
-| modal_price | STRING | ₹/quintal, raw |
+| state | STRING | State |
+| district | STRING | District |
+| market | STRING | Market (APMC yard) |
+| commodity | STRING | Commodity name |
+| commodity_code | STRING | Commodity code |
+| variety | STRING | Variety |
+| grade | STRING | Grade |
+| arrival_date | STRING | Date, `dd/MM/yyyy` |
+| min_price | STRING | Lowest price, rupees per quintal |
+| max_price | STRING | Highest price, rupees per quintal |
+| modal_price | STRING | Most common price, rupees per quintal |
 | _ingested_at | TIMESTAMP | Load time |
-| _source_mode | STRING | API / FILE / BACKFILL |
-| _file_name | STRING | Source file (NULL for API) |
-| _run_id | STRING | Run that loaded the row (joins audit) |
-| _row_no | BIGINT | Row number within the file/API page |
+| _source_mode | STRING | Always `FILE` |
+| _file_name | STRING | Source file |
+| _run_id | STRING | Run that loaded the row |
+| _row_no | BIGINT | Row number in the file |
 
-### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, idempotent per run
-Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run writes the rows of its seed file (loading the same run again replaces them, other runs stay), so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
+### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date
+- The three seed files exactly as received, all text.
 
-### bronze.pipeline_audit — one row per pipeline run
 | Column | Type | Description |
 |---|---|---|
-| run_id | STRING | Unique run id (PK) |
-| pipeline_name | STRING | Job/pipeline name |
-| source_mode | STRING | API / FILE / BACKFILL |
-| business_start_date | DATE | First arrival_date covered by the run (daily run: = end date; backfill: range start) |
-| business_end_date | DATE | Last arrival_date covered by the run |
-| status | STRING | RUNNING / SUCCESS / FAILED |
-| source_total_rows | BIGINT | Rows received from the source (API total or file row count) |
-| source_rows_rejected | BIGINT | Rows from this run sent to silver.mandi_prices_rejected |
-| start_timestamp | TIMESTAMP | Run start |
-| end_timestamp | TIMESTAMP | Run end (NULL while RUNNING) |
-| error_message | STRING | Failure detail (NULL on success) |
+| dimension columns | STRING | Same as the silver dimension, without `updated_at` |
+| _ingested_at | TIMESTAMP | Load time |
+| _source_mode | STRING | Always `FILE` |
+| _file_name | STRING | Source file |
+| _run_id | STRING | Run that loaded the row |
+| _row_no | BIGINT | Row number in the file |
 
----
-## 2. Silver
+## Silver
 
-### silver.mandi_prices_clean — typed, standardised, deduped (MERGE target)
-Natural key: `market + commodity_code + variety + grade + arrival_date`
+### silver.mandi_prices_clean
+- Price rows that passed all data quality rules, typed and standardised.
+
 | Column | Type | Description |
 |---|---|---|
-| state | STRING | Trimmed |
-| district | STRING | Raw district (trimmed) |
-| district_std | STRING | Standard district name from `silver.dim_market` |
-| market | STRING | Trimmed market name |
-| commodity_code | INT | Commodity code (natural key of `dim_commodity`) |
-| commodity | STRING | Standard name from `silver.dim_commodity` (one canonical name per code) |
-| variety | STRING | Trimmed variety |
-| grade | STRING | Trimmed grade |
-| arrival_date | DATE | Parsed from dd/MM/yyyy |
-| min_price | DECIMAL(10,2) | ₹/quintal |
-| max_price | DECIMAL(10,2) | ₹/quintal |
-| modal_price | DECIMAL(10,2) | ₹/quintal |
+| state | STRING | State |
+| district | STRING | District as in the file |
+| district_std | STRING | Standard district name from `dim_market` |
+| market | STRING | Market |
+| commodity_code | INT | Commodity code |
+| commodity | STRING | Standard commodity name from `dim_commodity` |
+| variety | STRING | Variety |
+| grade | STRING | Grade |
+| arrival_date | DATE | Date of the price |
+| min_price | DECIMAL(10,2) | Lowest price, rupees per quintal |
+| max_price | DECIMAL(10,2) | Highest price, rupees per quintal |
+| modal_price | DECIMAL(10,2) | Most common price, rupees per quintal |
 | run_id | STRING | Run that last wrote the row |
-| ingested_at | TIMESTAMP | Original bronze ingest time |
-| updated_at | TIMESTAMP | Last MERGE time |
+| ingested_at | TIMESTAMP | Time the row was loaded into bronze |
+| updated_at | TIMESTAMP | Last update time |
 
-### silver.mandi_prices_rejected — failed DQ rules, raw values kept
+### silver.mandi_prices_rejected
+- Price rows that failed a rule, with the rule and the reason.
+
 | Column | Type | Description |
 |---|---|---|
-| state … modal_price | STRING | Same 11 raw columns as bronze (STRING so bad dates/prices still fit) |
-| source_mode, file_name, run_id, ingested_at | as bronze | Lineage back to bronze |
-| row_no | BIGINT | Row number within the file/API page (with run_id and file_name identifies the bronze row) |
-| reject_reason | STRING | Human-readable reasons, separated by `;` |
-| reject_rule | STRING | Every failing rule id, separated by commas: `missing_market`, `missing_commodity_code`, `invalid_date`, `invalid_price`, `price_le_zero`, `min_gt_max`, `modal_out_of_range`, `unknown_market`, `unknown_commodity`, `future_date`, `unknown_date`, `duplicate` |
-| rejected_at | TIMESTAMP | When rejected |
-| status | STRING | ERROR (pending decision) / RESOLVED (fixed, ready to reload) / REJECTED (stays out) / LOADED (repaired and merged into clean) |
-| updated_at | TIMESTAMP | Last status change |
+| state ... modal_price | STRING | The 11 raw columns of the file |
+| source_mode, file_name, run_id, ingested_at | as bronze | Where the row came from |
+| row_no | BIGINT | Row number in the file |
+| reject_rule | STRING | Ids of the failed rules, comma separated |
+| reject_reason | STRING | Reasons, separated by `;` |
+| rejected_at | TIMESTAMP | Time of rejection |
+| status | STRING | `ERROR` (failed a rule) or `REJECTED` (duplicate) |
+| updated_at | TIMESTAMP | Last update time |
 
-### silver.dim_market — one row per APMC market (seed: `seed/dim_market.csv`)
-Natural key: `market_name`
+### silver.dim_market
+- One row per market (APMC) with its standard district name.
+
 | Column | Type | Description |
 |---|---|---|
 | market_key | BIGINT | Surrogate key |
-| state | STRING | Gujarat |
+| state | STRING | State |
 | district_name | STRING | Standard district name |
-| market_name | STRING | Market (APMC) name |
-| updated_at | TIMESTAMP | Last seed load |
+| market_name | STRING | Market name |
+| updated_at | TIMESTAMP | Last load time |
 
-### silver.dim_commodity — one row per commodity code (seed: `seed/dim_commodity.csv`)
+### silver.dim_commodity
+- One row per commodity.
+
 | Column | Type | Description |
 |---|---|---|
 | commodity_key | BIGINT | Surrogate key |
-| commodity_code | INT | Natural key |
+| commodity_code | INT | Commodity code |
 | commodity_name | STRING | Standard name |
-| category | STRING | Cereal / pulse / oilseed / vegetable / fruit / spice / cash crop |
-| is_perishable | BOOLEAN | Fresh produce that spoils quickly |
-| updated_at | TIMESTAMP | Last seed load |
+| category | STRING | Cereal, pulse, oilseed, vegetable, fruit, spice or cash crop |
+| is_perishable | BOOLEAN | True for fresh produce that spoils quickly |
+| updated_at | TIMESTAMP | Last load time |
 
-### silver.dim_date — one row per calendar day (seed: `seed/dim_date.csv`, 2026)
+### silver.dim_date
+- One row per calendar day.
+
 | Column | Type | Description |
 |---|---|---|
-| date_key | INT | yyyyMMdd |
-| date | DATE | Calendar date (natural key) |
-| day | INT | Day of month |
-| day_name | STRING | Monday … Sunday |
+| date_key | INT | Date as `yyyyMMdd` |
+| date | DATE | Calendar date |
+| day | INT | Day of the month |
+| day_name | STRING | Monday to Sunday |
 | week_start | DATE | Monday of the week |
 | month | INT | Month number |
-| month_name | STRING | January … December |
-| quarter | INT | Calendar quarter 1–4 |
-| year | INT | Calendar year |
-| is_weekend | BOOLEAN | Sat/Sun |
-| season | STRING | Kharif (Jun–Oct) / Rabi (Nov–Mar) / Zaid (Apr–May) |
-| updated_at | TIMESTAMP | Last seed load |
+| month_name | STRING | January to December |
+| quarter | INT | Quarter, 1 to 4 |
+| year | INT | Year |
+| is_weekend | BOOLEAN | True for Saturday and Sunday |
+| season | STRING | Kharif, Rabi or Zaid |
+| updated_at | TIMESTAMP | Last load time |
 
-The dimension tables are loaded from the CSV files in `seed/`: first as received into `bronze.raw_dim_*` (`src/load_bronze_dims`), then, after the checks, into silver with INSERT OVERWRITE (`src/load_silver_dims`), so the CSV is the source of truth. A new market or commodity is added by editing the CSV and loading it again. A row whose market or commodity code is not in the dimensions is rejected in Silver.
+### silver.fact_mandi_prices
+- Transaction fact table: one row per market, commodity, variety, grade and date.
 
-Checks before a dimension is written (if any fails, the table is left unchanged and the task fails): every value castable to the column type; the key columns filled; the key unique; no duplicate natural key (market: state + district + market name; commodity: commodity code; date: the date); and, for `dim_date`, no missing day between the first and the last date.
-
-### silver.fact_mandi_prices — grain: market × commodity × variety × grade × date (derived from clean)
 | Column | Type | Description |
 |---|---|---|
-| market_key | BIGINT | FK → dim_market |
-| commodity_key | BIGINT | FK → dim_commodity |
-| date_key | INT | FK → dim_date |
-| variety | STRING | Degenerate dim |
-| grade | STRING | Degenerate dim |
-| min_price, max_price, modal_price | DECIMAL(10,2) | ₹/quintal measures |
-| loaded_at | TIMESTAMP | Fact load time |
+| market_key | BIGINT | Foreign key to `dim_market` |
+| commodity_key | BIGINT | Foreign key to `dim_commodity` |
+| date_key | INT | Foreign key to `dim_date` |
+| variety | STRING | Degenerate dimension |
+| grade | STRING | Degenerate dimension |
+| min_price | DECIMAL(10,2) | Lowest price, rupees per quintal |
+| max_price | DECIMAL(10,2) | Highest price, rupees per quintal |
+| modal_price | DECIMAL(10,2) | Most common price, rupees per quintal |
+| loaded_at | TIMESTAMP | Load time |
 
----
-## 3. Gold (data marts)
-Aggregated tables for the dashboard, built from the Silver star schema.
+## Gold
 
-### gold.mart_price_weekly — grain: district × commodity × week
-Natural key: `district_name + commodity_name + week_start`. Updated incrementally: a run recomputes the weeks its clean rows fall in, plus the week before (its `is_complete_week` can change), and MERGEs them.
+### gold.mart_price_weekly
+- Weekly prices per district and commodity, read by the dashboard.
+
 | Column | Type | Description |
 |---|---|---|
 | year | INT | ISO year of the week |
@@ -143,8 +144,8 @@ Natural key: `district_name + commodity_name + week_start`. Updated incrementall
 | district_name | STRING | Standard district name |
 | commodity_name | STRING | Standard commodity name |
 | category | STRING | Commodity category |
-| min_price | DECIMAL(10,2) | Lowest min price of the week, ₹/quintal |
-| max_price | DECIMAL(10,2) | Highest max price of the week, ₹/quintal |
+| min_price | DECIMAL(10,2) | Lowest min price of the week |
+| max_price | DECIMAL(10,2) | Highest max price of the week |
 | avg_modal_price | DECIMAL(10,2) | Average modal price of the week |
-| is_complete_week | BOOLEAN | False if the week starts before the first or ends after the last loaded date |
-| updated_at | TIMESTAMP | Last MERGE time |
+| is_complete_week | BOOLEAN | False if the loaded data does not cover the whole week |
+| updated_at | TIMESTAMP | Last update time |

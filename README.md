@@ -1,335 +1,129 @@
 # Gujarat Mandi Pipeline
 
-A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandis (agricultural markets). Prices are ingested from the Government of India open data platform, cleaned through a Bronze → Silver → Gold medallion architecture on Azure Databricks, and served in a dashboard.
-
-> **Status:** in progress. The table design and high-level design are done (`docs/`), the Bronze file load and the Silver dimension tables are built. The rest of Silver, Gold, CI/CD and the dashboard are planned (see [Roadmap](#roadmap)).
-
-## Contents
-
-- [Overview](#overview)
-- [Data source](#data-source)
-- [Architecture](#architecture)
-- [Data model](#data-model)
-- [Pipeline run modes](#pipeline-run-modes)
-- [Data quality and rejected rows](#data-quality-and-rejected-rows)
-- [Sample data](#sample-data)
-- [Environments and CI/CD](#environments-and-cicd)
-- [Configuration](#configuration)
-- [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles)
-- [Repository layout](#repository-layout)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-
 ## Overview
 
-Mandi prices are published daily but are messy: district names are misspelt, commodity names carry stray line breaks, and some rows have impossible prices. This project:
+- Loads daily mandi (market) prices of Gujarat, cleans them and shows them in a dashboard.
+- Built on Azure Databricks (Bronze, Silver, Gold).
+- Bad rows are kept aside with a reason.
+- Deployed as code with a Databricks Asset Bundle and an Azure DevOps CI/CD pipeline.
 
-1. Loads the raw data exactly as received (Bronze).
-2. Cleans, standardises and validates it against the market and commodity dimensions, keeping bad rows aside for review, and models it as a star schema (Silver).
-3. Builds data marts for analysis (Gold).
-4. Shows price trends by commodity, market and district in a Databricks dashboard.
+## Input source
 
-Scope is mandi prices only; weather data is out of scope for now.
+- Input is a CSV file, one row per price report.
+- One row = market x commodity x variety x grade x date.
+- The file is uploaded to a Databricks volume `landing_zone`. The `mandi_daily` job then loads it into the tables.
+- Sample files in `sample_data/`: a one-day file (`mandi_2026-01-01.csv`) and the full file for 2026 as a zip (unzip it before uploading).
+- Source of the data: [data.gov.in, daily mandi prices](https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi).
 
-## Data source
-
-| | |
+| Column | What it means |
 |---|---|
-| **Dataset** | [Current Daily Price of Various Commodities from Various Markets (Mandi)](https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi) on data.gov.in |
-| **API** | `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24`, filtered to `State = Gujarat`, paged at 1,000 rows |
-| **Access** | Needs a free data.gov.in API key. The key is kept in a Databricks secret scope and is never committed. |
-| **Grain** | One row per market × commodity × variety × grade × arrival date |
-| **Refresh** | Daily |
-| **Prices** | Rupees per quintal (100 kg): minimum, maximum and modal (most common) |
+| State | State name (always Gujarat) |
+| District | District of the market (spelling can vary) |
+| Market | Name of the market (APMC yard) |
+| Commodity | Product sold |
+| Commodity_Code | Code of the commodity |
+| Variety | Variety of the product |
+| Grade | Quality grade |
+| Arrival_Date | Date of the price, `dd/MM/yyyy` |
+| Min_Price | Lowest price of the day, rupees per quintal (100 kg) |
+| Max_Price | Highest price of the day, rupees per quintal |
+| Modal_Price | Most common price of the day, rupees per quintal |
 
-Fields as received: `State`, `District`, `Market`, `Commodity`, `Commodity_Code`, `Variety`, `Grade`, `Arrival_Date` (`dd/MM/yyyy`), `Min_Price`, `Max_Price`, `Modal_Price`.
+Sample rows:
 
-Known quirks the pipeline has to handle:
+| State | District | Market | Commodity | Commodity_Code | Variety | Grade | Arrival_Date | Min_Price | Max_Price | Modal_Price |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Gujarat | Banaskanth | Amirgadh APMC | Wheat | 1 | Other | FAQ | 01/01/2026 | 2505 | 2650 | 2650 |
+| Gujarat | Morbi | APMC HALVAD | Cotton | 15 | Local | Local | 01/01/2026 | 6000 | 7860 | 6975 |
+| Gujarat | Morbi | APMC HALVAD | Groundnut | 10 | Other | Local | 01/01/2026 | 5500 | 8150 | 6850 |
 
-- District spellings vary (for example `Banaskanth`), so each market's standard district name comes from `dim_market`.
-- Commodity names can contain `\n`, and 6 commodity codes have two spellings; each code gets one standard name in `dim_commodity`.
-- `Variety` is often just `Other`.
-- Prices can arrive as decimals, as non-numbers, or in the wrong order (min > max).
+## High level architecture
 
-## Architecture
+![Architecture](docs/architecture.png)
 
-The full diagram, with tech-stack logos, is in [`docs/high-level-design.html`](docs/high-level-design.html) (open it in a browser). A simplified copy:
-
-```mermaid
-flowchart LR
-  FILE["File<br/>daily / backfill"] --> RAW
-  API["API<br/>daily"] --> RAW
-  subgraph Databricks["Azure Databricks"]
-    subgraph Bronze
-      RAW[("raw_mandi_transactions")]
-      AUD[("pipeline_audit")]
-    end
-    subgraph Silver
-      CLEAN[("mandi_prices_clean")]
-      REJ[("mandi_prices_rejected")]
-      DIMS[("dim_commodity<br/>dim_market<br/>dim_date")]
-      FACT[("fact_mandi_prices")]
-    end
-    subgraph Gold
-      MARTS[("data marts")]
-    end
-    DASH["Dashboard"]
-  end
-  RAW --> CLEAN
-  RAW --> REJ
-  REJ -. "error mode (skips Bronze)" .-> CLEAN
-  DIMS -. "validates" .-> CLEAN
-  CLEAN --> FACT
-  DIMS --> FACT
-  FACT --> MARTS
-  MARTS --> DASH
-```
-
-| Concern | Technology |
-|---|---|
-| Pipeline and dashboard | Azure Databricks |
-| Storage | Delta Lake tables, governed by Unity Catalog |
-| CI/CD | Azure DevOps |
-| Source control | GitHub |
+- **Price file:** 1 CSV file, uploaded to the volume `landing_zone`.
+- **Dimension files:** 3 CSV files (`dim_market`, `dim_commodity`, `dim_date`) stored in the code repo under `seed/`.
+- **Flow of the price file:** volume -> Bronze (raw, with file name and run id) -> Silver clean + rejected -> data modeling (fact and dimensions) -> Gold data mart.
+- **Flow of the dimension files:** `seed/` -> Bronze -> Silver dimensions.
+- **Silver:** failed rows go to the rejected table with the rule and the reason.
+- **Gold:** one weekly price table that the dashboard reads.
+- **Orchestration:** two Databricks jobs, `mandi_setup` (once) and `mandi_daily` (per source file). Azure DevOps deploys them.
 
 ## Data model
 
-Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` and `gold`. Full column lists, types and keys are in [`docs/table-structure.md`](docs/table-structure.md).
+![Data model](docs/data-model.png)
 
-| Layer | Table | Purpose |
-|---|---|---|
-| Bronze | `raw_mandi_transactions` | Raw rows, all `STRING`, written per run and file (a reload of the same run and file replaces its rows), with lineage columns (`_run_id`, `_source_mode`, `_file_name`, …) |
-| Bronze | `raw_dim_market`, `raw_dim_commodity`, `raw_dim_date` | The seed CSV files as received (all `STRING`), written per run (a retry of the same run replaces its rows, other runs stay), so a bad file stays visible before silver is touched |
-| Bronze | `pipeline_audit` | One row per pipeline run: mode, business date range, status, row counts |
-| Silver | `mandi_prices_clean` | Typed, standardised, de-duplicated; `MERGE` target. Natural key: market + commodity code + variety + grade + arrival date |
-| Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
-| Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the bronze seed tables after checks (keys filled and unique, no duplicate natural keys, castable values, no missing days in `dim_date`) |
-| Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
-| Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity; updated incrementally per run. More marts are planned |
+- Star schema in Silver, modelled the Kimball way.
+- **Fact table `fact_mandi_prices`:** a transaction fact table.
+  - **Grain:** one row per market, commodity, variety, grade and date.
+  - **Foreign keys:** `market_key`, `commodity_key`, `date_key` (surrogate keys of the dimensions).
+  - **Degenerate dimensions:** `variety` and `grade` (descriptive, kept in the fact table, no dimension table of their own).
+  - **Measures:** `min_price`, `max_price`, `modal_price` (rupees per quintal). They are non-additive: a price is averaged, not summed.
+  - **Load:** `MERGE` on the natural key, so a day loaded twice is updated, not duplicated.
+- **Dimension tables** (conformed, loaded from the CSV files in `seed/`):
+  - `dim_market`: one row per market, with its standard district name (`market_key`).
+  - `dim_commodity`: one row per commodity, with category and perishable flag (`commodity_key`).
+  - `dim_date`: one row per calendar day, with week start, month, quarter, year, weekend flag and season (`date_key`).
+  - Each has a surrogate key and a natural key. They are Type 1: a change in the seed file overwrites the row.
+- Every column and type: [`docs/table-structure.md`](docs/table-structure.md).
 
-The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then repair the rejected rows.
+## CI/CD process
 
-## Pipeline run modes
+![CI/CD](docs/cicd.png)
 
-Every run records its mode in `_source_mode` (`API`, `FILE` or `BACKFILL`) and writes one row to `bronze.pipeline_audit`.
-
-| Mode | Input | Path | When |
-|---|---|---|---|
-| **File** | A file with one day of data | Bronze → Silver → Gold marts | Daily |
-| **API** | One day of data from the API | Bronze → Silver → Gold marts | Daily |
-| **Backfill** | A file only; may hold many days | Bronze → Silver → Gold marts, for every date in the file | On demand, to load history |
-| **Error** | Rows in `silver.mandi_prices_rejected` with status `RESOLVED` | **Skips Bronze.** Reads the resolved rows directly from Silver and loads them into the target (`mandi_prices_clean`, then the fact table) | After someone has fixed rejected rows |
-
-How the audit row describes each run:
-
-- `business_start_date` / `business_end_date` are the first and last `arrival_date` the run covers. For a daily run they are equal; for a backfill they span the file.
-- `status` moves `RUNNING` → `SUCCESS` or `FAILED`; `error_message` is filled on failure.
-- `source_total_rows` and `source_rows_rejected` give the volume and how many rows went to the rejected table.
-
-Because Silver is a `MERGE` on the natural key, re-running a day or a backfill updates existing rows instead of duplicating them.
-
-## Data quality and rejected rows
-
-Rows are rejected (not dropped) when any of these rules fail, so nothing is silently lost:
-
-- Date is null or can't be parsed.
-- Any price is null or can't be parsed, or is zero or negative.
-- Min price is greater than max price.
-- Modal price is outside the min–max range.
-- Market or commodity code is missing.
-- Market is not in `dim_market`, or commodity code is not in `dim_commodity`.
-- Arrival date is in the future, or is not in `dim_date`.
-- Another row of the same run has the same natural key (a duplicate). The latest row is kept; the others are rejected with status `REJECTED`, since there is nothing to fix.
-
-Every failing rule is recorded, as comma separated ids in `reject_rule`.
-
-Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a `status`:
-
-```
-ERROR ──(fixed and marked)──▶ RESOLVED ──(error mode)──▶ mandi_prices_clean
-  └────(not fixable)───────▶ REJECTED
-```
-
-`ERROR` means pending a decision, `RESOLVED` means fixed and ready to be loaded by error mode, `REJECTED` means it stays out for good, and `LOADED` means it was repaired and merged into clean.
-
-## Sample data
-
-The values below are **illustrative**, shaped like the real data. They are not pulled from the live API, which needs a key.
-
-**1. Bronze: `raw_mandi_transactions`** (as received, all text)
-
-| state | district | market | commodity | commodity_code | variety | grade | arrival_date | min_price | max_price | modal_price | _source_mode | _run_id |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Gujarat | Banaskanth | Palanpur | Castor Seed | 21 | Other | FAQ | 11/10/2026 | 6100 | 6450 | 6300 | API | run_0001 |
-| Gujarat | Rajkot | Rajkot | Groundnut | 5 | Other | Local | 11/10/2026 | 5400 | 6200 | 5800 | API | run_0001 |
-| Gujarat | Mehsana | Unjha | Cumin Seed(Jeera) | 12 | Other | FAQ | 11/10/2026 | 0 | 24500 | 24000 | API | run_0001 |
-
-**2. Silver: `mandi_prices_clean`** (typed and standardised)
-
-| district | district_std | market | commodity_code | commodity | variety | grade | arrival_date | min_price | max_price | modal_price |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Banaskanth | Banaskantha | Palanpur | 21 | Castor Seed | Other | FAQ | 2026-10-11 | 6100.00 | 6450.00 | 6300.00 |
-| Rajkot | Rajkot | Rajkot | 5 | Groundnut | Other | Local | 2026-10-11 | 5400.00 | 6200.00 | 5800.00 |
-
-**3. Silver: `mandi_prices_rejected`** (the third raw row above, with a zero min price)
-
-| market | commodity_code | arrival_date | min_price | max_price | modal_price | reject_rule | reject_reason | status |
-|---|---|---|---|---|---|---|---|---|
-| Unjha | 12 | 11/10/2026 | 0 | 24500 | 24000 | price_le_zero | Min price is zero or negative | ERROR |
-
-After someone corrects the price and sets `status = RESOLVED`, an error-mode run loads it into `mandi_prices_clean`.
-
-**4. Silver: `fact_mandi_prices`** (keys point to the dimensions)
-
-| market_key | commodity_key | date_key | variety | grade | min_price | max_price | modal_price |
-|---|---|---|---|---|---|---|---|
-| 17 | 3 | 20261011 | Other | FAQ | 6100.00 | 6450.00 | 6300.00 |
-
-**5. Bronze: `pipeline_audit`**
-
-| run_id | source_mode | business_start_date | business_end_date | status | source_total_rows | source_rows_rejected |
-|---|---|---|---|---|---|---|
-| run_0001 | API | 2026-10-11 | 2026-10-11 | SUCCESS | 3 | 1 |
-
-## Environments and CI/CD
-
-- **Environments:** three Databricks workspaces, each with its own default catalog: `dev` (`gujarat_mandi_pipeline_dev_ws`), `uat` and `prod`. UAT and prod run as the service principals `sp-mandi-uat` and `sp-mandi-prod`.
-- **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/*.yml`) deploys the notebooks and two jobs: `mandi_setup` (creates the tables and loads the dimensions, run on demand) and `mandi_daily` (the load workflow). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
-- **CI/CD:** one Azure Pipelines definition, [`azure-pipelines.yml`](azure-pipelines.yml), described below.
-- **Scheduling (planned):** the daily File/API run will be a schedule on `mandi_daily` in the prod target; Backfill and Error runs are started on demand with a mode parameter.
-
-### Azure DevOps pipeline
-
-| Trigger | Lint, unit tests, validate | Deploy UAT | Deploy prod |
-|---|---|---|---|
-| Pull request to `main` | runs | skipped | skipped |
-| Merge to `main` | runs | runs after the checks pass | skipped |
-| Tag `v*` (for example `v1.0.0`) | runs | deploys the release commit after the checks pass | deploys after the UAT deploy and **a manual approval** |
-
-The stages form one line: Lint, Unit tests, Validate bundle, Deploy UAT, Deploy prod. Prod never starts unless the UAT deploy succeeded for the same commit in the same run. **The pipeline only deploys; it never runs a job.**
-
-- **Checks** (every run, one stage each, cheapest first): **Lint** (`ruff check`), **Unit tests** (`pytest tests/unit`, results shown in the Tests tab) and **Validate bundle** (`databricks bundle validate` for `uat` and `prod`). They change nothing in any workspace.
-- **Deploy UAT:** `databricks bundle deploy -t uat`. It creates or updates the jobs, owned by the UAT service principal, and runs nothing.
-- **Deploy prod:** only for a tag, only after Deploy UAT succeeded. Checks that the tagged commit is on `main`, waits for the approval on the `prod` environment, then runs `databricks bundle deploy -t prod`. It deploys the exact commit that the tag names; it does not run a job.
-- **No stored secrets:** the pipeline signs in with workload identity federation. There is one Azure DevOps service connection per environment (`sc-mandi-uat`, `sc-mandi-prod`), each backed by a federated credential on the matching Entra app registration. The YAML only names the connection.
-
-One-time setup in Azure DevOps (not in the YAML): the two service connections, and the `uat` and `prod` environments with an approval on `prod` (**Pipelines > Environments > prod > Approvals and checks**).
-
-**Run the jobs by hand (the pipeline never does)**
-
-The order for a new environment is: deploy, `mandi_setup` (creates the schemas, tables and the `landing_zone` and `archive` volumes, and loads the seed tables), put a file in the `landing_zone` volume (it only exists after setup), then `mandi_daily`. For UAT use the `gujarat-uat` profile:
-
-```
-databricks bundle run mandi_setup -t uat -p gujarat-uat
-databricks bundle run mandi_daily -t uat -p gujarat-uat
-```
-
-`mandi_daily` needs no parameter: `file_path` defaults per target to `/Volumes/gujarat_mandi_pipeline_<env>_ws/bronze/landing_zone/mandi_*.csv` and `run_id` to the Databricks job run id. Pass `--params file_path=<path or pattern>` to load something else.
-
-**Before you tag a release:** run `mandi_daily` in UAT and check that it is green, because a green pipeline only proves that the checks passed and the bundle deployed. In prod, run `mandi_setup` once after the first deploy.
-
-**Release to prod**
-
-```
-git checkout main && git pull
-git tag -a v1.0.0 -m "First production release"
-git push origin v1.0.0
-```
-
-Or use **Releases > Draft a new release** on GitHub with a new tag `v1.0.0` on `main`. The tag must start with `v`. Approve the run on the `prod` environment to deploy.
-
-**Roll back:** re-run the pipeline for an older tag. Do not move or reuse a tag; create a new one (`v1.0.1`) for a fix.
-
-A push to a feature branch starts no run (only `main`, tags and pull requests do). Start one by hand with **Run pipeline** and choose the branch; that runs the checks only. To try a branch in UAT, deploy it yourself: `databricks bundle deploy -t uat` and `databricks bundle run ... -t uat` with the `gujarat-uat` profile.
-
-## Configuration
-
-Planned inputs; names may change when the code is written.
-
-| Setting | Purpose |
+| Stage | What it does |
 |---|---|
-| `catalog` | `mandi_dev` or `mandi_prod` |
-| `mode` | `file`, `api`, `backfill` or `error` |
-| `arrival_date` | The day to load (File and API modes) |
-| API key | data.gov.in key, stored as a Databricks secret, never in the repo |
+| Lint | Runs `ruff` on the code: finds unused or undefined names and unsorted imports |
+| Unit tests | Runs the `pytest` tests of the `lib_mandi` library on a local Spark with Delta, and publishes the results |
+| Validate | Runs `databricks bundle validate` for UAT and prod, to check the bundle against the real workspaces without deploying |
+| Deploy UAT | Runs `databricks bundle deploy` to upload the notebooks, library, jobs and dashboard to the UAT workspace |
+| Approval | Waits for a person to approve the prod release |
+| Deploy prod | Runs `databricks bundle deploy` to the prod workspace |
 
-## Deploy with Databricks Asset Bundles
+- Code is on GitHub, the pipeline runs on Azure DevOps. The pipeline only deploys; the jobs are run by hand.
 
-Needs the Databricks CLI and a logged-in profile (`databricks auth login --profile <name>`). There is one target per environment, each in its own workspace: `dev` (your own folder, runs as you), `uat` and `prod` (`mode: production`, deployed to the service principal's folder and run as that principal: `sp-mandi-uat`, `sp-mandi-prod`). Every target runs on serverless compute and uses its workspace's default catalog, so the notebooks need no catalog setting. Use `-t uat` or `-t prod` with the matching CLI profile for the other two.
+## Testing
 
-```
-databricks bundle validate -t dev
-databricks bundle deploy -t dev
-databricks bundle run mandi_setup -t dev
-databricks bundle run mandi_daily -t dev
-```
+| Level | Where it runs | What it checks |
+|---|---|---|
+| Unit tests (`tests/unit`) | CI pipeline, on a local Spark with Delta | The `lib_mandi` functions: extract, transform, data quality rules, load (`MERGE`), config |
+| Notebook tests (`tests/test_*.ipynb`) | Databricks, run by hand in dev | One test per notebook (setup, bronze, silver dimensions, silver transactions, silver facts, gold) |
 
-`mandi_setup` runs `setup`, `load_bronze_dims` and `load_silver_dims`; run it once after a deploy and again when a seed CSV changes. `mandi_daily` runs `load_bronze`, `load_silver_transactions`, `load_silver_facts`, `load_gold` and `archive_files`, one after the other, and needs the tables and dimensions to exist. In both, `run_id` defaults to the job run id.
+- Unit test results are published to the Tests tab of every pipeline run:
 
-**Source files:** a file waits in the `bronze.landing_zone` volume. `load_bronze` loads every file that matches `file_path` (each one separately, with its own `_file_name` and `_row_no`) and fails when none matches. `archive_files` runs last and moves the files that this run loaded to `bronze.archive/<run_id>/<file name>`, so the next run only sees new files; if a task fails, the files stay in the landing zone. A file delivered again later is archived in the folder of its own run, so nothing is overwritten. The load notebooks take a `fail_on_error` widget (default `false`, which the test notebooks rely on); the jobs set it to `true`, so a failed load fails the task.
+![Test results](docs/test-results.png)
 
 ## Repository layout
 
 ```
 .
 ├── README.md
-├── databricks.yml                Databricks Asset Bundle (variables and targets)
-├── azure-pipelines.yml           Azure Pipelines: checks, deploy to UAT, release to prod
-├── azure-pipelines/templates/    Reusable pipeline steps (Databricks CLI install)
-├── ruff.toml                     Lint settings
+├── databricks.yml              bundle: variables and the dev, uat, prod targets
+├── azure-pipelines.yml         CI/CD pipeline
+├── azure-pipelines/templates/  reusable pipeline steps
 ├── resources/
-│   ├── mandi_setup.yml           Job: create the tables and load the dimensions (on demand)
-│   └── mandi_daily.yml           Job: bronze -> silver -> gold load workflow, then archive the files
-├── docs/
-│   ├── table-structure.md        Table design (source of truth)
-│   ├── table-structure.html      Same, rendered for reading
-│   └── high-level-design.html    Architecture diagram with tech stack
-├── seed/                         CSV files for the silver dimensions
+│   ├── mandi_setup.yml         job: create tables, load dimensions
+│   ├── mandi_daily.yml         job: load bronze, silver, gold, then archive the file
+│   ├── dashboards.yml          dashboard settings
+│   └── dashboards/             dashboard definition (.lvdash.json)
 ├── src/
-│   ├── *.ipynb                   Databricks notebooks: setup, load_bronze, load_bronze_dims, load_silver_dims, load_silver_transactions, load_silver_facts, load_gold, archive_files
-│   │                             (widgets, catalog lookup and the extract -> transform -> load calls)
-│   └── lib_mandi/                extract__, transform__, load__ functions, dq_check__ rules, ddl, schemas and read options (no Databricks globals)
+│   ├── *.ipynb                 notebooks (read widgets, call the library)
+│   └── lib_mandi/              the code: extract, transform, load, quality rules, table definitions
 ├── tests/
-│   ├── test_*.ipynb              pytest notebooks run on Databricks, one per source notebook
-│   └── unit/                     function tests: one file per lib_mandi module, local Spark with Delta (for CI)
-├── pytest.ini
-└── requirements-dev.txt
+│   ├── unit/                   unit tests (run in CI)
+│   └── test_*.ipynb            notebook tests (run on Databricks)
+├── seed/                       dimension CSV files
+├── sample_data/                sample price files to try the pipeline
+├── docs/                       diagrams, table structure, decisions, quality rules
+└── ruff.toml, pytest.ini, requirements-dev.txt
 ```
 
-Tests have three layers:
+- More docs: [`decisions`](docs/decisions.md), [`data quality rules`](docs/data-quality-rules.md).
 
-| Layer | What it tests | Where it runs |
-|---|---|---|
-| Function tests (`tests/unit`) | `extract`, `transformations`, `dq_checks`, `load`, `utility` and `config` of `lib_mandi`, including the edge cases | Local Spark with Delta; the pull request stage of CI |
-| Notebook tests (`tests/test_*.ipynb`) | Each notebook on Databricks, with dummy data | Dev workspace |
-| End to end | `mandi_setup` then `mandi_daily` with the sample file, started by hand | UAT, after each deploy and before tagging a release |
+## Dashboard
 
-Run the function tests without Databricks (needs Java 17+ for local Spark; the first run downloads the Delta jar):
+![Dashboard](docs/dashboard.png)
 
-```
-pip install -r requirements-dev.txt
-pytest
-```
-
-## Roadmap
-
-- [x] Table structure
-- [x] High-level design diagram
-- [x] README
-- [x] Bronze load, single-day file (#25)
-- [x] Silver dimension tables and seed files (#27)
-- [ ] Bronze seed layer with dimension checks (#38)
-- [ ] Bronze load (API, Backfill)
-- [x] Silver clean and rejected tables (#30)
-- [ ] Error-mode reprocessing
-- [x] Silver fact table (#34)
-- [ ] Silver post-load checks
-- [ ] Pipeline audit table
-- [ ] Gold weekly price mart (#32)
-- [ ] More gold marts
-- [ ] Dashboard
-- [ ] Azure DevOps CI/CD
-
-## Contributing
-
-Work is tracked in GitHub issues. Create a branch per issue named `feature/<issue-number>_<short_description>` (for example `feature/22_create_initial_project_plan`), open a pull request into `main`, and link the issue.
+- **Parameters:** Commodity (default Wheat) and Period (current week, last 2 weeks, last month, last 3 months; default last 3 months). Only complete weeks are counted.
+- **Chart 1, weekly price trend:** a line of the average modal price per week for the chosen commodity (the average of the district weekly averages).
+- **Chart 2, highest and lowest districts:** columns of the 5 districts with the highest (blue) and the 5 with the lowest (orange) average modal price over the chosen period, sorted high to low.

@@ -64,34 +64,6 @@ def create__volume(spark: SparkSession, catalog: str, schema: str, volume: str, 
         return False
 
 
-def grant__volume_access(spark: SparkSession, catalog: str, schema: str, volume: str, principal: str) -> bool:
-    """Let a user, group or service principal read and write the files in a volume.
-
-    Grants USE SCHEMA on the volume's schema (a volume can't be reached without it) and READ VOLUME and
-    WRITE VOLUME on the volume. Safe to re-run: granting a privilege the principal already has changes
-    nothing. USE CATALOG is not granted here: the catalog belongs to the workspace admins, so it is
-    granted once by hand.
-
-    Args:
-        spark: Spark session; it must run as the owner of the schema and volume (the setup job's identity).
-        catalog: Unity Catalog name, e.g. "mandi_dev".
-        schema: Schema of the volume, e.g. "bronze".
-        volume: Volume name, e.g. "landing_zone".
-        principal: User email, group name or service principal application ID.
-
-    Returns:
-        True if both grants succeeded; False if one failed (the reason is printed).
-    """
-    try:
-        print(f"Granting read/write on volume {catalog}.{schema}.{volume} to {principal} ...")
-        spark.sql(f"GRANT USE SCHEMA ON SCHEMA {catalog}.{schema} TO `{principal}`")
-        spark.sql(f"GRANT READ VOLUME, WRITE VOLUME ON VOLUME {catalog}.{schema}.{volume} TO `{principal}`")
-        return True
-    except Exception as e:
-        print(f"ERROR: could not grant access on volume {catalog}.{schema}.{volume} to {principal}: {e}")
-        return False
-
-
 def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, schema: str) -> bool:
     """Create the raw_mandi_transactions Delta table if it does not exist.
 
@@ -123,10 +95,10 @@ def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, sch
                 max_price       STRING    COMMENT 'Rs/quintal, raw',
                 modal_price     STRING    COMMENT 'Rs/quintal, raw',
                 _ingested_at    TIMESTAMP COMMENT 'Load time',
-                _source_mode    STRING    COMMENT 'API / FILE / BACKFILL',
-                _file_name      STRING    COMMENT 'Source file (NULL for API)',
-                _run_id         STRING    COMMENT 'Run that loaded the row (joins audit)',
-                _row_no         BIGINT    COMMENT 'Row number within the file/API page'
+                _source_mode    STRING    COMMENT 'FILE',
+                _file_name      STRING    COMMENT 'Source file',
+                _run_id         STRING    COMMENT 'Run that loaded the row',
+                _row_no         BIGINT    COMMENT 'Row number within the file'
             )
             USING DELTA
             COMMENT 'Raw, append-only mandi prices stored exactly as received'
@@ -440,15 +412,15 @@ def create__table__mandi_prices_rejected(spark: SparkSession, catalog: str, sche
                 min_price       STRING    COMMENT 'As received',
                 max_price       STRING    COMMENT 'As received',
                 modal_price     STRING    COMMENT 'As received',
-                source_mode     STRING    COMMENT 'API / FILE / BACKFILL',
-                file_name       STRING    COMMENT 'Source file (NULL for API)',
+                source_mode     STRING    COMMENT 'FILE',
+                file_name       STRING    COMMENT 'Source file',
                 run_id          STRING    COMMENT 'Run that loaded the row into bronze',
                 ingested_at     TIMESTAMP COMMENT 'Bronze ingest time',
-                row_no          BIGINT    COMMENT 'Row number within the file/API page',
+                row_no          BIGINT    COMMENT 'Row number within the file',
                 reject_reason   STRING    COMMENT 'Readable reasons, separated by semicolons',
                 reject_rule     STRING    COMMENT 'Rule ids, separated by commas',
                 rejected_at     TIMESTAMP COMMENT 'When rejected',
-                status          STRING    COMMENT 'ERROR / RESOLVED / REJECTED / LOADED',
+                status          STRING    COMMENT 'ERROR / REJECTED',
                 updated_at      TIMESTAMP COMMENT 'Last status change'
             )
             USING DELTA

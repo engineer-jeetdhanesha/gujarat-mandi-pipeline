@@ -1,0 +1,928 @@
+State,District,Market,Commodity,Commodity_Code,Variety,Grade,Arrival_Date,Min_Price,Max_Price,Modal_Price
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Bitter gourd,81,Other,FAQ,01/01/2026,550,550,550
+Gujarat,Bharuch,Bharuch APMC,Pomegranate,190,Other,Local,01/01/2026,2500,3500,3000
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Brinjal,35,Brinjal,Grade B,01/01/2026,1000,1500,1250
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Bottle gourd,82,Other,FAQ,01/01/2026,500,800,650
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Peas cod,308,Other,FAQ,01/01/2026,1600,2200,1900
+Gujarat,Amreli,Savarkundla APMC,Groundnut,10,Bold,Local,01/01/2026,5500,6500,5900
+Gujarat,Morbi,Morbi APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,6500,9870,8185
+Gujarat,Amreli,Dhari APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Non-FAQ,01/01/2026,7500,7500,7500
+Gujarat,Amreli,Babra APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,7700,10000,8850
+Gujarat,Rajkot,Dhoraji APMC,Groundnut,10,Hybrid,Non-FAQ,01/01/2026,5480,6505,6230
+Gujarat,Bhavnagar,Bhavnagar APMC,Groundnut,10,Local,FAQ,01/01/2026,7575,7575,7575
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Groundnut,10,Bold,FAQ,01/01/2026,5900,6540,6220
+Gujarat,Jamnagar,Jam Jodhpur APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,8100,10100,9100
+Gujarat,Porbandar,Porbandar APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Non-FAQ,01/01/2026,5500,5500,5500
+Gujarat,Amreli,Savarkundla APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,9000,10455,9750
+Gujarat,Junagarh,Junagadh APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,8000,10200,9575
+Gujarat,Mehsana,Mehsana APMC,Mustard,12,Mustard,Local,01/01/2026,5900,6125,6000
+Gujarat,Ahmedabad,Ahmedabad APMC,Turmeric(raw),309,Other,FAQ,01/01/2026,1500,3500,2400
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Groundnut,10,Other,FAQ,01/01/2026,6155,6675,6675
+Gujarat,Jamnagar,Jam Jodhpur APMC,Groundnut,10,Other,Local,01/01/2026,4000,7450,6000
+Gujarat,Amreli,Dhari APMC,Groundnut,10,Other,Non-FAQ,01/01/2026,5150,6500,6150
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Guar,75,Other,FAQ,01/01/2026,4050,4050,4050
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Bottle gourd,82,Bottle Gourd,FAQ,01/01/2026,1300,1500,1400
+Gujarat,Surendranagar,Vadhvan APMC,Bottle gourd,82,Bottle Gourd,Local,01/01/2026,500,1000,750
+Gujarat,Kachchh,Bhuj APMC,Potato,24,Desi,FAQ,01/01/2026,1000,2500,1750
+Gujarat,Navsari,Navsari APMC,Onion,23,Onion,Local,01/01/2026,1000,2700,1850
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Apple,17,Other,Medium,01/01/2026,5000,17750,11375
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Onion,23,Onion,Local,01/01/2026,500,1500,1200
+Gujarat,Vadodara(Baroda),Padra APMC,Cauliflower,34,Other,FAQ,01/01/2026,2500,3000,2750
+Gujarat,Bharuch,Bharuch APMC,Cauliflower,34,Other,Local,01/01/2026,1000,1400,1200
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Cauliflower,34,Other,FAQ,01/01/2026,1500,1800,1650
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Onion,23,Nasik,FAQ,01/01/2026,1500,2500,2300
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Potato,24,Potato,Local,01/01/2026,600,1400,1100
+Gujarat,Bhavnagar,Palitana APMC,Potato,24,Potato,Medium,01/01/2026,2000,3100,2550
+Gujarat,Bharuch,Bharuch APMC,Onion,23,Other,Local,01/01/2026,1000,1500,1200
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Onion,23,Other,Local,01/01/2026,1000,2700,1800
+Gujarat,Bhavnagar,Taleja APMC,Onion,23,Red,FAQ,01/01/2026,500,1630,1065
+Gujarat,Bhavnagar,Bhavnagar APMC,Onion,23,Red,FAQ,01/01/2026,1440,1440,1440
+Gujarat,Rajkot,Jasdan APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,16500,21000,20000
+Gujarat,Morbi,Morbi APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,17000,20340,18670
+Gujarat,Surendranagar,Dhragradhra APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,15250,20000,19000
+Gujarat,Junagarh,Junagadh APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,19000,20700,20000
+Gujarat,Patan,Radhanpur APMC,Cummin Seed(Jeera),42,Other,Local,01/01/2026,17000,22005,20500
+Gujarat,Amreli,Babra APMC,Cummin Seed(Jeera),42,Other,FAQ,01/01/2026,15275,20475,17875
+Gujarat,Sabarkantha,Bhiloda APMC,Soyabean,13,Other,Non-FAQ,01/01/2026,4500,4750,4625
+Gujarat,Bharuch,Bharuch APMC,Banana - Green,90,Banana - Green,Local,01/01/2026,400,750,600
+Gujarat,Porbandar,Porbandar APMC,Garlic,25,Average,FAQ,01/01/2026,6000,9000,7500
+Gujarat,Navsari,Navsari APMC,Brinjal,35,Brinjal,Local,01/01/2026,500,2000,1250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Brinjal,35,Brinjal,Local,01/01/2026,300,2000,1150
+Gujarat,Bharuch,Bharuch APMC,Pineapple,21,Other,Local,01/01/2026,2500,3200,3000
+Gujarat,Navsari,Navsari APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,2000,2500,2250
+Gujarat,Surendranagar,Vadhvan APMC,Garlic,25,Garlic,FAQ,01/01/2026,7500,9000,8250
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,400,1500,800
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Apple,17,Apple,Local,01/01/2026,7000,10000,8500
+Gujarat,Navsari,Navsari APMC,Apple,17,Apple,Local,01/01/2026,7000,12000,9500
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Green Chilli,87,Other,Local,01/01/2026,4000,6000,5000
+Gujarat,Jamnagar,Jamnagar APMC,Jowar(Sorghum),5,Other,Local,01/01/2026,2500,2525,2525
+Gujarat,Ahmedabad,Ahmedabad APMC,Colacasia,318,Other,FAQ,01/01/2026,2000,2500,2400
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,2500,6000,3500
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,700,6000,3500
+Gujarat,Bharuch,Ankleshwar APMC,Green Chilli,87,Green Chilly,Grade A,01/01/2026,3000,5000,4000
+Gujarat,Gir Somnath,Talalagir APMC,Tomato,78,Hybrid,FAQ,01/01/2026,1000,2200,1500
+Gujarat,Banaskanth,Dhanera APMC,Guar Seed(Cluster Beans Seed),413,Other,Local,01/01/2026,5455,5625,5555
+Gujarat,Banaskanth,Thara(Shihori) APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,4935,5350,5142.5
+Gujarat,Mehsana,Kadi APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,5300,5995,5700
+Gujarat,Patan,Siddhpur APMC,Guar Seed(Cluster Beans Seed),413,Whole,FAQ,01/01/2026,4815,5755,5285
+Gujarat,Vadodara(Baroda),Padra APMC,Raddish,161,Other,FAQ,01/01/2026,1000,1200,1100
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Raddish,161,Raddish,Local,01/01/2026,1000,1500,1250
+Gujarat,Rajkot,Rajkot APMC,Dry Chillies,132,Dry Chillies,FAQ,01/01/2026,10255,21500,17125
+Gujarat,Bharuch,Bharuch APMC,Cabbage,154,Other,Local,01/01/2026,600,1200,800
+Gujarat,Ahmedabad,Ahmedabad APMC,Spinach,342,Other,FAQ,01/01/2026,600,1200,900
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Spinach,342,Other,Local,01/01/2026,750,1500,750
+Gujarat,Navsari,Navsari APMC,Long Melon(Kakri),304,Long Melon (Kakri),Local,01/01/2026,2500,3000,2750
+Gujarat,Junagarh,Junagadh APMC,Groundnut(Split),314,Groundnut(Split),FAQ,01/01/2026,5500,6750,6000
+Gujarat,Ahmedabad,Ahmedabad APMC,Surat Beans(Papadi),300,Other,FAQ,01/01/2026,1500,6000,4000
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Surat Beans(Papadi),300,Other,FAQ,01/01/2026,2300,2300,2300
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Guava,185,Guava,Local,01/01/2026,1000,5000,3000
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Pea Pod/Pea Cod/हरी मटर,308,Other,FAQ,01/01/2026,1600,2200,1900
+Gujarat,Banaskanth,Vadgam APMC,Bajra(Pearl Millet/Cumbu),28,Bold,FAQ,01/01/2026,1820,2505,2475
+Gujarat,Patan,Siddhpur APMC,Bajra(Pearl Millet/Cumbu),28,Deshi,FAQ,01/01/2026,1755,2970,2362
+Gujarat,Mehsana,Mehsana APMC,Bajra(Pearl Millet/Cumbu),28,Local,Local,01/01/2026,1950,1950,1950
+Gujarat,Bhavnagar,Bhavnagar APMC,Bajra(Pearl Millet/Cumbu),28,Local,FAQ,01/01/2026,2382,2382,2382
+Gujarat,Morbi,APMC HALVAD,Cotton,15,Local,Local,01/01/2026,6000,7860,6975
+Gujarat,Sabarkantha,Vadali APMC,Cotton,15,Other,Local,01/01/2026,6900,7875,7388
+Gujarat,Bhavnagar,Bhavnagar APMC,Cotton,15,Other,FAQ,01/01/2026,6780,6780,6780
+Gujarat,Amreli,Bagasara APMC,Cotton,15,Other,Local,01/01/2026,5500,8375,6935
+Gujarat,Chhota Udaipur,Kalediya APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,7710,8060,7825
+Gujarat,Chhota Udaipur,Hadad     APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,7710,8060,7825
+Gujarat,Anand,Umreth APMC,Bajra(Pearl Millet/Cumbu),28,MH-179,Non-FAQ,01/01/2026,2250,2300,2295
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Bajra(Pearl Millet/Cumbu),28,Other,FAQ,01/01/2026,1955,3015,2500
+Gujarat,Gandhinagar,Kalol APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,1850,2150,2000
+Gujarat,Botad,Botad(Haddad) APMC,Cotton,15,Cotton (Unginned),FAQ,01/01/2026,6000,7900,7000
+Gujarat,Panchmahals,Gogamba(Similiya) APMC,Cotton,15,Desi,Local,01/01/2026,6150,6150,6150
+Gujarat,Patan,Siddhpur APMC,Cotton,15,H.Y.4 (Unginned),FAQ,01/01/2026,6705,7930,7317
+Gujarat,Botad,Botad APMC,Bajra(Pearl Millet/Cumbu),28,Small,FAQ,01/01/2026,2155,2340,2250
+Gujarat,Dahod,Dahod APMC,Bengal Gram(Gram)(Whole),6,Desi (Whole),Local,01/01/2026,5200,5200,5200
+Gujarat,Rajkot,Rajkot APMC,Bengal Gram(Gram)(Whole),6,Desi (Whole),FAQ,01/01/2026,4500,5440,5150
+Gujarat,Rajkot,Rajkot APMC,Green Gram(Moong)(Whole),9,Green (Whole),FAQ,01/01/2026,5500,10180,6250
+Gujarat,Valsad,Pardi(Ugvada) APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,2000,2250,2000
+Gujarat,Surat,Mahuva(Anaval) APMC,Pointed gourd(Parval),303,Other,Local,01/01/2026,5400,5600,5500
+Gujarat,Navsari,Vansda APMC,Pointed gourd(Parval),303,Other,FAQ,01/01/2026,5000,5500,5250
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Round gourd,306,Other,FAQ,01/01/2026,2500,2500,2500
+Gujarat,Bharuch,Bharuch APMC,Guava,185,Other,Local,01/01/2026,1300,2000,1500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Guava,185,Other,Medium,01/01/2026,3500,4200,3850
+Gujarat,Navsari,Navsari APMC,Methi(Leaves),46,Methi,Local,01/01/2026,2000,2500,2250
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Arhar(Tur/Red Gram)(Whole),49,Local,FAQ,01/01/2026,6040,6040,6040
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Coriander(Leaves),43,Coriander,FAQ,01/01/2026,1300,1600,1500
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Coriander(Leaves),43,Coriander,Local,01/01/2026,700,2000,1500
+Gujarat,Morbi,Morbi APMC,Guar,75,Gwar,FAQ,01/01/2026,7500,8500,8000
+Gujarat,Sabarkantha,Vijaynagar(Kundlakap) APMC,Maize,4,Other,Local,01/01/2026,2120,2140,2130
+Gujarat,Dahod,Dahod APMC,Maize,4,White (SAFED),Local,01/01/2026,1625,2400,2200
+Gujarat,Ahmedabad,Ahmedabad APMC,Elephant Yam(Suran)/Amorphophallus,296,Other,FAQ,01/01/2026,2500,3200,3100
+Gujarat,Kachchh,Rapar APMC,Mataki,93,Mataki (W),Local,01/01/2026,6005,7005,6505
+Gujarat,Bharuch,Bharuch APMC,Bhindi(Ladies Finger),85,Other,Local,01/01/2026,2000,3500,2500
+Gujarat,Morbi,Morbi APMC,Cucumbar(Kheera),159,Cucumbar,FAQ,01/01/2026,1500,3000,2250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Cucumbar(Kheera),159,Cucumbar,Local,01/01/2026,1000,3500,2250
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Beetroot,157,Beetroot,FAQ,01/01/2026,1500,2000,1800
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Cucumbar(Kheera),159,Other,FAQ,01/01/2026,2500,3150,2825
+Gujarat,Amreli,Rajula APMC,Wheat,1,PISSI,Local,01/01/2026,2350,2850,2600
+Gujarat,Navsari,Navsari APMC,Carrot,153,Carrot,Local,01/01/2026,1500,2000,1750
+Gujarat,Surendranagar,Vadhvan APMC,Carrot,153,Carrot,Local,01/01/2026,1000,1500,1250
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Lemon,310,Other,Local,01/01/2026,2500,3500,3000
+Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC",Lemon,310,Other,Local,01/01/2026,2000,2500,2250
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Lemon,310,Other,FAQ,01/01/2026,1000,1700,1350
+Gujarat,Amreli,Rajula APMC,Kabuli Chana(Chickpeas-White),362,Kabuli Chana(Chickpeas-white),Local,01/01/2026,3930,4700,4315
+Gujarat,Junagarh,Junagadh APMC,Kabuli Chana(Chickpeas-White),362,White (whole),FAQ,01/01/2026,4900,5480,5200
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Sweet Potato,152,Sweet Potato,Local,01/01/2026,1500,2000,1750
+Gujarat,Gandhinagar,Kalol APMC,Castor Seed,123,Other,Local,01/01/2026,6370,6590,6475
+Gujarat,Patan,Chansama APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6100,6100,6100
+Gujarat,Patan,Sami APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6400,6560,6530
+Gujarat,Kachchh,Bhuj APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6225,6377,6301
+Gujarat,Surendranagar,Dasada Patadi APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6290,6325,6300
+Gujarat,Gandhinagar,Mansa APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6250,6580,6525
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Amla(Nelli Kai),355,Other,Grade A,01/01/2026,2500,2500,2500
+Gujarat,Valsad,Chikli(Khorgam) APMC,Tinda,349,Other,Medium,01/01/2026,5000,5500,5250
+Gujarat,Panchmahals,Morva Hafad APMC,Wheat,1,Deshi,Local,01/01/2026,2400,2500,2450
+Gujarat,Gandhinagar,Mansa APMC,Wheat,1,Local,Local,01/01/2026,2425,2715,2550
+Gujarat,Amreli,Savarkundla APMC,Wheat,1,Lokwan,Local,01/01/2026,2250,2675,2500
+Gujarat,Rajkot,Rajkot APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2515,2640,2605
+Gujarat,Sabarkantha,Vijaynagar(Kundlakap) APMC,Wheat,1,Other,Local,01/01/2026,2430,2450,2440
+Gujarat,Banaskanth,Thara APMC,Wheat,1,Other,FAQ,01/01/2026,2440,2615,2527.5
+Gujarat,Ahmedabad,Viramgam APMC,Wheat,1,Other,Local,01/01/2026,2640,2675,2660
+Gujarat,Anand,Khambhat(Grain Market) APMC,Wheat,1,Other,Local,01/01/2026,2250,2750,2500
+Gujarat,Junagarh,Bhesan APMC,Wheat,1,Other,FAQ,01/01/2026,2000,2700,2500
+Gujarat,Dahod,Dahod APMC,Wheat,1,147 Average,Local,01/01/2026,2760,2860,2800
+Gujarat,Morbi,Morbi APMC,Cabbage,154,Cabbage,FAQ,01/01/2026,500,1000,750
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Cabbage,154,Cabbage,Local,01/01/2026,500,1200,850
+Gujarat,Bharuch,Ankleshwar APMC,Cabbage,154,Cabbage,Grade A,01/01/2026,1000,1500,1200
+Gujarat,Ahmedabad,Ahmedabad APMC,Ginger(Green),103,Other,FAQ,01/01/2026,4500,5700,5650
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Ginger(Green),103,Other,FAQ,01/01/2026,4300,4300,4300
+Gujarat,Surendranagar,Dhragradhra APMC,Soanf,135,Soanf,Local,01/01/2026,5875,7375,7000
+Gujarat,Mehsana,Unjha APMC,Soanf,135,Soanf,FAQ,01/01/2026,5750,30060,11000
+Gujarat,Sabarkantha,Modasa APMC,Black Gram(Urd Beans)(Whole),8,Rajkot T-9,Non-FAQ,01/01/2026,5050,6755,6755
+Gujarat,Amreli,Savarkundla APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),Local,01/01/2026,3750,5750,5250
+Gujarat,Banaskanth,Amirgadh APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),FAQ,01/01/2026,5000,6500,6250
+Gujarat,Gir Somnath,Veraval APMC,Black Gram(Urd Beans)(Whole),8,Other,FAQ,01/01/2026,5500,7605,7505
+Gujarat,Mehsana,Visnagar APMC,Black Gram(Urd Beans)(Whole),8,Other,Local,01/01/2026,2555,6750,4652
+Gujarat,Patan,Patan APMC,Black Gram(Urd Beans)(Whole),8,Other,FAQ,01/01/2026,4500,7575,7500
+Gujarat,Surendranagar,Vadhvan APMC,Elephant Yam(Suran)/Amorphophallus,296,Elephant Yam (Suran),Medium,01/01/2026,4000,4500,4250
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Ginger(Green),103,Green Ginger,Local,01/01/2026,4000,5500,5000
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Ginger(Green),103,Green Ginger,FAQ,01/01/2026,4645,5615,5130
+Gujarat,Bharuch,Ankleshwar APMC,Ginger(Green),103,Green Ginger,Grade A,01/01/2026,3000,4500,3500
+Gujarat,Amreli,Damnagar APMC,Ginger(Green),103,Green Ginger,Local,01/01/2026,5000,5000,5000
+Gujarat,Anand,Umreth APMC,Paddy(Common),2,Other,Non-FAQ,01/01/2026,1700,1800,1790
+Gujarat,Panchmahals,Godhra Kakanpur APMC,Paddy(Common),2,Other,Local,01/01/2026,1810,1865,1835
+Gujarat,Bharuch,Ankleshwar APMC,Tomato,78,Tomato,Grade A,01/01/2026,2500,3500,2900
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Drumstick,168,Other,FAQ,01/01/2026,2300,2300,2300
+Gujarat,Porbandar,Porbandar APMC,Brinjal,35,Arkasheela Mattigulla,FAQ,01/01/2026,1500,2000,1750
+Gujarat,Kheda,Kapadvanj APMC,Brinjal,35,Brinjal,Grade A,01/01/2026,800,1000,900
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Coriander(Leaves),43,Local,Local,01/01/2026,2000,2500,2000
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Brinjal,35,Other,FAQ,01/01/2026,1500,2150,1825
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Ber(Zizyphus/Borehannu),357,Other,Medium,01/01/2026,2200,2700,2450
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Mousambi(Sweet Lime),77,Mousambi,Local,01/01/2026,1500,2500,2000
+Gujarat,Porbandar,Porbandar APMC,Mousambi(Sweet Lime),77,Mousambi,Grade A,01/01/2026,3000,3500,3250
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Orange,18,Other,Medium,01/01/2026,3000,3700,3350
+Gujarat,Navsari,Navsari APMC,Bottle gourd,82,Bottle Gourd,Local,01/01/2026,1500,2000,1750
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Bottle gourd,82,Bottle Gourd,FAQ,01/01/2026,630,1015,820
+Gujarat,Rajkot,Rajkot APMC,Garlic,25,Garlic,FAQ,01/01/2026,6125,9005,7525
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Garlic,25,Garlic,FAQ,01/01/2026,3255,8505,6755
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Potato,24,Desi,FAQ,01/01/2026,900,1000,950
+Gujarat,Vadodara(Baroda),Padra APMC,Potato,24,Other,FAQ,01/01/2026,1000,2000,1500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Potato,24,Other,FAQ,01/01/2026,900,1200,1050
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Onion,23,Onion,FAQ,01/01/2026,1400,1600,1500
+Gujarat,Bharuch,Ankleshwar APMC,Onion,23,Onion,Grade A,01/01/2026,1200,2500,1800
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Cauliflower,34,Cauliflower,Grade B,01/01/2026,1000,1500,1250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Grapes,22,Green,Local,01/01/2026,6000,10000,8000
+Gujarat,Porbandar,Porbandar APMC,Apple,17,Apple,Grade A,01/01/2026,4000,9000,6500
+Gujarat,Bharuch,Bharuch APMC,Apple,17,Apple,Local,01/01/2026,3500,4500,4000
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Brinjal,35,Brinjal,FAQ,01/01/2026,1400,1800,1600
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Pineapple,21,Other,Medium,01/01/2026,5000,6250,5625
+Gujarat,Rajkot,Rajkot APMC,Arhar(Tur/Red Gram)(Whole),49,Arhar (Whole),FAQ,01/01/2026,4250,6900,6300
+Gujarat,Vadodara(Baroda),Nasvadi APMC,Arhar(Tur/Red Gram)(Whole),49,Other,Local,01/01/2026,7425,7425,7425
+Gujarat,Surendranagar,Dasada Patadi APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,18000,20000,19500
+Gujarat,Rajkot,Rajkot APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,19000,21375,20500
+Gujarat,Patan,Harij APMC,Cummin Seed(Jeera),42,Other,Local,01/01/2026,19230,20850,20250
+Gujarat,Botad,Botad APMC,Cummin Seed(Jeera),42,Other,FAQ,01/01/2026,18000,21250,19600
+Gujarat,Patan,Patan APMC,Cummin Seed(Jeera),42,Other,FAQ,01/01/2026,19000,20500,20000
+Gujarat,Mehsana,Visnagar APMC,Mustard,12,Other,Local,01/01/2026,6405,6690,6547
+Gujarat,Dahod,Dahod APMC,Soyabean,13,Soyabeen,Non-FAQ,01/01/2026,4700,4800,4750
+Gujarat,Surendranagar,Chotila APMC,Soyabean,13,Soyabeen,FAQ,01/01/2026,4000,4500,4350
+Gujarat,Sabarkantha,Himatnagar APMC,Soyabean,13,Yellow,Local,01/01/2026,4415,4615,4550
+Gujarat,Amreli,Bagasara APMC,Soyabean,13,Yellow,Local,01/01/2026,2500,4600,3550
+Gujarat,Amreli,Rajula APMC,Groundnut,10,Local,Local,01/01/2026,5605,6625,6115
+Gujarat,Sabarkantha,Modasa APMC,Groundnut,10,Local,FAQ,01/01/2026,5500,7800,7800
+Gujarat,Porbandar,Porbandar APMC,Kulthi(Horse Gram),114,Horse gram (Whole),Local,01/01/2026,4650,5325,4985
+Gujarat,Amreli,Savarkundla APMC,Groundnut,10,Big (With Shell),Local,01/01/2026,5500,6875,6250
+Gujarat,Amreli,Rajula APMC,"Sesamum(Sesame,Gingelly,Til)",11,Black,Local,01/01/2026,11000,11000,11000
+Gujarat,Kachchh,Bhuj APMC,"Sesamum(Sesame,Gingelly,Til)",11,Sesame,FAQ,01/01/2026,8500,9925,9212
+Gujarat,Jamnagar,Jam Jodhpur APMC,Groundnut,10,G20,Local,01/01/2026,4000,7400,6250
+Gujarat,Morbi,APMC HALVAD,Groundnut,10,Other,Local,01/01/2026,5500,8150,6850
+Gujarat,Banaskanth,Deesa APMC,Groundnut,10,Other,FAQ,01/01/2026,6250,7075,6500
+Gujarat,Banaskanth,Palanpur APMC,Groundnut,10,Other,Local,01/01/2026,7070,7302,7169.81
+Gujarat,Patan,Patan APMC,Groundnut,10,Other,FAQ,01/01/2026,5500,6345,6200
+Gujarat,Navsari,Navsari APMC,Banana,19,Banana - Ripe,Local,01/01/2026,1250,1750,1500
+Gujarat,Navsari,Navsari APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,3000,5000,4000
+Gujarat,Gir Somnath,Talalagir APMC,Green Chilli,87,Green Chilly,FAQ,01/01/2026,2000,3500,3000
+Gujarat,Vadodara(Baroda),Padra APMC,Green Chilli,87,Green Chilly,FAQ,01/01/2026,4500,5500,5000
+Gujarat,Morbi,Morbi APMC,Red Gram,7,Other,FAQ,01/01/2026,4255,4995,4625
+Gujarat,Amreli,Damnagar APMC,Guar,75,Gwar,Local,01/01/2026,7000,7000,7000
+Gujarat,Ahmedabad,Ahmedabad APMC,Guar,75,Other,FAQ,01/01/2026,7000,11000,9250
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Banana,19,Other,Local,01/01/2026,1500,2000,1750
+Gujarat,Valsad,Valsad APMC,Banana,19,Other,Medium,01/01/2026,1200,1300,1250
+Gujarat,Vadodara(Baroda),Padra APMC,Bottle gourd,82,Other,FAQ,01/01/2026,1000,1100,1050
+Gujarat,Ahmedabad,Ahmedabad APMC,Bottle gourd,82,Other,FAQ,01/01/2026,500,2000,1350
+Gujarat,Navsari,Navsari APMC,Potato,24,Potato,Local,01/01/2026,1000,2600,1800
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Potato,24,Potato,Grade B,01/01/2026,1000,2000,1500
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Potato,24,Potato,Local,01/01/2026,900,1500,1200
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Brinjal,35,Round/Long,Local,01/01/2026,2000,2000,2000
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Onion,23,Red,FAQ,01/01/2026,605,2180,1393
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Onion,23,Other,FAQ,01/01/2026,800,1100,1000
+Gujarat,Mehsana,Vijapur(veg) APMC,Cauliflower,34,Other,Local,01/01/2026,400,1000,700
+Gujarat,Navsari,Bilimora APMC,Cauliflower,34,Other,FAQ,01/01/2026,1500,3000,2200
+Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC",Cauliflower,34,Cauliflower,Local,01/01/2026,1000,1500,1250
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,800,1000,1000
+Gujarat,Porbandar,Porbandar APMC,Potato,24,Red Nanital,FAQ,01/01/2026,1000,1500,1250
+Gujarat,Ahmedabad,Ahmedabad APMC,Bitter gourd,81,Other,FAQ,01/01/2026,3500,5000,4100
+Gujarat,Vadodara(Baroda),Padra APMC,Ginger(Green),103,Other,FAQ,01/01/2026,4250,4750,4500
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Green Chilli,87,Other,Local,01/01/2026,3500,5000,4000
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Yam(Ratalu),297,Other,Local,01/01/2026,4000,4500,4300
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Yam(Ratalu),297,Other,FAQ,01/01/2026,3900,3900,3900
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Corriander seed,108,Coriander Seed,FAQ,01/01/2026,5655,9755,9255
+Gujarat,Navsari,Navsari APMC,Little gourd(Kundru),302,Little gourd (Kundru),Local,01/01/2026,6500,7000,6750
+Gujarat,Sabarkantha,Vadali APMC,Black Gram(Urd Beans)(Whole),8,Other,Local,01/01/2026,5750,6780,6265
+Gujarat,Bhavnagar,Taleja APMC,Black Gram(Urd Beans)(Whole),8,Local,FAQ,01/01/2026,6180,6180,6180
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Dry Chillies,132,Dry Chillies,FAQ,01/01/2026,5005,26000,18500
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Tomato,78,Other,Local,01/01/2026,4000,5500,4800
+Gujarat,Ahmedabad,Ahmedabad APMC,Onion Green,358,Other,FAQ,01/01/2026,200,800,500
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Onion Green,358,Other,FAQ,01/01/2026,1900,1900,1900
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Sweet Potato,152,Sweet Potato,FAQ,01/01/2026,3000,3500,3400
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Lemon,310,Lemon,FAQ,01/01/2026,3000,3500,3300
+Gujarat,Bharuch,Ankleshwar APMC,Lemon,310,Lemon,Grade A,01/01/2026,1200,2100,1800
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Carrot,153,Carrot,FAQ,01/01/2026,1500,2000,1850
+Gujarat,Vadodara(Baroda),Padra APMC,Carrot,153,Other,FAQ,01/01/2026,1000,1700,1400
+Gujarat,Amreli,Damnagar APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,4500,4500,4500
+Gujarat,Gir Somnath,Talalagir APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,2500,4000,3000
+Gujarat,Morbi,Morbi APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,2500,4000,3250
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,2000,3000,2500
+Gujarat,Surendranagar,Vadhvan APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,5500,6000,5750
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Bhindi(Ladies Finger),85,Bhindi,Grade B,01/01/2026,4000,4500,4250
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,3680,5080,4380
+Gujarat,Navsari,Vansda APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,4750,5250,5000
+Gujarat,Banaskanth,Dhanera APMC,Isabgul(Psyllium),256,Isabgul (Psyllium),Local,01/01/2026,9125,12750,11000
+Gujarat,Mehsana,Unjha APMC,Isabgul(Psyllium),256,Isabgul (Psyllium),FAQ,01/01/2026,11700,14000,12600
+Gujarat,Patan,Radhanpur APMC,Isabgul(Psyllium),256,Other,Local,01/01/2026,8250,12650,11500
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Pumpkin,84,Other,FAQ,01/01/2026,1150,1150,1150
+Gujarat,Porbandar,Porbandar APMC,Chikoos(Sapota),71,Other,Grade A,01/01/2026,2000,2500,2250
+Gujarat,Valsad,Pardi(Motavagachiya) APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,1500,1750,1500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,3000,3700,3350
+Gujarat,Ahmedabad,Sanad APMC,Wheat,1,Sharbati,FAQ,01/01/2026,2615,2615,2615
+Gujarat,Junagarh,Junagadh APMC,Wheat,1,Sharbati,FAQ,01/01/2026,2500,2695,2575
+Gujarat,Gandhinagar,Dehgam APMC,Wheat,1,Other,FAQ,01/01/2026,2540,2555,2547
+Gujarat,Gandhinagar,Dehgam(Rekhiyal) APMC,Wheat,1,Other,FAQ,01/01/2026,2475,2500,2487
+Gujarat,Sabarkantha,Meghraj APMC,Wheat,1,Other,Local,01/01/2026,2450,2550,2550
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Wheat,1,Kalyan,FAQ,01/01/2026,2305,3075,2690
+Gujarat,Mehsana,Mehsana APMC,Wheat,1,Local,Local,01/01/2026,2450,2650,2600
+Gujarat,Jamnagar,Jam Jodhpur APMC,Wheat,1,Local,Local,01/01/2026,2350,2575,2500
+Gujarat,Surendranagar,Chotila APMC,Wheat,1,Local,FAQ,01/01/2026,2250,2650,2500
+Gujarat,Sabarkantha,Meghraj(Radlavada) APMC,Wheat,1,Lokwan,Local,01/01/2026,2550,2550,2550
+Gujarat,Amreli,Dhari APMC,Wheat,1,Lokwan,Non-FAQ,01/01/2026,2225,2225,2225
+Gujarat,Sabarkantha,Modasa(Tintoi) APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2400,2535,2535
+Gujarat,Gir Somnath,Veraval APMC,Wheat,1,Medium Fine,FAQ,01/01/2026,2025,2550,2500
+Gujarat,Rajkot,Jasdan APMC,Wheat,1,2189 No. 2,FAQ,01/01/2026,2400,2755,2500
+Gujarat,Panchmahals,Gogamba APMC,Paddy(Common),2,Other,Local,01/01/2026,1925,1925,1925
+Gujarat,Panchmahals,Gogamba(Similiya) APMC,Paddy(Common),2,Other,Local,01/01/2026,1875,1875,1875
+Gujarat,Porbandar,Porbandar APMC,Cabbage,154,Cabbage,Local,01/01/2026,750,1250,1000
+Gujarat,Ahmedabad,Ahmedabad APMC,Peas Wet,174,Other,FAQ,01/01/2026,1600,2000,1900
+Gujarat,Surendranagar,Vadhvan APMC,Peas Wet,174,Peas Wet,Medium,01/01/2026,2500,3000,2750
+Gujarat,Surendranagar,Vadhvan APMC,Tomato,78,Hybrid,Medium,01/01/2026,3000,3500,3250
+Gujarat,Dahod,Davgadbaria(Piplod) APMC,Paddy(Common),2,Common,Non-FAQ,01/01/2026,1320,1340,1330
+Gujarat,Gandhinagar,Dehgam APMC,Castor Seed,123,Other,FAQ,01/01/2026,6250,6355,6302
+Gujarat,Patan,Harij APMC,Castor Seed,123,Other,Local,01/01/2026,6375,6625,6475
+Gujarat,Banaskanth,Palanpur APMC,Castor Seed,123,Other,Local,01/01/2026,6500,6505,6503.29
+Gujarat,Ahmedabad,Ahmedabad APMC,Beetroot,157,Other,FAQ,01/01/2026,500,1500,950
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Cucumbar(Kheera),159,Other,FAQ,01/01/2026,1300,1300,1300
+Gujarat,Banaskanth,Thara APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6350,6635,6492.5
+Gujarat,Patan,Siddhpur APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6400,6585,6492
+Gujarat,Patan,Chansama APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6100,6100,6100
+Gujarat,Banaskanth,Bhabhar APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6500,6645,6580
+Gujarat,Mehsana,Mehsana(Jornang) APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6430,6470,6460
+Gujarat,Bharuch,Bharuch APMC,Capsicum,164,Other,Local,01/01/2026,1500,2200,1700
+Gujarat,Banaskanth,Palanpur APMC,Rajgir,248,Other,Local,01/01/2026,8297,8455,8354.98
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Cucumbar(Kheera),159,Cucumbar,Local,01/01/2026,1000,2000,1500
+Gujarat,Ahmedabad,Ahmedabad APMC,Capsicum,164,Capsicum,FAQ,01/01/2026,1600,2200,1950
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Seetapal,201,Seethaphal,Local,01/01/2026,2500,5000,3750
+Gujarat,Bhavnagar,Taleja APMC,Jowar(Sorghum),5,Local,FAQ,01/01/2026,2000,2300,2150
+Gujarat,Bharuch,Bharuch APMC,Green Chilli,87,Other,Local,01/01/2026,2000,3000,2500
+Gujarat,Patan,"Patan(Veg,Yard Patan) APMC",Green Chilli,87,Other,FAQ,01/01/2026,3500,5250,4500
+Gujarat,Sabarkantha,Modasa APMC,Maize,4,Hybrid Red (Cattle Feed),Non-FAQ,01/01/2026,1805,1845,1845
+Gujarat,Rajkot,Jasdan APMC,Maize,4,Hybrid/Local,FAQ,01/01/2026,1755,1755,1755
+Gujarat,Vadodara(Baroda),Nasvadi APMC,Maize,4,Other,Local,01/01/2026,2250,2250,2250
+Gujarat,Banaskanth,Dhanera APMC,Suva(Dill Seed),255,Other,Local,01/01/2026,7750,9755,8780
+Gujarat,Surendranagar,Vadhvan APMC,Onion Green,358,Onion Green,Local,01/01/2026,500,1000,750
+Gujarat,Jamnagar,Jam Jodhpur APMC,Arhar Dal(Tur Dal),260,Arhar Dal(Tur),Local,01/01/2026,4750,6750,5750
+Gujarat,Banaskanth,Deesa APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,5380,6005,6000
+Gujarat,Kachchh,Bhuj APMC,Guar Seed(Cluster Beans Seed),413,Whole,FAQ,01/01/2026,5050,5710,5380
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Pegeon Pea(Arhar Fali),301,Other,Local,01/01/2026,3000,3500,3250
+Gujarat,Vadodara(Baroda),Padra APMC,Pegeon Pea(Arhar Fali),301,Other,FAQ,01/01/2026,4000,5000,4500
+Gujarat,Rajkot,Jasdan APMC,Beans,94,Local,FAQ,01/01/2026,3500,5500,4000
+Gujarat,Valsad,Chikli(Khorgam) APMC,Pointed gourd(Parval),303,Other,Medium,01/01/2026,5500,6000,5750
+Gujarat,Porbandar,Porbandar APMC,Guava,185,Guava,Grade A,01/01/2026,3000,4000,3500
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Mint(Pudina),360,Other,FAQ,01/01/2026,2900,2900,2900
+Gujarat,Surendranagar,Dhragradhra APMC,Ajwan,137,Ajwan,Local,01/01/2026,7075,7075,7075
+Gujarat,Mehsana,Unjha APMC,Ajwan,137,Ajwan,FAQ,01/01/2026,4675,14760,10750
+Gujarat,Patan,Patan APMC,Ajwan,137,Other,FAQ,01/01/2026,5000,13830,12000
+Gujarat,Amreli,Savarkundla APMC,Bajra(Pearl Millet/Cumbu),28,Hybrid,Local,01/01/2026,1750,3385,2500
+Gujarat,Sabarkantha,Himatnagar APMC,Bajra(Pearl Millet/Cumbu),28,Local,Local,01/01/2026,2200,2240,2240
+Gujarat,Banaskanth,Palanpur APMC,Bajra(Pearl Millet/Cumbu),28,Local,Local,01/01/2026,2217,2270,2230.68
+Gujarat,Sabarkantha,Himatnagar APMC,Bengal Gram(Gram)(Whole),6,Desi (Whole),Local,01/01/2026,4910,4960,4960
+Gujarat,Amreli,Bagasara APMC,Bengal Gram(Gram)(Whole),6,Desi (Whole),Local,01/01/2026,4250,5025,4635
+Gujarat,Amreli,Rajula APMC,Cotton,15,Local,Local,01/01/2026,4755,7805,6280
+Gujarat,Sabarkantha,Dhansura APMC,Cotton,15,Other,Local,01/01/2026,6800,7300,7150
+Gujarat,Bhavnagar,Palitana APMC,Cotton,15,Other,Local,01/01/2026,6005,8225,7115
+Gujarat,Ahmedabad,Dhandhuka APMC,Cotton,15,Other,FAQ,01/01/2026,5850,7585,7300
+Gujarat,Rajkot,Upleta APMC,Cotton,15,Other,Local,01/01/2026,6500,7575,7100
+Gujarat,Vadodara(Baroda),Nasvadi APMC,Cotton,15,Other,Local,01/01/2026,7225,7225,7225
+Gujarat,Banaskanth,Thara(Shihori) APMC,Cotton,15,RCH-2,Local,01/01/2026,6805,7155,6980
+Gujarat,Surendranagar,Dhragradhra APMC,Cotton,15,RCH-2,Local,01/01/2026,6300,7470,7000
+Gujarat,Surendranagar,Limdi APMC,Cotton,15,Shanker 6 (B) 30mm FIne,Local,01/01/2026,6650,8060,7355
+Gujarat,Anand,Khambhat(Grain Market) APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,2250,2625,2425
+Gujarat,Patan,Patan APMC,Bajra(Pearl Millet/Cumbu),28,Other,FAQ,01/01/2026,1800,2905,2775
+Gujarat,Junagarh,Junagadh APMC,Green Gram(Moong)(Whole),9,Green (Whole),FAQ,01/01/2026,7000,10440,8750
+Gujarat,Mehsana,Kadi(Kadi cotton Yard) APMC,Cotton,15,Cotton (Unginned),FAQ,01/01/2026,6700,7755,7250
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Cotton,15,Cotton (Unginned),FAQ,01/01/2026,5170,7805,7300
+Gujarat,Ahmedabad,Dholka APMC,Paddy(Common),2,Other,Grade Range-2,01/01/2026,1535,2385,2369
+Gujarat,Anand,Borsad APMC,Paddy(Common),2,Other,Local,01/01/2026,1625,1625,1625
+Gujarat,Panchmahals,Godhra(Timbaroad) APMC,Paddy(Common),2,Other,Non-FAQ,01/01/2026,1810,1855,1825
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Tomato,78,Tomato,FAQ,01/01/2026,2500,3000,2800
+Gujarat,Kheda,Nadiad APMC,Tomato,78,Tomato,FAQ,01/01/2026,3400,3800,3600
+Gujarat,Ahmedabad,Ahmedabad APMC,Papaya(Raw),313,Other,FAQ,01/01/2026,700,800,750
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Peas cod,308,Peas cod,FAQ,01/01/2026,3000,3500,3200
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,150,1500,825
+Gujarat,Bharuch,Ankleshwar APMC,Cauliflower,34,Cauliflower,Grade A,01/01/2026,1200,1800,1500
+Gujarat,Ahmedabad,Ahmedabad APMC,Sweet Potato,152,Other,FAQ,01/01/2026,1800,2500,2250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Ber(Zizyphus/Borehannu),357,Ber(Zizyphus),Local,01/01/2026,1000,7000,4000
+Gujarat,Patan,Siddhpur APMC,Jowar(Sorghum),5,Jowar ( White),FAQ,01/01/2026,5040,5950,5495
+Gujarat,Rajkot,Rajkot APMC,Jowar(Sorghum),5,Jowar ( White),FAQ,01/01/2026,4550,4850,4650
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Jowar(Sorghum),5,Local,FAQ,01/01/2026,1700,3845,2773
+Gujarat,Kheda,Matar APMC,Paddy(Common),2,Masuri,Local,01/01/2026,2230,2285,2255
+Gujarat,Kheda,Matar APMC,Paddy(Common),2,Other,Local,01/01/2026,2495,2570,2530
+Gujarat,Gandhinagar,Dehgam(Rekhiyal) APMC,Paddy(Common),2,Other,FAQ,01/01/2026,1700,2575,2137
+Gujarat,Sabarkantha,Himatnagar APMC,Wheat,1,Sonalika,FAQ,01/01/2026,2500,2715,2650
+Gujarat,Rajkot,Dhoraji APMC,Wheat,1,Lokwan Gujrat,Non-FAQ,01/01/2026,2200,2535,2490
+Gujarat,Sabarkantha,Modasa APMC,Wheat,1,Lokwan Gujrat,FAQ,01/01/2026,2450,2635,2635
+Gujarat,Patan,Radhanpur APMC,Wheat,1,Other,Local,01/01/2026,2485,2760,2700
+Gujarat,Jamnagar,Jamnagar APMC,Wheat,1,Other,Local,01/01/2026,2250,2650,2550
+Gujarat,Sabarkantha,Bhiloda APMC,Wheat,1,Other,FAQ,01/01/2026,2500,2700,2600
+Gujarat,Sabarkantha,Vadali APMC,Wheat,1,Other,FAQ,01/01/2026,2540,2625,2583
+Gujarat,Mehsana,Visnagar APMC,Wheat,1,Other,Local,01/01/2026,2400,2650,2525
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Wheat,1,Other,FAQ,01/01/2026,2525,2730,2625
+Gujarat,Patan,Radhanpur APMC,Guar,75,Other,Local,01/01/2026,4900,5500,5250
+Gujarat,Bhavnagar,Taleja APMC,Wheat,1,Kalyan,FAQ,01/01/2026,2490,2775,2635
+Gujarat,Morbi,Vankaner APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2250,2540,2500
+Gujarat,Amreli,Dhari APMC,Ground Nut Seed,268,Ground Nut Seed,Local,01/01/2026,6150,6575,6575
+Gujarat,Surendranagar,Vadhvan APMC,Beetroot,157,Beetroot,Medium,01/01/2026,1500,2000,1750
+Gujarat,Panchmahals,Morva Hafad APMC,Paddy(Common),2,Paddy,Local,01/01/2026,1300,2050,1675
+Gujarat,Surendranagar,Vadhvan APMC,French Beans(Frasbean),298,French Beans (Frasbean),Medium,01/01/2026,2000,2500,2250
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Rajgir,248,Other,FAQ,01/01/2026,8000,8555,8500
+Gujarat,Banaskanth,Dhanera APMC,Rajgir,248,Rajgir,Local,01/01/2026,8400,8505,8450
+Gujarat,Navsari,Navsari APMC,Pointed gourd(Parval),303,Pointed gourd (Parval),Local,01/01/2026,5000,6000,5500
+Gujarat,Surendranagar,Vadhvan APMC,Cabbage,154,Cabbage,Medium,01/01/2026,1000,1500,1250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Pomegranate,190,Pomogranate,Local,01/01/2026,1500,7000,4250
+Gujarat,Ahmedabad,Ahmedabad APMC,Drumstick,168,Other,FAQ,01/01/2026,7000,16000,13000
+Gujarat,Banaskanth,Thara APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,5400,5760,5580
+Gujarat,Kachchh,Rapar APMC,Guar Seed(Cluster Beans Seed),413,Other,Local,01/01/2026,5335,5335,5335
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,5250,5600,5600
+Gujarat,Banaskanth,Palanpur APMC,Guar Seed(Cluster Beans Seed),413,Other,Local,01/01/2026,5615,5655,5631.08
+Gujarat,Ahmedabad,Sanad APMC,Paddy(Common),2,Other,FAQ,01/01/2026,2370,2370,2370
+Gujarat,Gandhinagar,Kalol APMC,Paddy(Common),2,Other,Local,01/01/2026,1550,2605,2250
+Gujarat,Morbi,Morbi APMC,Tomato,78,Tomato,FAQ,01/01/2026,2500,4500,3500
+Gujarat,Kheda,Kapadvanj APMC,Tomato,78,Tomato,Grade A,01/01/2026,3000,3500,3250
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Tomato,78,Tomato,FAQ,01/01/2026,2105,4160,3130
+Gujarat,Surendranagar,Vadhvan APMC,Raddish,161,Raddish,Local,01/01/2026,500,1000,750
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,French Beans(Frasbean),298,Other,FAQ,01/01/2026,3800,3800,3800
+Gujarat,Navsari,Bilimora APMC,Long Melon(Kakri),304,Other,FAQ,01/01/2026,2500,3000,2800
+Gujarat,Rajkot,Jasdan APMC,Bajra(Pearl Millet/Cumbu),28,Deshi,FAQ,01/01/2026,1500,2350,2000
+Gujarat,Banaskanth,Dhanera APMC,Bajra(Pearl Millet/Cumbu),28,Hybrid,Local,01/01/2026,2205,2925,2585
+Gujarat,Banaskanth,Amirgadh APMC,Bajra(Pearl Millet/Cumbu),28,Hybrid,FAQ,01/01/2026,2385,2520,2520
+Gujarat,Bhavnagar,Taleja APMC,Bajra(Pearl Millet/Cumbu),28,Local,FAQ,01/01/2026,1700,2655,2180
+Gujarat,Gandhinagar,Dehgam APMC,Bajra(Pearl Millet/Cumbu),28,Local,FAQ,01/01/2026,2115,2255,2185
+Gujarat,Amreli,Rajula APMC,Bajra(Pearl Millet/Cumbu),28,Local,Local,01/01/2026,1890,2150,2020
+Gujarat,Gandhinagar,Mansa APMC,Bajra(Pearl Millet/Cumbu),28,Local,Local,01/01/2026,1675,2445,2300
+Gujarat,Jamnagar,Jamnagar APMC,Cotton,15,Other,Local,01/01/2026,5000,7700,7135
+Gujarat,Mehsana,Unava APMC,Cotton,15,Other,FAQ,01/01/2026,6205,7825,7380
+Gujarat,Panchmahals,Gogamba APMC,Cotton,15,Other,Local,01/01/2026,6250,6250,6250
+Gujarat,Jamnagar,Jam Jodhpur APMC,Cotton,15,Other,Local,01/01/2026,6000,7775,7100
+Gujarat,Banaskanth,Amirgadh APMC,Cotton,15,Other,FAQ,01/01/2026,7110,7505,7505
+Gujarat,Gandhinagar,Mansa APMC,Cotton,15,Other,Local,01/01/2026,6125,7665,7300
+Gujarat,Rajkot,Jasdan APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,6000,7750,7250
+Gujarat,Chhota Udaipur,Modasar APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,7710,8060,7825
+Gujarat,Surendranagar,Vadhvan APMC,Cotton,15,Shanker 6 (B) 30mm FIne,Local,01/01/2026,7955.22,8060,8007.61
+Gujarat,Banaskanth,Dhanera APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,2810,3700,3200
+Gujarat,Mehsana,Kadi APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,2300,2370,2350
+Gujarat,Dahod,Dahod APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,1950,2200,2070
+Gujarat,Gandhinagar,Dehgam(Rekhiyal) APMC,Bajra(Pearl Millet/Cumbu),28,Other,FAQ,01/01/2026,2000,2150,2075
+Gujarat,Amreli,Rajula APMC,Green Gram(Moong)(Whole),9,Local,Local,01/01/2026,4630,10500,7565
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Green Gram(Moong)(Whole),9,Local (Whole),FAQ,01/01/2026,2000,10250,6125
+Gujarat,Junagarh,Manavdar APMC,Cotton,15,Cotton (Unginned),Local,01/01/2026,6825,8000,7500
+Gujarat,Sabarkantha,Himatnagar APMC,Cotton,15,Cotton (Unginned),Local,01/01/2026,7400,7775,7725
+Gujarat,Rajkot,Dhoraji APMC,Cotton,15,H.B (Unginned),Non-FAQ,01/01/2026,6405,7505,7205
+Gujarat,Patan,Sami APMC,Bengal Gram(Gram)(Whole),6,Average (Whole),Local,01/01/2026,4250,4650,4500
+Gujarat,Jamnagar,Jam Jodhpur APMC,Bengal Gram(Gram)(Whole),6,Average (Whole),Local,01/01/2026,4200,5200,4700
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Bengal Gram(Gram)(Whole),6,Desi (Whole),FAQ,01/01/2026,4750,5125,5000
+Gujarat,Jamnagar,Jamnagar APMC,Bengal Gram(Gram)(Whole),6,Other,Local,01/01/2026,4750,5500,5250
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Capsicum,164,Capsicum,FAQ,01/01/2026,2300,2300,2300
+Gujarat,Valsad,Pardi APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,2000,2250,2000
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Green Chilli,87,Other,FAQ,01/01/2026,4500,5100,4800
+Gujarat,Banaskanth,Deesa APMC,Castor Seed,123,Other,FAQ,01/01/2026,6400,6450,6440
+Gujarat,Patan,Patan APMC,Castor Seed,123,Other,FAQ,01/01/2026,6425,6580,6550
+Gujarat,Morbi,Vankaner APMC,Castor Seed,123,Other,FAQ,01/01/2026,5500,6085,6000
+Gujarat,Banaskanth,Dhanera APMC,Castor Seed,123,Caster,Local,01/01/2026,6425,6560,6500
+Gujarat,Mehsana,Kadi APMC,Castor Seed,123,Caster,FAQ,01/01/2026,6300,6575,6450
+Gujarat,Surendranagar,Lakhtar APMC,Castor Seed,123,Caster,FAQ,01/01/2026,6000,6350,6175
+Gujarat,Morbi,APMC HALVAD,Castor Seed,123,Castor seed,Local,01/01/2026,5505,6545,6325
+Gujarat,Ahmedabad,Viramgam APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6235,6425,6330
+Gujarat,Jamnagar,Jam Jodhpur APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6000,6350,6225
+Gujarat,Rajkot,Rajkot APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,5055,6250,6025
+Gujarat,Patan,Radhanpur APMC,Black Gram(Urd Beans)(Whole),8,Other,Local,01/01/2026,4500,6300,5750
+Gujarat,Rajkot,Jasdan APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),FAQ,01/01/2026,2400,6500,4500
+Gujarat,Porbandar,Porbandar APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),Non-FAQ,01/01/2026,5075,5075,5075
+Gujarat,Banaskanth,Dhanera APMC,Soanf,135,Soanf,Local,01/01/2026,6905,9000,8000
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Chikoos(Sapota),71,Sapota,Local,01/01/2026,500,4000,2500
+Gujarat,Valsad,Valsad APMC,Chikoos(Sapota),71,Sapota,Medium,01/01/2026,2250,2750,2500
+Gujarat,Navsari,Navsari APMC,Guava,185,Guava,Local,01/01/2026,2500,5000,3750
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Guava,185,Guava,Local,01/01/2026,1000,4800,3000
+Gujarat,Vadodara(Baroda),Padra APMC,Cabbage,154,Other,FAQ,01/01/2026,1200,1250,1225
+Gujarat,Navsari,Bilimora APMC,Cabbage,154,Other,FAQ,01/01/2026,1250,1750,1500
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Cabbage,154,Other,Local,01/01/2026,500,600,600
+Gujarat,Ahmedabad,Ahmedabad APMC,Turnip,341,Other,FAQ,01/01/2026,2800,3000,2900
+Gujarat,Vadodara(Baroda),Padra APMC,Pea Pod/Pea Cod/हरी मटर,308,Other,FAQ,01/01/2026,1700,2000,1850
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Pea Pod/Pea Cod/हरी मटर,308,Peas cod,FAQ,01/01/2026,3000,3500,3200
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Carrot,153,Other,FAQ,01/01/2026,1000,1250,1125
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Carrot,153,Other,FAQ,01/01/2026,1300,1300,1300
+Gujarat,Navsari,Navsari APMC,Lemon,310,Lemon,Local,01/01/2026,1000,2500,1750
+Gujarat,Morbi,Morbi APMC,Lemon,310,Lemon,FAQ,01/01/2026,2000,3000,2500
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Lemon,310,Lemon,FAQ,01/01/2026,1585,3105,2345
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Carrot,153,Carrot,Local,01/01/2026,1000,2200,1750
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Carrot,153,Carrot,Local,01/01/2026,700,2000,1350
+Gujarat,Ahmedabad,Ahmedabad APMC,Cucumbar(Kheera),159,Other,FAQ,01/01/2026,800,1600,1400
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Beetroot,157,Other,FAQ,01/01/2026,2900,2900,2900
+Gujarat,Vadodara(Baroda),Padra APMC,Lemon,310,Other,FAQ,01/01/2026,3000,3500,3250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Lemon,310,Other,Local,01/01/2026,1000,3000,2000
+Gujarat,Amreli,Rajula APMC,Arhar(Tur/Red Gram)(Whole),49,Other,Local,01/01/2026,5000,5000,5000
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Methi(Leaves),46,Methi,Local,01/01/2026,600,1000,1000
+Gujarat,Jamnagar,Jamnagar APMC,Soyabean,13,Other,Local,01/01/2026,4000,4600,4600
+Gujarat,Gir Somnath,Veraval APMC,Soyabean,13,Other,FAQ,01/01/2026,4025,4680,4585
+Gujarat,Junagarh,Bhesan APMC,Soyabean,13,Other,FAQ,01/01/2026,3500,4500,4000
+Gujarat,Jamnagar,Jam Jodhpur APMC,Soyabean,13,Soyabeen,Local,01/01/2026,4150,4575,4450
+Gujarat,Amreli,Savarkundla APMC,Soyabean,13,Soyabeen,Local,01/01/2026,4050,4610,4350
+Gujarat,Rajkot,Rajkot APMC,Soyabean,13,Soyabeen,FAQ,01/01/2026,4175,4695,4400
+Gujarat,Amreli,Dhari APMC,Arhar(Tur/Red Gram)(Whole),49,Red,Local,01/01/2026,5105,5105,5105
+Gujarat,Banaskanth,Dhanera APMC,Mustard,12,Mustard,Local,01/01/2026,6200,6330,6265
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Turmeric(raw),309,Other,FAQ,01/01/2026,2900,2900,2900
+Gujarat,Mehsana,Vijapur(Kukarvada) APMC,Cotton Seed,99,Other,Local,01/01/2026,6300,7650,7100
+Gujarat,Surat,Bardoli(Kadod) APMC,Cauliflower,34,Other,Local,01/01/2026,1800,3200,2500
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Brinjal,35,Other,Local,01/01/2026,1000,2500,1700
+Gujarat,Navsari,Bilimora APMC,Brinjal,35,Other,FAQ,01/01/2026,1000,1500,1200
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Cauliflower,34,Other,FAQ,01/01/2026,1500,1500,1500
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Potato,24,Potato,FAQ,01/01/2026,1500,2000,1800
+Gujarat,Bharuch,Bharuch APMC,Potato,24,Other,Local,01/01/2026,1000,1800,1200
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Potato,24,Other,FAQ,01/01/2026,800,1100,950
+Gujarat,Navsari,Bilimora APMC,Potato,24,Other,FAQ,01/01/2026,1900,2700,2300
+Gujarat,Gir Somnath,Talalagir APMC,Brinjal,35,Brinjal,FAQ,01/01/2026,3000,5000,4000
+Gujarat,Morbi,Morbi APMC,Brinjal,35,Brinjal,FAQ,01/01/2026,1000,1500,1250
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Brinjal,35,Brinjal,Local,01/01/2026,2000,2000,2000
+Gujarat,Porbandar,Porbandar APMC,Cauliflower,34,African Sarson,FAQ,01/01/2026,2000,2500,2250
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Onion,23,Local,FAQ,01/01/2026,1000,2000,1750
+Gujarat,Rajkot,Dhoraji APMC,Onion,23,Nasik,Non-FAQ,01/01/2026,350,1855,1130
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Onion,23,Onion,FAQ,01/01/2026,1650,1650,1650
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Potato,24,Jalander,FAQ,01/01/2026,700,800,750
+Gujarat,Bharuch,Bharuch APMC,Bottle gourd,82,Other,Local,01/01/2026,500,1100,800
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Bottle gourd,82,Other,Local,01/01/2026,1000,1000,1000
+Gujarat,Navsari,Navsari APMC,Mousambi(Sweet Lime),77,Mousambi,Local,01/01/2026,2500,4000,3250
+Gujarat,Navsari,Navsari APMC,Papaya,72,Papaya,Local,01/01/2026,2000,2500,2250
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Maize,4,Local,FAQ,01/01/2026,1860,1860,1860
+Gujarat,Porbandar,Porbandar APMC,Coriander(Leaves),43,Coriander,FAQ,01/01/2026,2000,2500,2250
+Gujarat,Amreli,Damnagar APMC,Coriander(Leaves),43,Coriander,Local,01/01/2026,1200,1200,1200
+Gujarat,Morbi,Morbi APMC,Green Chilli,87,Green Chilly,FAQ,01/01/2026,2000,3500,2750
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,1000,4000,2500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Ginger(Green),103,Other,FAQ,01/01/2026,5500,5650,5575
+Gujarat,Jamnagar,Jam Jodhpur APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,17000,20450,19500
+Gujarat,Amreli,Savarkundla APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,19000,20930,20000
+Gujarat,Rajkot,Upleta APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,17000,18025,17500
+Gujarat,Jamnagar,Jamnagar APMC,Cummin Seed(Jeera),42,Other,Local,01/01/2026,19000,21125,20750
+Gujarat,Junagarh,Junagadh APMC,Arhar(Tur/Red Gram)(Whole),49,Arhar (Whole),FAQ,01/01/2026,5500,6950,6650
+Gujarat,Rajkot,Jasdan APMC,Methi Seeds,47,Methiseeds,FAQ,01/01/2026,3500,5000,4500
+Gujarat,Rajkot,Rajkot APMC,Methi Seeds,47,Methiseeds,FAQ,01/01/2026,4250,7200,6125
+Gujarat,Patan,Patan APMC,Methi Seeds,47,Other,FAQ,01/01/2026,5040,5040,5040
+Gujarat,Amreli,Bagasara APMC,Groundnut,10,Balli/Habbu,Local,01/01/2026,3500,6250,4875
+Gujarat,Surendranagar,Dhragradhra APMC,"Sesamum(Sesame,Gingelly,Til)",11,Black,Local,01/01/2026,13400,13400,13400
+Gujarat,Mehsana,Visnagar APMC,"Sesamum(Sesame,Gingelly,Til)",11,Other,Local,01/01/2026,7875,8775,8325
+Gujarat,Mehsana,Unjha APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,8100,9605,8850
+Gujarat,Rajkot,Rajkot APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,8610,11330,10150
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Groundnut,10,G20,FAQ,01/01/2026,5850,6875,6363
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Coriander(Leaves),43,Other,FAQ,01/01/2026,1500,2000,1750
+Gujarat,Banaskanth,Deesa APMC,Mustard,12,Other,FAQ,01/01/2026,6155,6355,6300
+Gujarat,Patan,Patan APMC,Mustard,12,Other,FAQ,01/01/2026,6050,6585,6400
+Gujarat,Ahmedabad,Ahmedabad APMC,Yam(Ratalu),297,Other,FAQ,01/01/2026,3300,4000,3500
+Gujarat,Rajkot,Rajkot APMC,Corriander seed,108,"A-1, Green",FAQ,01/01/2026,7250,10000,9250
+Gujarat,Jamnagar,Jam Jodhpur APMC,Corriander seed,108,Coriander Seed,Local,01/01/2026,9000,9700,9300
+Gujarat,Rajkot,Rajkot APMC,Corriander seed,108,Coriander Seed,FAQ,01/01/2026,6750,9815,8760
+Gujarat,Jamnagar,Jamnagar APMC,Maize,4,Other,Local,01/01/2026,1500,2000,2000
+Gujarat,Dahod,Limkheda APMC,Maize,4,Other,Local,01/01/2026,1650,1800,1725
+Gujarat,Banaskanth,Palanpur APMC,Maize,4,Other,Local,01/01/2026,2000,2000,2000
+Gujarat,Sabarkantha,Himatnagar APMC,Maize,4,Yellow,Non-FAQ,01/01/2026,1800,2000,1950
+Gujarat,Patan,Patan APMC,Suva(Dill Seed),255,Other,FAQ,01/01/2026,6500,8795,8100
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Bottle gourd,82,Bottle Gourd,Local,01/01/2026,300,1000,500
+Gujarat,Bharuch,Ankleshwar APMC,Bottle gourd,82,Bottle Gourd,Grade A,01/01/2026,1000,1800,1500
+Gujarat,Sabarkantha,Modasa(Tintoi) APMC,Soyabean,13,Yellow,Non-FAQ,01/01/2026,4500,4600,4600
+Gujarat,Sabarkantha,Modasa APMC,Soyabean,13,Yellow,Non-FAQ,01/01/2026,4600,4695,4695
+Gujarat,Mehsana,Vijapur APMC,Groundnut,10,Other,Local,01/01/2026,6250,7750,7750
+Gujarat,Morbi,Morbi APMC,Groundnut,10,Other,FAQ,01/01/2026,4300,6700,5500
+Gujarat,Amreli,Rajula APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,8255,10500,9377
+Gujarat,Bhavnagar,Palitana APMC,Groundnut,10,G20,Local,01/01/2026,5505,6300,5900
+Gujarat,Amreli,Babra APMC,Groundnut,10,G20,FAQ,01/01/2026,5410,6790,6100
+Gujarat,Ahmedabad,Ahmedabad APMC,Banana - Green,90,Other,FAQ,01/01/2026,800,1500,1350
+Gujarat,Vadodara(Baroda),Padra APMC,Surat Beans(Papadi),300,Other,FAQ,01/01/2026,2000,3000,2500
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,2000,4500,3500
+Gujarat,Navsari,Navsari APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,5000,5500,5250
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,2800,3000,2900
+Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC",Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,3000,6000,4000
+Gujarat,Navsari,Vansda(Limzar) APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,5500,6000,5750
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Bhindi(Ladies Finger),85,Other,FAQ,01/01/2026,2500,2500,2500
+Gujarat,Dahod,Devgadhbaria APMC,Paddy(Common),2,Common,Non-FAQ,01/01/2026,1330,1350,1340
+Gujarat,Navsari,Bilimora APMC,Tomato,78,Other,FAQ,01/01/2026,2500,5000,3800
+Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC",Tomato,78,Other,Local,01/01/2026,2000,3000,2500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Tomato,78,Other,FAQ,01/01/2026,3150,3700,3425
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Spinach,342,Other,FAQ,01/01/2026,750,750,750
+Gujarat,Kheda,Kapadvanj APMC,Bhindi(Ladies Finger),85,Bhindi,Grade A,01/01/2026,2500,2550,2525
+Gujarat,Kachchh,Bhuj APMC,Onion,23,Small,FAQ,01/01/2026,1500,2500,2000
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Brinjal,35,Other,FAQ,01/01/2026,550,550,550
+Gujarat,Ahmedabad,Ahmedabad APMC,Brinjal,35,Other,FAQ,01/01/2026,500,1800,1200
+Gujarat,Banaskanth,Lakhani APMC,Mustard,12,Mustard,Local,01/01/2026,6360,6360,6360
+Gujarat,Rajkot,Jasdan APMC,Mustard,12,Mustard,FAQ,01/01/2026,8500,8500,8500
+Gujarat,Patan,Siddhpur APMC,Mustard,12,Mustard,FAQ,01/01/2026,5505,5575,5540
+Gujarat,Banaskanth,Thara APMC,Mustard,12,Mustard,FAQ,01/01/2026,6050,6160,6105
+Gujarat,Morbi,Morbi APMC,Bottle gourd,82,Bottle Gourd,FAQ,01/01/2026,500,1000,750
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Bottle gourd,82,Bottle Gourd,FAQ,01/01/2026,1200,1300,1250
+Gujarat,Navsari,Navsari APMC,Guar,75,Gwar,Local,01/01/2026,7500,8000,7750
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Guar,75,Gwar,Local,01/01/2026,1000,8000,4500
+Gujarat,Porbandar,Porbandar APMC,Guar,75,Gwar,FAQ,01/01/2026,7000,8000,7500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Mousambi(Sweet Lime),77,Other,Medium,01/01/2026,3500,4200,3850
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Guar,75,Other,FAQ,01/01/2026,9000,10100,9550
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Bottle gourd,82,Bottle Gourd,Local,01/01/2026,500,1500,1000
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Banana,19,Banana - Ripe,Local,01/01/2026,1500,2500,2000
+Gujarat,Porbandar,Porbandar APMC,Orange,18,Darjeeling,Grade A,01/01/2026,2000,4000,3000
+Gujarat,Patan,Siddhpur APMC,Methi Seeds,47,Methiseeds,FAQ,01/01/2026,5245,5355,5300
+Gujarat,Ahmedabad,Ahmedabad APMC,Methi(Leaves),46,Other,FAQ,01/01/2026,400,800,600
+Gujarat,Rajkot,Jasdan APMC,Arhar(Tur/Red Gram)(Whole),49,Arhar (Whole),FAQ,01/01/2026,5000,7000,6250
+Gujarat,Dahod,Dahod APMC,Arhar(Tur/Red Gram)(Whole),49,Arhar (Whole),Non-FAQ,01/01/2026,5500,5831,5700
+Gujarat,Sabarkantha,Vadali APMC,Arhar(Tur/Red Gram)(Whole),49,Other,Local,01/01/2026,5500,6055,5778
+Gujarat,Botad,Botad APMC,Arhar(Tur/Red Gram)(Whole),49,Other,FAQ,01/01/2026,4250,6250,5250
+Gujarat,Vadodara(Baroda),Padra APMC,Coriander(Leaves),43,Other,FAQ,01/01/2026,1500,2000,1750
+Gujarat,Amreli,Savarkundla APMC,"Sesamum(Sesame,Gingelly,Til)",11,Black,Local,01/01/2026,12500,22005,18500
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,"Sesamum(Sesame,Gingelly,Til)",11,Sesame,FAQ,01/01/2026,3750,10250,9500
+Gujarat,Surendranagar,Dhragradhra APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,8750,8750,8750
+Gujarat,Botad,Botad APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,7250,11450,9400
+Gujarat,Junagarh,Junagadh APMC,Groundnut,10,Bold,FAQ,01/01/2026,5250,6750,6000
+Gujarat,Rajkot,Jasdan APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,6500,10250,9400
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,6630,9490,8060
+Gujarat,Bhavnagar,Taleja APMC,Groundnut,10,G20,FAQ,01/01/2026,6435,7100,6770
+Gujarat,Gir Somnath,Veraval APMC,Groundnut,10,G20,FAQ,01/01/2026,5150,6575,6175
+Gujarat,Patan,Siddhpur APMC,Groundnut,10,Balli/Habbu,FAQ,01/01/2026,6250,6250,6250
+Gujarat,Gir Somnath,Veraval APMC,Millets,237,Millets,FAQ,01/01/2026,1500,2405,2075
+Gujarat,Mehsana,Unjha APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,17255,23400,22700
+Gujarat,Morbi,Vankaner APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),FAQ,01/01/2026,18500,20850,20000
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Coriander(Leaves),43,Coriander,FAQ,01/01/2026,1340,2035,1685
+Gujarat,Bharuch,Ankleshwar APMC,Coriander(Leaves),43,Coriander,Grade A,01/01/2026,2000,3500,3000
+Gujarat,Ahmedabad,Ahmedabad APMC,Coriander(Leaves),43,Coriander,FAQ,01/01/2026,1000,1600,1250
+Gujarat,Ahmedabad,Mandal APMC,Cummin Seed(Jeera),42,Other,Local,01/01/2026,18005,20255,19000
+Gujarat,Banaskanth,Thara APMC,Cummin Seed(Jeera),42,Other,FAQ,01/01/2026,19250,20125,19687.5
+Gujarat,Sabarkantha,Himatnagar APMC,Groundnut,10,JL-24,FAQ,01/01/2026,7263,9515,7700
+Gujarat,Sabarkantha,Himatnagar APMC,Groundnut,10,JL-24,Non-FAQ,01/01/2026,5750,7262,6500
+Gujarat,Junagarh,Junagadh APMC,Groundnut,10,Local,FAQ,01/01/2026,5250,6850,6000
+Gujarat,Banaskanth,Lakhani APMC,Groundnut,10,Other,Local,01/01/2026,6615,6615,6615
+Gujarat,Banaskanth,Dhanera APMC,Groundnut,10,Other,Local,01/01/2026,6125,7330,6765
+Gujarat,Junagarh,Bhesan APMC,Groundnut,10,Other,FAQ,01/01/2026,3500,6500,5500
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Groundnut,10,Other,FAQ,01/01/2026,5105,6880,5755
+Gujarat,Rajkot,Upleta APMC,Groundnut,10,Other,Non-FAQ,01/01/2026,5000,6380,5500
+Gujarat,Amreli,Dhari APMC,Soyabean,13,Soyabeen,Non-FAQ,01/01/2026,4175,4445,4445
+Gujarat,Rajkot,Upleta APMC,Soyabean,13,Soyabeen,Local,01/01/2026,4075,4505,4400
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Cauliflower,34,Cauliflower,FAQ,01/01/2026,1500,2000,1700
+Gujarat,Morbi,Morbi APMC,Onion,23,Onion,FAQ,01/01/2026,500,1500,1000
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Onion,23,Onion,FAQ,01/01/2026,350,1705,1110
+Gujarat,Vadodara(Baroda),Padra APMC,Brinjal,35,Other,FAQ,01/01/2026,750,1300,1000
+Gujarat,Bharuch,Bharuch APMC,Brinjal,35,Other,Local,01/01/2026,500,1500,1000
+Gujarat,Patan,"Patan(Veg,Yard Patan) APMC",Brinjal,35,Other,FAQ,01/01/2026,1500,2000,1800
+Gujarat,Amreli,Damnagar APMC,Brinjal,35,Other,Local,01/01/2026,3000,3000,3000
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Brinjal,35,Brinjal,FAQ,01/01/2026,1500,2000,1800
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Brinjal,35,Brinjal,FAQ,01/01/2026,1015,1765,1390
+Gujarat,Kheda,Kapadvanj APMC,Onion,23,Onion,Grade A,01/01/2026,800,1800,1300
+Gujarat,Surendranagar,Vadhvan APMC,Apple,17,Apple,Medium,01/01/2026,8500,9500,9000
+Gujarat,Porbandar,Porbandar APMC,Onion,23,Other,Non-FAQ,01/01/2026,500,1500,1000
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Onion,23,Other,FAQ,01/01/2026,1700,2250,1975
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Potato,24,Potato,Local,01/01/2026,500,1500,1250
+Gujarat,Surendranagar,Vadhvan APMC,Potato,24,Potato,Medium,01/01/2026,2000,2500,2250
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Potato,24,Potato,FAQ,01/01/2026,2100,2300,2250
+Gujarat,Surendranagar,Vadhvan APMC,Guar,75,Gwar,Local,01/01/2026,7000,8000,7500
+Gujarat,Porbandar,Porbandar APMC,Ginger(Green),103,Green Ginger,FAQ,01/01/2026,4500,5000,4750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Tomato,78,Tomato,Local,01/01/2026,800,4000,3000
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Tomato,78,Tomato,FAQ,01/01/2026,2800,3500,3000
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Tomato,78,Tomato,Local,01/01/2026,1000,3500,2250
+Gujarat,Mehsana,Kadi APMC,Paddy(Common),2,Paddy,Local,01/01/2026,1500,2300,2000
+Gujarat,Vadodara(Baroda),Padra APMC,Cucumbar(Kheera),159,Other,FAQ,01/01/2026,2500,3500,3000
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Tinda,349,Tinda,FAQ,01/01/2026,2000,2500,2200
+Gujarat,Surendranagar,Vadhvan APMC,Tinda,349,Tinda,Medium,01/01/2026,3500,4000,3750
+Gujarat,Gandhinagar,Mansa APMC,Guar Seed(Cluster Beans Seed),413,Whole,Local,01/01/2026,4800,5650,5450
+Gujarat,Surendranagar,Vadhvan APMC,Spinach,342,Spinach,Local,01/01/2026,500,1000,750
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Cabbage,154,Other,Local,01/01/2026,500,1500,1000
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Cabbage,154,Other,FAQ,01/01/2026,600,900,750
+Gujarat,Ahmedabad,Ahmedabad APMC,Cabbage,154,Other,FAQ,01/01/2026,500,1100,850
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Banana,19,Other,Medium,01/01/2026,2000,3200,2600
+Gujarat,Mehsana,Visnagar APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,1605,2565,2085
+Gujarat,Botad,Botad APMC,Bengal Gram(Gram)(Whole),6,Other,FAQ,01/01/2026,4600,5030,4850
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Sweet Potato,152,Other,FAQ,01/01/2026,1500,1500,1500
+Gujarat,Anand,Khambhat(Grain Market) APMC,Paddy(Common),2,Paddy,Local,01/01/2026,2500,3105,2750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Sweet Potato,152,Sweet Potato,Local,01/01/2026,500,2500,1500
+Gujarat,Patan,Siddhpur APMC,Rajgir,248,Other,FAQ,01/01/2026,5555,5555,5555
+Gujarat,Banaskanth,Deesa APMC,Rajgir,248,Other,FAQ,01/01/2026,7900,8520,8400
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Cluster beans,80,Cluster Beans,Local,01/01/2026,9000,9000,9000
+Gujarat,Surendranagar,Vadhvan APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,2500,4000,3250
+Gujarat,Porbandar,Porbandar APMC,Green Chilli,87,Green Chilly,FAQ,01/01/2026,4500,5000,4750
+Gujarat,Gandhinagar,"Kalol(Veg,Market,Kalol) APMC",Green Chilli,87,Green Chilly,Local,01/01/2026,1500,3500,2500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Papaya,72,Other,Medium,01/01/2026,1500,1900,1700
+Gujarat,Amreli,Savarkundla APMC,Cotton,15,Narma BT Cotton,Local,01/01/2026,6250,7775,6750
+Gujarat,Rajkot,Rajkot APMC,Cotton,15,Narma BT Cotton,FAQ,01/01/2026,6500,7800,7350
+Gujarat,Morbi,Morbi APMC,Cotton,15,Other,FAQ,01/01/2026,6500,7750,7125
+Gujarat,Patan,Harij APMC,Cotton,15,Other,Local,01/01/2026,6390,7255,6725
+Gujarat,Jamnagar,Kalawad APMC,Cotton,15,Other,Local,01/01/2026,5500,7725,7525
+Gujarat,Surendranagar,Sayala APMC,Cotton,15,Other,Local,01/01/2026,5214,7812,6750
+Gujarat,Patan,Patan APMC,Cotton,15,Other,FAQ,01/01/2026,6500,7780,7725
+Gujarat,Bhavnagar,Taleja APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,5250,7700,6475
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,4875,7545,6210
+Gujarat,Surendranagar,Chotila APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,6500,7800,7250
+Gujarat,Rajkot,Jasdan(Vichhiya) APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,5000,7925,6465
+Gujarat,Kachchh,Rapar APMC,Green Gram(Moong)(Whole),9,Other,Local,01/01/2026,6105,6105,6105
+Gujarat,Banaskanth,Lakhani APMC,Bajra(Pearl Millet/Cumbu),28,Deshi,Local,01/01/2026,2775,2775,2775
+Gujarat,Rajkot,Rajkot APMC,Bajra(Pearl Millet/Cumbu),28,Deshi,FAQ,01/01/2026,1500,2055,1850
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Bajra(Pearl Millet/Cumbu),28,Hybrid,FAQ,01/01/2026,1755,3125,2440
+Gujarat,Patan,Chansama APMC,Cotton,15,Cotton (Ginned),Local,01/01/2026,6652,6652,6652
+Gujarat,Patan,Chansama APMC,Cotton,15,Cotton (Ginned),FAQ,01/01/2026,6250,7055,6652
+Gujarat,Botad,Botad(Bhabarkot) APMC,Cotton,15,Cotton (Unginned),FAQ,01/01/2026,6250,7500,6750
+Gujarat,Jamnagar,Jam Jodhpur APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),Local,01/01/2026,4250,6850,4750
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),FAQ,01/01/2026,5000,6625,6250
+Gujarat,Junagarh,Junagadh APMC,Black Gram(Urd Beans)(Whole),8,Black Gram (Whole),FAQ,01/01/2026,4000,7255,5350
+Gujarat,Amreli,Rajula APMC,Black Gram(Urd Beans)(Whole),8,Local,Local,01/01/2026,4035,4855,4445
+Gujarat,Rajkot,Jasdan APMC,Green Gram(Moong)(Whole),9,Green (Whole),FAQ,01/01/2026,6755,6755,6755
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Black Gram(Urd Beans)(Whole),8,Other,FAQ,01/01/2026,4805,6595,5750
+Gujarat,Patan,Harij APMC,Black Gram(Urd Beans)(Whole),8,Other,Local,01/01/2026,4810,6650,5650
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2400,2675,2600
+Gujarat,Junagarh,Junagadh APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2500,2670,2550
+Gujarat,Patan,Siddhpur APMC,Wheat,1,Hybrid,FAQ,01/01/2026,2485,2650,2567
+Gujarat,Bhavnagar,Bhavnagar APMC,Wheat,1,Local,FAQ,01/01/2026,2460,2460,2460
+Gujarat,Dahod,Limkheda APMC,Wheat,1,Local,Local,01/01/2026,2500,2600,2550
+Gujarat,Rajkot,Upleta APMC,Wheat,1,Local,Local,01/01/2026,2350,2500,2450
+Gujarat,Botad,Botad APMC,Wheat,1,Local,FAQ,01/01/2026,2250,2840,2500
+Gujarat,Banaskanth,Thara(Shihori) APMC,Wheat,1,Other,FAQ,01/01/2026,2200,2250,2225
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Wheat,1,Other,FAQ,01/01/2026,2450,2450,2450
+Gujarat,Morbi,Morbi APMC,Wheat,1,Other,FAQ,01/01/2026,2400,2760,2580
+Gujarat,Bhavnagar,Palitana APMC,Wheat,1,Other,Local,01/01/2026,2390,2655,2520
+Gujarat,Gandhinagar,Kalol APMC,Wheat,1,Other,Local,01/01/2026,2450,2700,2550
+Gujarat,Jamnagar,Kalawad APMC,Wheat,1,Other,Local,01/01/2026,2245,2650,2515
+Gujarat,Banaskanth,Amirgadh APMC,Wheat,1,Other,FAQ,01/01/2026,2505,2650,2650
+Gujarat,Rajkot,Jasdan APMC,Wheat,1,2189 No. 1,FAQ,01/01/2026,2250,2720,2500
+Gujarat,Amreli,Savarkundla APMC,Wheat,1,Bansi,Local,01/01/2026,2500,2900,2750
+Gujarat,Gir Somnath,Talalagir APMC,Cabbage,154,Cabbage,FAQ,01/01/2026,1000,2000,1300
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Cabbage,154,Cabbage,Local,01/01/2026,500,1000,750
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Cabbage,154,Cabbage,Grade B,01/01/2026,500,1000,750
+Gujarat,Amreli,Damnagar APMC,Cabbage,154,Cabbage,Local,01/01/2026,1500,1500,1500
+Gujarat,Amreli,Damnagar APMC,Tomato,78,Local,Local,01/01/2026,4500,4500,4500
+Gujarat,Bharuch,Bharuch APMC,Tomato,78,Other,Local,01/01/2026,1500,2500,2000
+Gujarat,Vadodara(Baroda),Padra APMC,Tomato,78,Other,FAQ,01/01/2026,2500,4000,3250
+Gujarat,Navsari,Chikhali APMC,Chikoos(Sapota),71,Other,Large,01/01/2026,2950,7845,5398
+Gujarat,Valsad,Pardi(Rohinee) APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,1500,2000,1500
+Gujarat,Junagarh,Junagadh APMC,Corriander seed,108,Coriander Seed,FAQ,01/01/2026,8250,10600,9350
+Gujarat,Jamnagar,Jamnagar APMC,Ajwan,137,Other,Local,01/01/2026,6500,19000,13675
+Gujarat,Ahmedabad,Viramgam APMC,Paddy(Common),2,Other,Local,01/01/2026,1315,2435,1875
+Gujarat,Gandhinagar,Dehgam APMC,Paddy(Common),2,Other,FAQ,01/01/2026,1755,2640,2197
+Gujarat,Dahod,Dahod APMC,Paddy(Common),2,Other,Local,01/01/2026,1800,1900,1840
+Gujarat,Dahod,Limkheda APMC,Paddy(Common),2,Other,Local,01/01/2026,1700,2000,1850
+Gujarat,Surat,Mandvi APMC,Paddy(Common),2,Other,Non-FAQ,01/01/2026,1650,1850,1750
+Gujarat,Rajkot,Rajkot APMC,Wheat,1,Sharbati,FAQ,01/01/2026,2540,3055,2660
+Gujarat,Bharuch,Ankleshwar APMC,Carrot,153,Carrot,Grade A,01/01/2026,700,1500,1100
+Gujarat,Surendranagar,Vadhvan APMC,Lemon,310,Lemon,Local,01/01/2026,2000,2500,2250
+Gujarat,Ahmedabad,Ahmedabad APMC,Lemon,310,Other,FAQ,01/01/2026,1000,2500,2150
+Gujarat,Ahmedabad,Ahmedabad APMC,Carrot,153,Other,FAQ,01/01/2026,1000,1500,1300
+Gujarat,Patan,"Patan(Veg,Yard Patan) APMC",Carrot,153,Other,FAQ,01/01/2026,600,875,800
+Gujarat,Ahmedabad,Ahmedabad APMC,Green Chilli,87,Other,FAQ,01/01/2026,2000,5000,3750
+Gujarat,Surendranagar,Dasada Patadi APMC,Suva(Dill Seed),255,Suva (Dill Seed),FAQ,01/01/2026,7000,8060,7925
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Gram Raw(Chholia),359,Other,FAQ,01/01/2026,2300,2300,2300
+Gujarat,Mehsana,Mehsana APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6200,6650,6640
+Gujarat,Morbi,Morbi APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6200,6200,6200
+Gujarat,Surendranagar,Dhragradhra APMC,Castor Seed,123,Castor seed,Local,01/01/2026,5980,6495,6425
+Gujarat,Gandhinagar,Dehgam(Rekhiyal) APMC,Castor Seed,123,Other,FAQ,01/01/2026,6200,6325,6262
+Gujarat,Mehsana,Visnagar APMC,Castor Seed,123,Other,Local,01/01/2026,6040,6670,6355
+Gujarat,Rajkot,Upleta APMC,Castor Seed,123,Other,FAQ,01/01/2026,6000,6320,6250
+Gujarat,Botad,Botad APMC,Castor Seed,123,Other,FAQ,01/01/2026,6060,6060,6060
+Gujarat,Navsari,Navsari APMC,Capsicum,164,Capsicum,Local,01/01/2026,2500,3000,2750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Pumpkin,84,Pumpkin,Local,01/01/2026,800,1500,1200
+Gujarat,Porbandar,Porbandar APMC,Bhindi(Ladies Finger),85,Bhindi,FAQ,01/01/2026,5000,5500,5250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,1000,5000,3000
+Gujarat,Navsari,Bilimora APMC,Bottle gourd,82,Other,FAQ,01/01/2026,1000,1500,1200
+Gujarat,Gandhinagar,Mansa APMC,Jowar(Sorghum),5,Other,Local,01/01/2026,4975,5505,5505
+Gujarat,Morbi,Vankaner APMC,Jowar(Sorghum),5,Jowar ( White),FAQ,01/01/2026,3000,4565,4100
+Gujarat,Amreli,Rajula APMC,Jowar(Sorghum),5,Local,Local,01/01/2026,2705,5760,4233
+Gujarat,Navsari,Bilimora APMC,Bhindi(Ladies Finger),85,Other,FAQ,01/01/2026,3250,3750,3500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Bhindi(Ladies Finger),85,Other,FAQ,01/01/2026,3000,3750,3375
+Gujarat,Surat,Bardoli(Kadod) APMC,Bhindi(Ladies Finger),85,Other,Local,01/01/2026,1500,3300,2400
+Gujarat,Ahmedabad,Ahmedabad APMC,Bhindi(Ladies Finger),85,Other,FAQ,01/01/2026,3500,6000,4750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Raddish,161,Raddish,Local,01/01/2026,500,900,700
+Gujarat,Mehsana,Visnagar APMC,Guar Seed(Cluster Beans Seed),413,Other,Local,01/01/2026,5000,5740,5370
+Gujarat,Banaskanth,Vadgam APMC,Guar Seed(Cluster Beans Seed),413,Other,FAQ,01/01/2026,5445,5605,5605
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Pegeon Pea(Arhar Fali),301,Pigeon Pea (Arhar Fali),FAQ,01/01/2026,3200,3500,3400
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Kartali(Kantola),305,Other,FAQ,01/01/2026,4555,4555,4555
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Onion Green,358,Other,FAQ,01/01/2026,200,700,450
+Gujarat,Surendranagar,Vadhvan APMC,Methi(Leaves),46,Methi,Local,01/01/2026,500,1000,750
+Gujarat,Ahmedabad,Ahmedabad APMC,Rat Tail Radish(Mogari),307,Other,FAQ,01/01/2026,1500,4000,2750
+Gujarat,Bharuch,Ankleshwar APMC,Brinjal,35,Brinjal,Grade A,01/01/2026,1000,2000,1300
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Grapes,22,Other,Medium,01/01/2026,5500,6750,6125
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Garlic,25,Garlic,Local,01/01/2026,5000,12000,9000
+Gujarat,Ahmedabad,Ahmedabad(Chimanbhai Patal Market Vasana) APMC,Potato,24,Chips,FAQ,01/01/2026,1600,1800,1750
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Potato,24,Desi,Local,01/01/2026,1000,1500,1200
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Onion,23,Onion,Grade B,01/01/2026,750,1500,1125
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Potato,24,Other,FAQ,01/01/2026,3200,3200,3200
+Gujarat,Ahmedabad,Ahmedabad APMC,Cauliflower,34,Other,FAQ,01/01/2026,500,1400,1000
+Gujarat,Surat,Bardoli(Kadod) APMC,Brinjal,35,Other,Local,01/01/2026,1800,3700,2800
+Gujarat,Vadodara(Baroda),Padra APMC,Onion,23,Other,FAQ,01/01/2026,1000,1500,1250
+Gujarat,Kheda,Nadiad APMC,Potato,24,Potato,FAQ,01/01/2026,2200,2500,2350
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Potato,24,Potato,FAQ,01/01/2026,475,1225,850
+Gujarat,Kheda,Kapadvanj APMC,Potato,24,Potato,Grade A,01/01/2026,800,1400,1100
+Gujarat,Amreli,Damnagar APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,2000,2000,2000
+Gujarat,Jamnagar,Jamnagar APMC,Garlic,25,Other,Local,01/01/2026,5000,9000,7825
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Brinjal,35,Brinjal,Local,01/01/2026,300,2000,1600
+Gujarat,Surendranagar,Vadhvan APMC,Brinjal,35,Brinjal,Local,01/01/2026,3000,3500,3250
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Onion,23,Onion,Local,01/01/2026,300,2000,1300
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Onion,23,Onion,FAQ,01/01/2026,355,2105,1205
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Cauliflower,34,Cauliflower,Local,01/01/2026,500,1500,1000
+Gujarat,Surendranagar,Vadhvan APMC,Cauliflower,34,Cauliflower,Medium,01/01/2026,1000,2000,1500
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Brinjal,35,Round,Local,01/01/2026,2000,3000,2000
+Gujarat,Bhavnagar,Mahuva(Station Road) APMC,Onion,23,White,FAQ,01/01/2026,755,1405,1080
+Gujarat,Navsari,Navsari APMC,Coriander(Leaves),43,Coriander,Local,01/01/2026,2000,3000,2500
+Gujarat,Surendranagar,Vadhvan APMC,Coriander(Leaves),43,Coriander,Local,01/01/2026,2000,2500,2250
+Gujarat,Kheda,Nadiyad(Chaklasi) APMC,Coriander(Leaves),43,Coriander,FAQ,01/01/2026,1200,1400,1300
+Gujarat,Banaskanth,Dhanera APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,18005,21000,19500
+Gujarat,Patan,Sami APMC,Cummin Seed(Jeera),42,Cummin Seed(Jeera),Local,01/01/2026,19250,20375,20000
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Coriander(Leaves),43,Other,FAQ,01/01/2026,2400,2400,2400
+Gujarat,Rajkot,Dhoraji APMC,Arhar(Tur/Red Gram)(Whole),49,Hybrid,Non-FAQ,01/01/2026,5905,6555,5905
+Gujarat,Dahod,Dahod APMC,Rice,3,Lashkari,FAQ,01/01/2026,5000,6000,5520
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Methi(Leaves),46,Methi,FAQ,01/01/2026,1200,1400,1300
+Gujarat,Bharuch,Ankleshwar APMC,Methi(Leaves),46,Methi,Grade A,01/01/2026,1000,1800,1500
+Gujarat,Vadodara(Baroda),Padra APMC,Methi(Leaves),46,Other,FAQ,01/01/2026,650,700,675
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Methi(Leaves),46,Other,FAQ,01/01/2026,1000,1000,1000
+Gujarat,Sabarkantha,Modasa(Tintoi) APMC,Groundnut,10,Local,FAQ,01/01/2026,5400,7650,7650
+Gujarat,Botad,Botad APMC,Groundnut,10,Local,FAQ,01/01/2026,5750,6700,6250
+Gujarat,Junagarh,Junagadh APMC,Kulthi(Horse Gram),114,Horse gram (Whole),FAQ,01/01/2026,4750,5175,5000
+Gujarat,Morbi,Vankaner APMC,Groundnut,10,Other,FAQ,01/01/2026,4500,7725,5750
+Gujarat,Jamnagar,Kalawad APMC,Groundnut,10,Other,Local,01/01/2026,4275,7485,6825
+Gujarat,Jamnagar,Jamnagar APMC,"Sesamum(Sesame,Gingelly,Til)",11,Other,Local,01/01/2026,7000,10000,9525
+Gujarat,Patan,Patan APMC,"Sesamum(Sesame,Gingelly,Til)",11,Other,FAQ,01/01/2026,5500,10005,9850
+Gujarat,Porbandar,Porbandar APMC,Groundnut,10,Bold,Non-FAQ,01/01/2026,4625,6525,5575
+Gujarat,Rajkot,Jasdan APMC,Groundnut,10,G20,FAQ,01/01/2026,5000,6750,6000
+Gujarat,Bhavnagar,Bhavnagar APMC,Groundnut,10,G20,FAQ,01/01/2026,6595,6595,6595
+Gujarat,Bhavnagar,Taleja APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,FAQ,01/01/2026,10035,10555,10295
+Gujarat,Kachchh,Bhuj APMC,Mustard,12,Mustard,FAQ,01/01/2026,5750,6000,5875
+Gujarat,Rajkot,Rajkot APMC,Mustard,12,Mustard,FAQ,01/01/2026,5500,6250,6050
+Gujarat,Banaskanth,Thara APMC,Groundnut,10,Balli/Habbu,Local,01/01/2026,5900,6835,6367.5
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Groundnut,10,Bold,FAQ,01/01/2026,5205,6855,5805
+Gujarat,Banaskanth,Dhanera APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,9700,10505,10150
+Gujarat,Amreli,Bagasara APMC,"Sesamum(Sesame,Gingelly,Til)",11,White,Local,01/01/2026,5500,9100,7300
+Gujarat,Morbi,Morbi APMC,Bitter gourd,81,Bitter Gourd,FAQ,01/01/2026,2500,3500,3000
+Gujarat,Ahmedabad,Ahmedabad APMC,Tomato,78,Other,FAQ,01/01/2026,2000,4500,3400
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Tomato,78,Other,FAQ,01/01/2026,3050,3050,3050
+Gujarat,Porbandar,Porbandar APMC,Tomato,78,Deshi,FAQ,01/01/2026,3500,4000,3750
+Gujarat,Bharuch,Ankleshwar APMC,Surat Beans(Papadi),300,Surat Beans (Papadi),Grade A,01/01/2026,1500,2500,2000
+Gujarat,Surendranagar,Vadhvan APMC,Banana,19,Other,Medium,01/01/2026,2000,2500,2250
+Gujarat,Panchmahals,Morva Hafad APMC,Maize,4,Deshi White,Local,01/01/2026,1750,2250,2000
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Green Chilli,87,Green Chilly,Grade B,01/01/2026,3500,4500,4000
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Green Chilli,87,Green Chilly,FAQ,01/01/2026,1680,3240,2460
+Gujarat,Amreli,Damnagar APMC,Green Chilli,87,Green Chilly,Local,01/01/2026,2500,2500,2500
+Gujarat,Bharuch,Bharuch APMC,Papaya,72,Other,Local,01/01/2026,800,1200,1000
+Gujarat,Vadodara(Baroda),Padra APMC,Spinach,342,Spinach,FAQ,01/01/2026,600,700,650
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Ginger(Green),103,Green Ginger,FAQ,01/01/2026,5000,6000,5500
+Gujarat,Navsari,Navsari APMC,Chikoos(Sapota),71,Sapota,Local,01/01/2026,2250,2500,2375
+Gujarat,Valsad,Pardi(Vapi) APMC,Chikoos(Sapota),71,Other,Medium,01/01/2026,2000,2250,2000
+Gujarat,Bharuch,Bharuch APMC,Chikoos(Sapota),71,Other,Local,01/01/2026,1500,2000,1700
+Gujarat,Navsari,Navsari APMC,Cowpea(Veg),89,Cowpea (Veg),Local,01/01/2026,3500,4000,3750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Cowpea(Veg),89,Cowpea (Veg),Local,01/01/2026,1500,2500,2000
+Gujarat,Ahmedabad,Ahmedabad APMC,Pumpkin,84,Other,FAQ,01/01/2026,800,1000,900
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Guar,75,Gwar,FAQ,01/01/2026,2000,2500,2400
+Gujarat,Surendranagar,Dhragradhra APMC,Corriander seed,108,Coriander Seed,Local,01/01/2026,7575,7575,7575
+Gujarat,Jamnagar,Jamnagar APMC,Corriander seed,108,Other,Local,01/01/2026,7500,9600,9025
+Gujarat,Patan,Patan APMC,Soanf,135,Other,FAQ,01/01/2026,7000,12000,10500
+Gujarat,Morbi,Vankaner APMC,Soanf,135,Soanf,FAQ,01/01/2026,8020,8335,8250
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Elephant Yam(Suran)/Amorphophallus,296,Other,FAQ,01/01/2026,2400,2400,2400
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Bhindi(Ladies Finger),85,Bhindi,Local,01/01/2026,2500,5000,3750
+Gujarat,Bharuch,Ankleshwar APMC,Bhindi(Ladies Finger),85,Bhindi,Grade A,01/01/2026,3000,5000,4000
+Gujarat,Anand,Tarapur APMC,Paddy(Common),2,Other,Local,01/01/2026,2375,3035,2625
+Gujarat,Navsari,Navsari APMC,Tomato,78,Tomato,Local,01/01/2026,2500,5000,3750
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Tomato,78,Tomato,Local,01/01/2026,1500,4200,3500
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Tomato,78,Tomato,Grade B,01/01/2026,2500,4000,3250
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Tomato,78,Tomato,Local,01/01/2026,3000,3500,3000
+Gujarat,Panchmahals,Godhra APMC,Paddy(Common),2,Paddy Medium,Non-FAQ,01/01/2026,1825,1890,1865
+Gujarat,Banaskanth,Thara APMC,Cotton,15,RCH-2,Local,01/01/2026,6750,7475,7112.5
+Gujarat,Chhota Udaipur,Bodeliu APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,7710,8060,7850
+Gujarat,Amreli,Babra APMC,Cotton,15,Shanker 6 (B) 30mm FIne,FAQ,01/01/2026,6350,7900,7125
+Gujarat,Banaskanth,Deesa APMC,Bajra(Pearl Millet/Cumbu),28,Bold,FAQ,01/01/2026,1970,3060,2750
+Gujarat,Banaskanth,Thara APMC,Bajra(Pearl Millet/Cumbu),28,Other,FAQ,01/01/2026,2000,2655,2327.5
+Gujarat,Jamnagar,Jamnagar APMC,Bajra(Pearl Millet/Cumbu),28,Other,Local,01/01/2026,1900,2150,2150
+Gujarat,Banaskanth,Thara(Shihori) APMC,Bajra(Pearl Millet/Cumbu),28,Other,FAQ,01/01/2026,1705,2550,2127.5
+Gujarat,Amreli,Savarkundla APMC,Bengal Gram(Gram)(Whole),6,Average (Whole),Local,01/01/2026,4500,5050,4875
+Gujarat,Anand,"Anand(Veg,Yard,Anand) APMC",Bottle gourd,82,Bottle Gourd,Grade B,01/01/2026,500,1000,750
+Gujarat,Amreli,Damnagar APMC,Bottle gourd,82,Bottle Gourd,Local,01/01/2026,1500,1500,1500
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Bitter gourd,81,Bitter Gourd,Local,01/01/2026,1000,5000,3000
+Gujarat,Jamnagar,Jam Jodhpur APMC,Kabuli Chana(Chickpeas-White),362,Kabuli Chana(Chickpeas-white),Local,01/01/2026,4000,6500,5250
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Onion Green,358,Onion Green,Local,01/01/2026,700,1500,1200
+Gujarat,Patan,Radhanpur APMC,Ajwan,137,Other,Local,01/01/2026,6670,13250,10000
+Gujarat,Rajkot,Jasdan APMC,Jowar(Sorghum),5,Jowar ( White),FAQ,01/01/2026,2000,4650,4000
+Gujarat,Botad,Botad APMC,Jowar(Sorghum),5,Local,FAQ,01/01/2026,4225,4915,4550
+Gujarat,Banaskanth,Palanpur APMC,Jowar(Sorghum),5,Local,Local,01/01/2026,5757,5757,5757
+Gujarat,Banaskanth,Lakhani APMC,Castor Seed,123,Other,Local,01/01/2026,6550,6550,6550
+Gujarat,Mehsana,Vijapur(Gojjariya) APMC,Castor Seed,123,Other,Local,01/01/2026,6300,6310,6305
+Gujarat,Mehsana,Unava APMC,Castor Seed,123,Other,FAQ,01/01/2026,6605,6625,6610
+Gujarat,Patan,Radhanpur APMC,Castor Seed,123,Other,Local,01/01/2026,6500,6650,6625
+Gujarat,Banaskanth,Deesa(Bhildi) APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6355,6480,6425
+Gujarat,Sabarkantha,Himatnagar APMC,Castor Seed,123,Castor seed,FAQ,01/01/2026,6425,6525,6500
+Gujarat,Kachchh,Rapar APMC,Castor Seed,123,Castor seed,Local,01/01/2026,6055,6055,6055
+Gujarat,Rajkot,Dhoraji APMC,Castor Seed,123,Castor seed,Local,01/01/2026,5530,6230,6005
+Gujarat,Ahmedabad,Viramgam APMC,Cotton,15,Other,Local,01/01/2026,6130,7655,6890
+Gujarat,Sabarkantha,Bhiloda APMC,Cotton,15,Other,Non-FAQ,01/01/2026,7250,7600,7425
+Gujarat,Junagarh,Bhesan APMC,Cotton,15,Other,FAQ,01/01/2026,5000,8000,7500
+Gujarat,Morbi,Vankaner APMC,Cotton,15,Other,FAQ,01/01/2026,5750,7810,7100
+Gujarat,Chhota Udaipur,Jetpur-Pavi APMC,Cotton,15,Other,Local,01/01/2026,6050,6280,6150
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Little gourd(Kundru),302,Other,Local,01/01/2026,2000,3500,3000
+Gujarat,Vadodara(Baroda),Padra APMC,Little gourd(Kundru),302,Other,FAQ,01/01/2026,1250,2750,2000
+Gujarat,Sabarkantha,Himatnagar APMC,Black Gram(Urd Beans)(Whole),8,Local,Local,01/01/2026,6060,6755,6500
+Gujarat,Surendranagar,Lakhtar APMC,Cotton,15,Cotton (Unginned),FAQ,01/01/2026,6775,7250,7013
+Gujarat,Jamnagar,Kalawad APMC,Black Gram(Urd Beans)(Whole),8,Other,Local,01/01/2026,5500,6500,6225
+Gujarat,Porbandar,Porbandar APMC,Pomegranate,190,Other,Grade A,01/01/2026,6000,7000,6500
+Gujarat,Banaskanth,Deesa(Deesa Veg Yard) APMC,Pomegranate,190,Other,Medium,01/01/2026,7000,13500,10050
+Gujarat,Surendranagar,Vadhvan APMC,Drumstick,168,Drumstick,Local,01/01/2026,7500,8500,8000
+Gujarat,Sabarkantha,Vadali APMC,Soyabean,13,Other,Local,01/01/2026,4250,4525,4387
+Gujarat,Rajkot,Dhoraji APMC,Soyabean,13,Yellow,Non-FAQ,01/01/2026,4105,4575,4540
+Gujarat,Rajkot,Rajkot(Veg.Sub Yard) APMC,Cluster beans,80,Cluster Beans,FAQ,01/01/2026,5095,9130,7110
+Gujarat,Kachchh,Bhuj APMC,Isabgul(Psyllium),256,Isabgul (Psyllium),FAQ,01/01/2026,9500,12375,10937
+Gujarat,Surendranagar,Vadhvan APMC,Guava,185,Guava,Medium,01/01/2026,3500,4000,3750
+Gujarat,Mehsana,Visnagar APMC,Jowar(Sorghum),5,Other,Local,01/01/2026,2000,5530,3765
+Gujarat,Banaskanth,Palanpur APMC,Jowar(Sorghum),5,Other,Local,01/01/2026,5750,5750,5750
+Gujarat,Patan,Harij APMC,Guar Seed(Cluster Beans Seed),413,Other,Local,01/01/2026,5130,5940,5480
+Gujarat,Ahmedabad,Ahmedabad APMC,Raddish,161,Other,FAQ,01/01/2026,600,1500,900
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Raddish,161,Other,FAQ,01/01/2026,1400,1400,1400
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Raddish,161,Raddish,FAQ,01/01/2026,1000,1200,1100
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Pegeon Pea(Arhar Fali),301,Other,FAQ,01/01/2026,2500,2500,2500
+Gujarat,Navsari,Navsari APMC,Pegeon Pea(Arhar Fali),301,Pigeon Pea (Arhar Fali),Local,01/01/2026,3500,5000,4250
+Gujarat,Amreli,Dhari APMC,Bengal Gram(Gram)(Whole),6,Other,Non-FAQ,01/01/2026,5000,5000,5000
+Gujarat,Bhavnagar,Bhavnagar APMC,Bengal Gram(Gram)(Whole),6,Other,FAQ,01/01/2026,4620,4620,4620
+Gujarat,Surendranagar,Vadhvan APMC,Cucumbar(Kheera),159,Cucumbar,Local,01/01/2026,1000,2000,1500
+Gujarat,Rajkot,Rajkot APMC,Bengal Gram(Gram)(Whole),6,White (whole),FAQ,01/01/2026,5750,9300,8500
+Gujarat,Mehsana,Unjha APMC,Suva(Dill Seed),255,Suva (Dill Seed),FAQ,01/01/2026,6505,9720,8950
+Gujarat,Amreli,Bagasara APMC,Wheat,1,Lokwan Gujrat,Local,01/01/2026,1750,2595,2170
+Gujarat,Amreli,Babra APMC,Wheat,1,Medium,FAQ,01/01/2026,2375,2775,2575
+Gujarat,Amreli,Dhari APMC,Wheat,1,Lokwan,FAQ,01/01/2026,2605,2620,2620
+Gujarat,Mehsana,Kadi APMC,Wheat,1,Other,FAQ,01/01/2026,2380,2625,2525
+Gujarat,Banaskanth,Deesa APMC,Wheat,1,Other,FAQ,01/01/2026,2450,2575,2500
+Gujarat,Mehsana,Mehsana(Jornang) APMC,Wheat,1,Other,Local,01/01/2026,2205,2500,2450
+Gujarat,Banaskanth,Palanpur APMC,Wheat,1,Other,Local,01/01/2026,2572,2665,2605.75
+Gujarat,Patan,Patan APMC,Wheat,1,Other,FAQ,01/01/2026,2400,2645,2575
+Gujarat,Rajkot,Jasdan APMC,Ground Nut Seed,268,Ground Nut Seed,FAQ,01/01/2026,5250,7255,6500
+Gujarat,Porbandar,Porbandar APMC,Ground Nut Seed,268,Ground Nut Seed,Local,01/01/2026,5250,6650,5950
+Gujarat,Rajkot,Upleta APMC,Ground Nut Seed,268,Ground Nut Seed,Local,01/01/2026,5000,6025,5500
+Gujarat,Navsari,Navsari APMC,Orange,18,Orange,Local,01/01/2026,2500,4000,3250
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Orange,18,Orange,Local,01/01/2026,9000,10000,9500
+Gujarat,Rajkot,Dhoraji APMC,Maize,4,Deshi Red,Non-FAQ,01/01/2026,1655,1655,1655
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Papaya,72,Other,Local,01/01/2026,500,1500,1000
+Gujarat,Porbandar,Porbandar APMC,Papaya,72,Other,Grade A,01/01/2026,2000,2500,2250
+Gujarat,Rajkot,Jasdan APMC,Soyabean,13,Soyabeen,FAQ,01/01/2026,3950,4550,4440
+Gujarat,Rajkot,Jetpur(Dist.Rajkot) APMC,Soyabean,13,Soyabeen,FAQ,01/01/2026,4400,4605,4555
+Gujarat,Junagarh,Junagadh APMC,Soyabean,13,Soyabeen,FAQ,01/01/2026,4400,5460,4600
+Gujarat,Navsari,Bilimora APMC,Green Chilli,87,Other,FAQ,01/01/2026,4500,5500,5000
+Gujarat,Valsad,Chikli(Khorgam) APMC,Bitter gourd,81,Other,Medium,01/01/2026,3250,3500,3375
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Green Chilli,87,Other,FAQ,01/01/2026,4300,4300,4300
+Gujarat,Ahmedabad,Ahmedabad APMC,French Beans(Frasbean),298,Other,FAQ,01/01/2026,1800,3000,2100
+Gujarat,Valsad,Chikli(Khorgam) APMC,Bottle gourd,82,Other,Medium,01/01/2026,1250,3500,1375
+Gujarat,Surendranagar,Vadhvan APMC,Sweet Potato,152,Sweet Potato,Medium,01/01/2026,3000,4000,3500
+Gujarat,Rajkot,Gondal(Veg.market Gondal) APMC,Sweet Potato,152,Sweet Potato,Local,01/01/2026,1500,3000,2250
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Mint(Pudina),360,Mint(Pudina),Local,01/01/2026,3000,7000,5500
+Gujarat,Ahmedabad,Ahmedabad APMC,Mint(Pudina),360,Other,FAQ,01/01/2026,800,1750,1600
+Gujarat,Ahmedabad,Ahmedabad APMC,Pointed gourd(Parval),303,Other,FAQ,01/01/2026,5500,6500,6000
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Cabbage,154,Other,FAQ,01/01/2026,1150,1150,1150
+Gujarat,Gandhinagar,Mansa(Manas Veg Yard) APMC,Carrot,153,Other,Local,01/01/2026,2000,2000,2000
+Gujarat,Mehsana,Mehsana(Mehsana Veg) APMC,Lemon,310,Lemon,Local,01/01/2026,1000,2500,2000
+Gujarat,Bhavnagar,Palitana APMC,Lemon,310,Lemon,Medium,01/01/2026,1100,1700,1400
+Gujarat,Porbandar,Porbandar APMC,Lemon,310,Lemon,FAQ,01/01/2026,2000,2500,2250
+Gujarat,Amreli,Damnagar APMC,Lemon,310,Lemon,Local,01/01/2026,1500,1500,1500
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Lemon,310,Other,FAQ,01/01/2026,1700,1700,1700
+Gujarat,Navsari,Navsari APMC,Cabbage,154,Cabbage,Local,01/01/2026,1500,2000,1750
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Cabbage,154,Cabbage,Local,01/01/2026,600,1100,900
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Cabbage,154,Cabbage,FAQ,01/01/2026,1400,1500,1450
+Gujarat,Kheda,Kapadvanj APMC,Cabbage,154,Cabbage,Grade A,01/01/2026,700,800,750
+Gujarat,Kheda,Kapadvanj APMC,Cauliflower,34,Cauliflower,Grade A,01/01/2026,600,1000,800
+Gujarat,Dahod,Dahod(Veg. Market) APMC,Brinjal,35,Brinjal,Local,01/01/2026,500,2000,1000
+Gujarat,Anand,Khambhat(Veg Yard Khambhat) APMC,Cauliflower,34,Other,Local,01/01/2026,500,1200,800
+Gujarat,Porbandar,Porbandar APMC,Banana,19,Amruthapani,Grade A,01/01/2026,3000,3500,3250
+Gujarat,Kheda,Kapadvanj APMC,Bottle gourd,82,Bottle Gourd,Grade A,01/01/2026,600,700,650
+Gujarat,Banaskanth,Amirgadh APMC,Soanf,135,Other,FAQ,01/01/2026,11500,17400,15000
+Gujarat,Vadodara(Baroda),Vadodara(Sayajipura) APMC,Peas Wet,174,Other,FAQ,01/01/2026,1500,1500,1500
+Gujarat,Kheda,Nadiyad(Piplag) APMC,Indian Beans(Seam),299,Indian Beans (Seam),FAQ,01/01/2026,1800,2000,1900
+Gujarat,Chhota Udaipur,Jetpur-Pavi     APMC,Cotton,15,Other,Local,01/01/2026,6050,6280,6150
+Gujarat,Vadodara(Baroda),Padra APMC,Peas cod,308,Other,FAQ,01/01/2026,1700,2000,1850
