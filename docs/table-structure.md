@@ -28,6 +28,12 @@ Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mand
 ### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, idempotent per run
 Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run writes the rows of its seed file (loading the same run again replaces them, other runs stay), so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
 
+### Volumes (bronze) — files, not tables
+| Volume | Holds |
+|---|---|
+| bronze.landing_zone | Source CSV files waiting to be loaded (`mandi_*.csv`) |
+| bronze.archive | Files already loaded, in a folder per run: `archive/<run_id>/<file name>` |
+
 ---
 ## 2. Silver
 
@@ -130,6 +136,6 @@ Natural key: `district_name + commodity_name + week_start`. Updated incrementall
 | category | STRING | Commodity category |
 | min_price | DECIMAL(10,2) | Lowest min price of the week, ₹/quintal |
 | max_price | DECIMAL(10,2) | Highest max price of the week, ₹/quintal |
-| avg_modal_price | DECIMAL(10,2) | Average modal price of the week |
+| avg_modal_price | DECIMAL(10,2) | Average modal price of the week (the average of the modal prices in the group) |
 | is_complete_week | BOOLEAN | False if the week starts before the first or ends after the last loaded date |
 | updated_at | TIMESTAMP | Last MERGE time |

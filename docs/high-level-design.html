@@ -31,7 +31,9 @@ flowchart LR
     direction LR
     subgraph BRONZE["Bronze"]
       direction TB
+      LZ[/"landing_zone<br/>volume"/]
       RAW[("raw_mandi_transactions")]
+      ARC[/"archive<br/>volume"/]
       DL1["<i class='lg delta'></i>"]
     end
     subgraph SILVER["Silver"]
@@ -46,13 +48,15 @@ flowchart LR
     end
     subgraph GOLD["Gold"]
       direction TB
-      MARTS[("data marts")]
+      MARTS[("mart_price_weekly")]
       DL3["<i class='lg delta'></i>"]
     end
     DASH["Dashboard"]
   end
 
-  FILE --> RAW
+  FILE --> LZ
+  LZ --> RAW
+  LZ -. "moved after load" .-> ARC
   RAW --> CLEAN
   RAW --> REJ
   DC -. "validates" .-> CLEAN
@@ -71,7 +75,7 @@ flowchart LR
   classDef dash fill:#12331f,stroke:#4fc07f,color:#e6ebf2
   classDef logo fill:none,stroke:none,color:#e6ebf2
   class FILE src
-  class RAW bronze
+  class LZ,RAW,ARC bronze
   class CLEAN,REJ,DC,DM,DD,FACT silver
   class MARTS gold
   class DASH dash
