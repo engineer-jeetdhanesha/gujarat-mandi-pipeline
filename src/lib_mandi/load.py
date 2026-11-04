@@ -184,7 +184,7 @@ def load__gold_weekly_mart(spark: SparkSession, df: DataFrame, mart_table: str) 
             MERGE INTO {mart_table} AS t
             USING gold_mart_input AS s
             ON  t.district_name = s.district_name
-            AND t.commodity_code = s.commodity_code
+            AND t.commodity_name = s.commodity_name
             AND t.week_start = s.week_start
             WHEN MATCHED THEN UPDATE SET *
             WHEN NOT MATCHED THEN INSERT *

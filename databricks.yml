@@ -27,6 +27,14 @@ variables:
       Empty grants nothing.
     default: ""
 
+  warehouse_id:
+    description: SQL warehouse that runs the dashboard queries, found by name in each workspace
+    lookup:
+      warehouse: Serverless Starter Warehouse
+  catalog:
+    description: Catalog of the environment, used by the dashboard queries (set per target)
+    default: ""
+
 targets:
   dev:
     mode: development
@@ -35,6 +43,7 @@ targets:
       host: https://adb-7405617239301071.11.azuredatabricks.net
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_dev_ws/bronze/landing_zone/mandi_*.csv
+      catalog: gujarat_mandi_pipeline_dev_ws
       volume_users: _workspace_users_gujarat_mandi_pipeline_dev_ws_7405617239301071
 
   uat:
@@ -46,6 +55,7 @@ targets:
       service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_uat_ws/bronze/landing_zone/mandi_*.csv
+      catalog: gujarat_mandi_pipeline_uat_ws
       volume_users: _workspace_users_gujarat_mandi_pipeline_uat_ws_7405618434508183
     permissions:
       - service_principal_name: 7b6c1128-258e-47a7-ab23-195029fb260c
@@ -60,6 +70,7 @@ targets:
       service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10
     variables:
       file_path: /Volumes/gujarat_mandi_pipeline_prod_ws/bronze/landing_zone/mandi_*.csv
+      catalog: gujarat_mandi_pipeline_prod_ws
       volume_users: _workspace_users_gujarat_mandi_pipeline_prod_ws_7405605581298117
     permissions:
       - service_principal_name: 47b5ebd0-4696-40d1-bd0a-02b71ce98a10

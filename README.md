@@ -105,7 +105,7 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
 | Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the bronze seed tables after checks (keys filled and unique, no duplicate natural keys, castable values, no missing days in `dim_date`) |
 | Silver | `fact_mandi_prices` | Prices at market × commodity × variety × grade × date, derived from clean. Variety and grade are degenerate dimensions on the fact |
-| Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity, with week-on-week change; updated incrementally per run. More marts are planned |
+| Gold | `mart_price_weekly` | Weekly min, max and average price per district × commodity; updated incrementally per run. More marts are planned |
 
 The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then repair the rejected rows.
 

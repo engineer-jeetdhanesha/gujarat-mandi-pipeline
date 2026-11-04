@@ -348,9 +348,8 @@ def transform__gold_weekly_mart(
     """Rows of gold.mart_price_weekly for the weeks the given clean rows changed.
 
     Recomputes the district x commodity weeks of the clean rows, plus the week before (its
-    is_complete_week can change) and the week after (its prev_week_avg_price changes). Each
-    week is aggregated from all its fact rows, so the result can be MERGEd on district_name,
-    commodity_code and week_start.
+    is_complete_week can change). Each week is aggregated from all its fact rows, so the result
+    can be MERGEd on district_name, commodity_name and week_start.
 
     Args:
         clean: Clean rows of the run (silver.mandi_prices_clean); they decide the weeks.
@@ -367,27 +366,27 @@ def transform__gold_weekly_mart(
     from pyspark.sql import functions as F
 
     try:
-        keys = ["district_name", "commodity_code", "week_start"]
+        keys = ["district_name", "commodity_name", "week_start"]
 
-        touched = clean.select(
-            F.col("district_std").alias("district_name"),
-            "commodity_code",
-            F.trunc("arrival_date", "week").alias("week_start"),
-        ).distinct()
+        touched = (
+            clean
+            .join(F.broadcast(dim_commodity.select("commodity_code", "commodity_name")), "commodity_code")
+            .select(
+                F.col("district_std").alias("district_name"),
+                "commodity_name",
+                F.trunc("arrival_date", "week").alias("week_start"),
+            )
+            .distinct()
+        )
         rewrite = reduce(
             lambda a, b: a.union(b),
-            [touched.withColumn("week_start", F.date_add("week_start", days)) for days in (-7, 0, 7)],
+            [touched.withColumn("week_start", F.date_add("week_start", days)) for days in (-7, 0)],
         ).distinct()
-        # Each rewritten week also needs the week before it, for prev_week_avg_price.
-        needed = rewrite.union(rewrite.withColumn("week_start", F.date_add("week_start", -7))).distinct()
 
         detail = (
             fact
             .join(F.broadcast(dim_market.select("market_key", "district_name")), "market_key")
-            .join(
-                F.broadcast(dim_commodity.select("commodity_key", "commodity_code", "commodity_name", "category")),
-                "commodity_key",
-            )
+            .join(F.broadcast(dim_commodity.select("commodity_key", "commodity_name", "category")), "commodity_key")
             .join(F.broadcast(dim_date.select("date_key", F.col("date").alias("price_date"), "week_start")), "date_key")
         )
 
@@ -396,48 +395,28 @@ def transform__gold_weekly_mart(
 
         weekly = (
             detail
-            .join(needed, keys, "left_semi")
-            .groupBy(*keys, "commodity_name", "category")
+            .join(rewrite, keys, "left_semi")
+            .groupBy(*keys, "category")
             .agg(
                 F.min("min_price").alias("min_price"),
                 F.max("max_price").alias("max_price"),
-                F.sum("modal_price").alias("sum_modal_price"),
-                F.count(F.lit(1)).alias("price_records"),
-                F.countDistinct("market_key").alias("markets_count"),
+                F.round(F.avg("modal_price"), 2).alias("avg_modal_price"),
             )
-            .withColumn("avg_modal_price", F.round(F.col("sum_modal_price") / F.col("price_records"), 2))
-        )
-        previous = weekly.select(
-            "district_name",
-            "commodity_code",
-            F.date_add("week_start", 7).alias("week_start"),
-            F.col("avg_modal_price").alias("prev_week_avg_price"),
         )
 
         mart = (
             weekly
-            .join(previous, keys, "left")
-            .join(rewrite, keys, "left_semi")
             .crossJoin(F.broadcast(bounds))
             .select(
                 F.year(F.date_add("week_start", 3)).alias("year"),
                 F.weekofyear("week_start").alias("week_number"),
                 "week_start",
                 "district_name",
-                "commodity_code",
                 "commodity_name",
                 "category",
                 F.col("min_price").cast("decimal(10,2)").alias("min_price"),
                 F.col("max_price").cast("decimal(10,2)").alias("max_price"),
                 F.col("avg_modal_price").cast("decimal(10,2)").alias("avg_modal_price"),
-                F.col("prev_week_avg_price").cast("decimal(10,2)").alias("prev_week_avg_price"),
-                F.when(
-                    F.col("prev_week_avg_price") > 0,
-                    F.round((F.col("avg_modal_price") - F.col("prev_week_avg_price")) / F.col("prev_week_avg_price") * 100, 2),
-                ).cast("decimal(10,2)").alias("wow_change_pct"),
-                F.col("price_records").cast("bigint").alias("price_records"),
-                F.col("sum_modal_price").cast("decimal(18,2)").alias("sum_modal_price"),
-                F.col("markets_count").cast("bigint").alias("markets_count"),
                 (
                     (F.col("week_start") >= F.col("first_date"))
                     & (F.date_add("week_start", 6) <= F.col("last_date"))

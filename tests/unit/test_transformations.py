@@ -328,43 +328,12 @@ def test__weekly_aggregates_and_week_on_week_change(spark: SparkSession) -> None
 
     rows = {row["week_start"]: row for row in out.collect()}
     week_1, week_2 = rows[WEEK_1], rows[WEEK_2]
-    # Week 1: two rows from two markets; modal prices 20 and 40 give a sum of 60 and an average of 30.
-    assert (week_1["price_records"], week_1["markets_count"]) == (2, 2)
+    # Week 1: two rows from two markets; modal prices 20 and 40 give an average of 30.
     assert (week_1["min_price"], week_1["max_price"]) == (Decimal("10.00"), Decimal("34.00"))
-    assert (week_1["sum_modal_price"], week_1["avg_modal_price"]) == (Decimal("60.00"), Decimal("30.00"))
-    # Nothing before week 1, so there is no change to report.
-    assert week_1["prev_week_avg_price"] is None and week_1["wow_change_pct"] is None
-    # Week 2 averages 45 against 30 the week before: +50 percent.
-    assert week_2["prev_week_avg_price"] == Decimal("30.00")
-    assert week_2["wow_change_pct"] == Decimal("50.00")
+    assert week_1["avg_modal_price"] == Decimal("30.00")
+    # Week 2 has one row with modal price 45.
+    assert week_2["avg_modal_price"] == Decimal("45.00")
     assert week_1["year"] == 2026 and week_1["week_number"] == 50
-
-
-def test__a_missing_previous_week_gives_no_change(spark: SparkSession) -> None:
-    """No previous week means no week-on-week change.
-
-    Args:
-        spark: Local Spark session with Delta (fixture).
-
-    Returns:
-        None.
-    """
-    # Only week 3 has data; week 2 is missing, so there is nothing to compare with.
-    fact = spark.createDataFrame(
-        [(1, 10, 20261221, "Other", "FAQ", Decimal("10"), Decimal("30"), Decimal("20"), None)], FACT_SCHEMA
-    )
-    clean = spark.createDataFrame([("D1", 100, date(2026, 12, 21))], "district_std string, commodity_code int, arrival_date date")
-    market = spark.createDataFrame([(1, "D1"), (2, "D1")], ["market_key", "district_name"])
-    commodity = spark.createDataFrame([(10, 100, "Wheat", "Cereals")], ["commodity_key", "commodity_code", "commodity_name", "category"])
-    days = [date(2026, 12, 1) + timedelta(days=i) for i in range(40)]
-    dt = spark.createDataFrame(
-        [(int(d.strftime("%Y%m%d")), d, d - timedelta(days=d.weekday())) for d in days], ["date_key", "date", "week_start"]
-    )
-
-    out = t.transform__gold_weekly_mart(clean, fact, market, commodity, dt)
-
-    row = out.where(out.week_start == WEEK_3).first()
-    assert row["prev_week_avg_price"] is None and row["wow_change_pct"] is None
 
 
 def test__a_week_is_complete_only_inside_the_loaded_dates(spark: SparkSession) -> None:
@@ -406,7 +375,7 @@ def test__a_week_is_complete_only_inside_the_loaded_dates(spark: SparkSession) -
 
 
 def test__only_the_weeks_around_the_run_are_returned(spark: SparkSession) -> None:
-    """Returns the touched weeks plus the weeks before and after.
+    """Returns the touched weeks plus the week before.
 
     Args:
         spark: Local Spark session with Delta (fixture).
@@ -434,8 +403,8 @@ def test__only_the_weeks_around_the_run_are_returned(spark: SparkSession) -> Non
 
     out = t.transform__gold_weekly_mart(clean, fact, market, commodity, dt)
 
-    # Week 2 plus the week before and the week after (their change depends on it); week 4 is left alone.
-    assert sorted(row["week_start"] for row in out.collect()) == [WEEK_1, WEEK_2, WEEK_3]
+    # Week 2 plus the week before (its is_complete_week can change); weeks 3 and 4 are left alone.
+    assert sorted(row["week_start"] for row in out.collect()) == [WEEK_1, WEEK_2]
 
 
 def test__gold_returns_none_when_the_fact_has_no_rows_for_the_weeks(spark: SparkSession) -> None:
