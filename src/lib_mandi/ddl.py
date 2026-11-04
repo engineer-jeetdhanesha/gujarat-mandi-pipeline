@@ -95,10 +95,10 @@ def create__table__raw_mandi_transactions(spark: SparkSession, catalog: str, sch
                 max_price       STRING    COMMENT 'Rs/quintal, raw',
                 modal_price     STRING    COMMENT 'Rs/quintal, raw',
                 _ingested_at    TIMESTAMP COMMENT 'Load time',
-                _source_mode    STRING    COMMENT 'API / FILE / BACKFILL',
-                _file_name      STRING    COMMENT 'Source file (NULL for API)',
-                _run_id         STRING    COMMENT 'Run that loaded the row (joins audit)',
-                _row_no         BIGINT    COMMENT 'Row number within the file/API page'
+                _source_mode    STRING    COMMENT 'FILE',
+                _file_name      STRING    COMMENT 'Source file',
+                _run_id         STRING    COMMENT 'Run that loaded the row',
+                _row_no         BIGINT    COMMENT 'Row number within the file'
             )
             USING DELTA
             COMMENT 'Raw, append-only mandi prices stored exactly as received'
@@ -412,15 +412,15 @@ def create__table__mandi_prices_rejected(spark: SparkSession, catalog: str, sche
                 min_price       STRING    COMMENT 'As received',
                 max_price       STRING    COMMENT 'As received',
                 modal_price     STRING    COMMENT 'As received',
-                source_mode     STRING    COMMENT 'API / FILE / BACKFILL',
-                file_name       STRING    COMMENT 'Source file (NULL for API)',
+                source_mode     STRING    COMMENT 'FILE',
+                file_name       STRING    COMMENT 'Source file',
                 run_id          STRING    COMMENT 'Run that loaded the row into bronze',
                 ingested_at     TIMESTAMP COMMENT 'Bronze ingest time',
-                row_no          BIGINT    COMMENT 'Row number within the file/API page',
+                row_no          BIGINT    COMMENT 'Row number within the file',
                 reject_reason   STRING    COMMENT 'Readable reasons, separated by semicolons',
                 reject_rule     STRING    COMMENT 'Rule ids, separated by commas',
                 rejected_at     TIMESTAMP COMMENT 'When rejected',
-                status          STRING    COMMENT 'ERROR / RESOLVED / REJECTED / LOADED',
+                status          STRING    COMMENT 'ERROR / REJECTED',
                 updated_at      TIMESTAMP COMMENT 'Last status change'
             )
             USING DELTA

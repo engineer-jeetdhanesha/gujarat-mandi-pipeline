@@ -1,6 +1,6 @@
 # Gujarat Mandi Pipeline — Table Structure
 
-Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mandi_prod`; schemas `bronze`, `silver`, `gold`. Source mode values everywhere: `API | FILE | BACKFILL`. The star schema (dimensions and fact) lives in Silver; Gold is for data marts. Variety and Grade are degenerate dimensions on the fact table. The audit table lives in Bronze.
+Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mandi_prod`; schemas `bronze`, `silver`, `gold`. The source mode is always `FILE`. The star schema (dimensions and fact) lives in Silver; Gold is for data marts. Variety and Grade are degenerate dimensions on the fact table.
 
 ---
 ## 1. Bronze
@@ -20,28 +20,13 @@ Mandi prices only (weather is out of scope for now). Catalog `mandi_dev` / `mand
 | max_price | STRING | ₹/quintal, raw |
 | modal_price | STRING | ₹/quintal, raw |
 | _ingested_at | TIMESTAMP | Load time |
-| _source_mode | STRING | API / FILE / BACKFILL |
-| _file_name | STRING | Source file (NULL for API) |
-| _run_id | STRING | Run that loaded the row (joins audit) |
-| _row_no | BIGINT | Row number within the file/API page |
+| _source_mode | STRING | FILE |
+| _file_name | STRING | Source file |
+| _run_id | STRING | Run that loaded the row |
+| _row_no | BIGINT | Row number within the file |
 
 ### bronze.raw_dim_market, bronze.raw_dim_commodity, bronze.raw_dim_date — seed files as received, all STRING, idempotent per run
 Same columns as the silver dimension (except `updated_at`), all STRING, followed by the lineage columns `_ingested_at` (TIMESTAMP), `_source_mode` (STRING, `FILE`), `_file_name` (STRING), `_run_id` (STRING) and `_row_no` (BIGINT). Each run writes the rows of its seed file (loading the same run again replaces them, other runs stay), so a file with duplicates or bad values stays visible here; silver only reads the run's rows after the checks below.
-
-### bronze.pipeline_audit — one row per pipeline run
-| Column | Type | Description |
-|---|---|---|
-| run_id | STRING | Unique run id (PK) |
-| pipeline_name | STRING | Job/pipeline name |
-| source_mode | STRING | API / FILE / BACKFILL |
-| business_start_date | DATE | First arrival_date covered by the run (daily run: = end date; backfill: range start) |
-| business_end_date | DATE | Last arrival_date covered by the run |
-| status | STRING | RUNNING / SUCCESS / FAILED |
-| source_total_rows | BIGINT | Rows received from the source (API total or file row count) |
-| source_rows_rejected | BIGINT | Rows from this run sent to silver.mandi_prices_rejected |
-| start_timestamp | TIMESTAMP | Run start |
-| end_timestamp | TIMESTAMP | Run end (NULL while RUNNING) |
-| error_message | STRING | Failure detail (NULL on success) |
 
 ---
 ## 2. Silver
@@ -71,7 +56,7 @@ Natural key: `market + commodity_code + variety + grade + arrival_date`
 |---|---|---|
 | state … modal_price | STRING | Same 11 raw columns as bronze (STRING so bad dates/prices still fit) |
 | source_mode, file_name, run_id, ingested_at | as bronze | Lineage back to bronze |
-| row_no | BIGINT | Row number within the file/API page (with run_id and file_name identifies the bronze row) |
+| row_no | BIGINT | Row number within the file (with run_id and file_name identifies the bronze row) |
 | reject_reason | STRING | Human-readable reasons, separated by `;` |
 | reject_rule | STRING | Every failing rule id, separated by commas: `missing_market`, `missing_commodity_code`, `invalid_date`, `invalid_price`, `price_le_zero`, `min_gt_max`, `modal_out_of_range`, `unknown_market`, `unknown_commodity`, `future_date`, `unknown_date`, `duplicate` |
 | rejected_at | TIMESTAMP | When rejected |

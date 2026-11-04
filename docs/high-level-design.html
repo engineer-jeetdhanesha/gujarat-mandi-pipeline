@@ -20,20 +20,18 @@ h2{margin:36px 0 14px;font-size:20px;padding-left:12px;border-left:5px solid var
 .cluster-label div,.cluster-label span.nodeLabel{max-width:none !important;white-space:nowrap !important}
 </style></head><body><div class="wrap">
 <h1>Gujarat Mandi Pipeline — High-Level Design</h1>
-<p class="lead">Mandi price data from file and API, processed through a Bronze → Silver → Gold medallion pipeline into a dashboard.</p>
+<p class="lead">Mandi price data from CSV files, processed through a Bronze → Silver → Gold medallion pipeline into a dashboard.</p>
 
 <h2>Architecture</h2>
 <div class="dg"><pre class="mermaid">
 flowchart LR
-  FILE["File<br/>daily / backfill"]
-  API["API<br/>daily"]
+  FILE["Source CSV file"]
 
   subgraph DBX["<span class='t'><i class='lg dbx'></i><br/>Databricks</span><span class='t'><i class='lg az'></i><br/>Azure</span><span class='t'><i class='lg do'></i><br/>Azure DevOps (CI/CD)</span>"]
     direction LR
     subgraph BRONZE["Bronze"]
       direction TB
       RAW[("raw_mandi_transactions")]
-      AUD[("pipeline_audit")]
       DL1["<i class='lg delta'></i>"]
     end
     subgraph SILVER["Silver"]
@@ -55,10 +53,8 @@ flowchart LR
   end
 
   FILE --> RAW
-  API --> RAW
   RAW --> CLEAN
   RAW --> REJ
-  REJ -. "error mode<br/>(skips Bronze)" .-> CLEAN
   DC -. "validates" .-> CLEAN
   DM -. "validates" .-> CLEAN
   CLEAN --> FACT
@@ -74,8 +70,8 @@ flowchart LR
   classDef gold fill:#3a3010,stroke:#e0b84a,color:#e6ebf2
   classDef dash fill:#12331f,stroke:#4fc07f,color:#e6ebf2
   classDef logo fill:none,stroke:none,color:#e6ebf2
-  class FILE,API src
-  class RAW,AUD bronze
+  class FILE src
+  class RAW bronze
   class CLEAN,REJ,DC,DM,DD,FACT silver
   class MARTS gold
   class DASH dash

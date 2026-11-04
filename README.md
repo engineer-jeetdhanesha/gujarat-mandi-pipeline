@@ -2,7 +2,7 @@
 
 A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandis (agricultural markets). Prices are ingested from the Government of India open data platform, cleaned through a Bronze → Silver → Gold medallion architecture on Azure Databricks, and served in a dashboard.
 
-> **Status:** in progress. The table design and high-level design are done (`docs/`), the Bronze file load and the Silver dimension tables are built. The rest of Silver, Gold, CI/CD and the dashboard are planned (see [Roadmap](#roadmap)).
+> **Status:** built and released. Bronze, Silver and Gold loads, the dashboard and the CI/CD pipeline are done; see [Roadmap](#roadmap) for what was delivered.
 
 ## Contents
 
@@ -10,7 +10,7 @@ A data pipeline and dashboard for daily commodity prices in Gujarat's APMC mandi
 - [Data source](#data-source)
 - [Architecture](#architecture)
 - [Data model](#data-model)
-- [Pipeline run modes](#pipeline-run-modes)
+- [Pipeline run](#pipeline-run)
 - [Data quality and rejected rows](#data-quality-and-rejected-rows)
 - [Sample data](#sample-data)
 - [Environments and CI/CD](#environments-and-cicd)
@@ -27,7 +27,7 @@ Mandi prices are published daily but are messy: district names are misspelt, com
 1. Loads the raw data exactly as received (Bronze).
 2. Cleans, standardises and validates it against the market and commodity dimensions, keeping bad rows aside for review, and models it as a star schema (Silver).
 3. Builds data marts for analysis (Gold).
-4. Shows price trends by commodity, market and district in a Databricks dashboard.
+4. Shows the weekly price of a commodity and the districts with the highest and lowest prices in a Databricks dashboard.
 
 Scope is mandi prices only; weather data is out of scope for now.
 
@@ -37,9 +37,9 @@ Scope is mandi prices only; weather data is out of scope for now.
 |---|---|
 | **Dataset** | [Current Daily Price of Various Commodities from Various Markets (Mandi)](https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi) on data.gov.in |
 | **API** | `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24`, filtered to `State = Gujarat`, paged at 1,000 rows |
-| **Access** | Needs a free data.gov.in API key. The key is kept in a Databricks secret scope and is never committed. |
+| **Access** | The pipeline reads CSV files with these columns from a Databricks volume. The files are exported from the API with a free data.gov.in key; the key is never committed. |
 | **Grain** | One row per market × commodity × variety × grade × arrival date |
-| **Refresh** | Daily |
+| **Refresh** | A file is loaded when it is delivered, by hand |
 | **Prices** | Rupees per quintal (100 kg): minimum, maximum and modal (most common) |
 
 Fields as received: `State`, `District`, `Market`, `Commodity`, `Commodity_Code`, `Variety`, `Grade`, `Arrival_Date` (`dd/MM/yyyy`), `Min_Price`, `Max_Price`, `Modal_Price`.
@@ -57,12 +57,10 @@ The full diagram, with tech-stack logos, is in [`docs/high-level-design.html`](d
 
 ```mermaid
 flowchart LR
-  FILE["File<br/>daily / backfill"] --> RAW
-  API["API<br/>daily"] --> RAW
+  FILE["Source CSV file"] --> RAW
   subgraph Databricks["Azure Databricks"]
     subgraph Bronze
       RAW[("raw_mandi_transactions")]
-      AUD[("pipeline_audit")]
     end
     subgraph Silver
       CLEAN[("mandi_prices_clean")]
@@ -93,13 +91,12 @@ flowchart LR
 
 ## Data model
 
-Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` and `gold`. Full column lists, types and keys are in [`docs/table-structure.md`](docs/table-structure.md).
+Each workspace has its own catalog (`gujarat_mandi_pipeline_<env>_ws`), each with schemas `bronze`, `silver` and `gold`. Full column lists, types and keys are in [`docs/table-structure.md`](docs/table-structure.md).
 
 | Layer | Table | Purpose |
 |---|---|---|
 | Bronze | `raw_mandi_transactions` | Raw rows, all `STRING`, written per run and file (a reload of the same run and file replaces its rows), with lineage columns (`_run_id`, `_source_mode`, `_file_name`, …) |
 | Bronze | `raw_dim_market`, `raw_dim_commodity`, `raw_dim_date` | The seed CSV files as received (all `STRING`), written per run (a retry of the same run replaces its rows, other runs stay), so a bad file stays visible before silver is touched |
-| Bronze | `pipeline_audit` | One row per pipeline run: mode, business date range, status, row counts |
 | Silver | `mandi_prices_clean` | Typed, standardised, de-duplicated; `MERGE` target. Natural key: market + commodity code + variety + grade + arrival date |
 | Silver | `mandi_prices_rejected` | Rows that failed a quality rule, with the reason and a review status |
 | Silver | `dim_market`, `dim_commodity`, `dim_date` | Dimensions with surrogate keys, loaded from the bronze seed tables after checks (keys filled and unique, no duplicate natural keys, castable values, no missing days in `dim_date`) |
@@ -108,23 +105,11 @@ Catalogs are `mandi_dev` and `mandi_prod`, each with schemas `bronze`, `silver` 
 
 The dimensions are the reference data: a market or commodity that is not in `seed/` is rejected, not added automatically. To add one, edit the CSV and run `src/load_bronze_dims` and `src/load_silver_dims` again, then load the source file again.
 
-## Pipeline run modes
+## Pipeline run
 
-Every run records its mode in `_source_mode` (`API`, `FILE` or `BACKFILL`) and writes one row to `bronze.pipeline_audit`.
+The pipeline reads CSV files only. A file with one or many days of data goes through Bronze → Silver → Gold marts in one run of `mandi_daily`, and every run records `FILE` in `_source_mode`.
 
-| Mode | Input | Path | When |
-|---|---|---|---|
-| **File** | A file with one day of data | Bronze → Silver → Gold marts | Daily |
-| **API** | One day of data from the API | Bronze → Silver → Gold marts | Daily |
-| **Backfill** | A file only; may hold many days | Bronze → Silver → Gold marts, for every date in the file | On demand, to load history |
-
-How the audit row describes each run:
-
-- `business_start_date` / `business_end_date` are the first and last `arrival_date` the run covers. For a daily run they are equal; for a backfill they span the file.
-- `status` moves `RUNNING` → `SUCCESS` or `FAILED`; `error_message` is filled on failure.
-- `source_total_rows` and `source_rows_rejected` give the volume and how many rows went to the rejected table.
-
-Because Silver is a `MERGE` on the natural key, re-running a day or a backfill updates existing rows instead of duplicating them.
+Because Silver is a `MERGE` on the natural key, loading a day again updates existing rows instead of duplicating them.
 
 ## Data quality and rejected rows
 
@@ -145,15 +130,15 @@ Each rejected row keeps its raw values plus `reject_rule`, `reject_reason` and a
 
 ## Sample data
 
-The values below are **illustrative**, shaped like the real data. They are not pulled from the live API, which needs a key.
+The values below are **illustrative**, shaped like the real data.
 
 **1. Bronze: `raw_mandi_transactions`** (as received, all text)
 
 | state | district | market | commodity | commodity_code | variety | grade | arrival_date | min_price | max_price | modal_price | _source_mode | _run_id |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Gujarat | Banaskanth | Palanpur | Castor Seed | 21 | Other | FAQ | 11/10/2026 | 6100 | 6450 | 6300 | API | run_0001 |
-| Gujarat | Rajkot | Rajkot | Groundnut | 5 | Other | Local | 11/10/2026 | 5400 | 6200 | 5800 | API | run_0001 |
-| Gujarat | Mehsana | Unjha | Cumin Seed(Jeera) | 12 | Other | FAQ | 11/10/2026 | 0 | 24500 | 24000 | API | run_0001 |
+| Gujarat | Banaskanth | Palanpur | Castor Seed | 21 | Other | FAQ | 11/10/2026 | 6100 | 6450 | 6300 | FILE | run_0001 |
+| Gujarat | Rajkot | Rajkot | Groundnut | 5 | Other | Local | 11/10/2026 | 5400 | 6200 | 5800 | FILE | run_0001 |
+| Gujarat | Mehsana | Unjha | Cumin Seed(Jeera) | 12 | Other | FAQ | 11/10/2026 | 0 | 24500 | 24000 | FILE | run_0001 |
 
 **2. Silver: `mandi_prices_clean`** (typed and standardised)
 
@@ -176,18 +161,12 @@ To correct it, fix the price in the source file and load the file again.
 |---|---|---|---|---|---|---|---|
 | 17 | 3 | 20261011 | Other | FAQ | 6100.00 | 6450.00 | 6300.00 |
 
-**5. Bronze: `pipeline_audit`**
-
-| run_id | source_mode | business_start_date | business_end_date | status | source_total_rows | source_rows_rejected |
-|---|---|---|---|---|---|---|
-| run_0001 | API | 2026-10-11 | 2026-10-11 | SUCCESS | 3 | 1 |
-
 ## Environments and CI/CD
 
 - **Environments:** three Databricks workspaces, each with its own default catalog: `dev` (`gujarat_mandi_pipeline_dev_ws`), `uat` and `prod`. UAT and prod run as the service principals `sp-mandi-uat` and `sp-mandi-prod`.
 - **Deployment:** a Databricks Asset Bundle (`databricks.yml`, `resources/*.yml`) deploys the notebooks and two jobs: `mandi_setup` (creates the tables and loads the dimensions, run on demand) and `mandi_daily` (the load workflow). See [Deploy with Databricks Asset Bundles](#deploy-with-databricks-asset-bundles).
 - **CI/CD:** one Azure Pipelines definition, [`azure-pipelines.yml`](azure-pipelines.yml), described below.
-- **Scheduling (planned):** the daily File/API run will be a schedule on `mandi_daily` in the prod target; Backfill and Error runs are started on demand with a mode parameter.
+- **Scheduling:** none yet; `mandi_daily` is started by hand when a file is delivered.
 
 ### Azure DevOps pipeline
 
@@ -235,14 +214,13 @@ A push to a feature branch starts no run (only `main`, tags and pull requests do
 
 ## Configuration
 
-Planned inputs; names may change when the code is written.
+Inputs of the jobs.
 
 | Setting | Purpose |
 |---|---|
-| `catalog` | `mandi_dev` or `mandi_prod` |
-| `mode` | `file`, `api`, `backfill` or `error` |
-| `arrival_date` | The day to load (File and API modes) |
-| API key | data.gov.in key, stored as a Databricks secret, never in the repo |
+| `file_path` | File or pattern to load, e.g. `/Volumes/<catalog>/bronze/landing_zone/mandi_*.csv` (default per target) |
+| `run_id` | Id of the run; defaults to the Databricks job run id |
+| Catalog | The workspace default catalog (`gujarat_mandi_pipeline_<env>_ws`) |
 
 ## Deploy with Databricks Asset Bundles
 
@@ -270,7 +248,9 @@ databricks bundle run mandi_daily -t dev
 ├── ruff.toml                     Lint settings
 ├── resources/
 │   ├── mandi_setup.yml           Job: create the tables and load the dimensions (on demand)
-│   └── mandi_daily.yml           Job: bronze -> silver -> gold load workflow, then archive the files
+│   ├── mandi_daily.yml           Job: bronze -> silver -> gold load workflow, then archive the files
+│   ├── dashboards.yml            The price dashboard (permissions, warehouse, catalog)
+│   └── dashboards/               mandi_prices.lvdash.json: dashboard definition
 ├── docs/
 │   ├── table-structure.md        Table design (source of truth)
 │   ├── table-structure.html      Same, rendered for reading
@@ -312,11 +292,8 @@ pytest
 - [x] Bronze seed layer with dimension checks (#38)
 - [x] Silver clean and rejected tables (#30)
 - [x] Silver fact table (#34)
-- [ ] Silver post-load checks
-- [ ] Pipeline audit table
 - [x] Gold weekly price mart (#32)
-- [ ] More gold marts
-- [ ] Dashboard
+- [x] Dashboard
 - [x] Azure DevOps CI/CD
 
 ## Contributing
